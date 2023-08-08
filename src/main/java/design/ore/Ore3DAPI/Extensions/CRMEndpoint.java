@@ -15,6 +15,15 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return       the Transaction found at the provided location, or null if not found.
 	 * @see          Transaction
 	 */
+	void initialize();
+	
+	/*
+	 * Retrieves the <code>Transaction</code> stored under a given <code>id</code>.
+	 * 
+	 * @param   id   a unique id to be handled by the CRM as a location for the <code>Transaction</code>
+	 * @return       the Transaction found at the provided location, or null if not found.
+	 * @see          Transaction
+	 */
 	Transaction getTransaction(String id);
 	
 	/*
