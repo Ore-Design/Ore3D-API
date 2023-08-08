@@ -5,7 +5,7 @@ plugins {
 
 java {
 	withSourcesJar()
-	withJavadocJar()
+	// withJavadocJar()
 }
 
 publishing {
