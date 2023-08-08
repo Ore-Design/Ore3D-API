@@ -11,4 +11,6 @@ public abstract class Ore3DPlugin extends Plugin
         super();
         this.context = context;
     }
+    
+    public abstract String targetVersion();
 }
