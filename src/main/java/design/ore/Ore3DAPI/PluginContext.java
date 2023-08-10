@@ -7,14 +7,18 @@ public class PluginContext
 {
 	private final RuntimeMode runtimeMode;
 	private final Logger logger;
+	private final boolean debug;
 	
-	public PluginContext(RuntimeMode runtimeMode, Logger logger)
+	public PluginContext(RuntimeMode runtimeMode, Logger logger, boolean debug)
 	{
 		this.runtimeMode = runtimeMode;
 		this.logger = logger;
+		this.debug = debug;
 	}
 	
 	public RuntimeMode getRuntimeMode() { return runtimeMode; }
 	
 	public Logger getLogger() { return logger; }
+	
+	public boolean isDebug() { return debug; }
 }
