@@ -11,13 +11,15 @@ public class PluginContext
 	private final Logger logger;
 	private final boolean debug;
 	private final Map<String, String> valueMap;
+	private final boolean sandbox;
 	
-	public PluginContext(RuntimeMode runtimeMode, Logger logger, boolean debug, Map<String, String> valueMap)
+	public PluginContext(RuntimeMode runtimeMode, Logger logger, boolean debug, Map<String, String> valueMap, boolean sandbox)
 	{
 		this.runtimeMode = runtimeMode;
 		this.logger = logger;
 		this.debug = debug;
 		this.valueMap = valueMap;
+		this.sandbox = sandbox;
 	}
 	
 	public RuntimeMode getRuntimeMode() { return runtimeMode; }
@@ -25,6 +27,7 @@ public class PluginContext
 	public Logger getLogger() { return logger; }
 
 	public boolean isDebug() { return debug; }
+	public boolean isSandbox() { return sandbox; }
 	public Map<String, String> getValueMap() { return valueMap; }
 	public String getValue(String key) { return valueMap.get(key); }
 }
