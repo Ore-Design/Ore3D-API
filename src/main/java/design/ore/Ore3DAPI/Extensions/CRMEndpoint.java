@@ -71,7 +71,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return       the Employee found at the provided location, or null if not found.
 	 * @see          Employee
 	 */
-	Customer getEmployee(String id);
+	Employee getEmployee(String id);
 	
 	/*
 	 * Updates the <code>Employee</code> associated with the id, to be handled by the CRM.
