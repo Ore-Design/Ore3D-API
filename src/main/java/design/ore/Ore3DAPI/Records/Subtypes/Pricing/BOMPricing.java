@@ -1,9 +1,9 @@
-package design.ore.Ore3DAPI.Records;
+package design.ore.Ore3DAPI.Records.Subtypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import design.ore.Ore3DAPI.Records.Subtypes.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,11 +15,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-public class Customer extends ValueStorageRecord
+public class BOMPricing
 {
-	String id;
-	String displayName;
-	String email;
-	Address shippingAddress;
-	Address billingAddress;
+	@JsonProperty("cpu") double costPerUnit;
+	@JsonProperty("pcpu") double publishedCostPerUnit;
+	@JsonProperty("id") int internalID;
 }

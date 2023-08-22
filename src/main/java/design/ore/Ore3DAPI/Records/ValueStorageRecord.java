@@ -3,7 +3,7 @@ package design.ore.Ore3DAPI.Records;
 import java.util.HashMap;
 import java.util.Map;
 
-import design.ore.Ore3DAPI.Records.Subtypes.Spec;
+import design.ore.Ore3DAPI.Records.Subtypes.Specs.Spec;
 
 public class ValueStorageRecord
 {

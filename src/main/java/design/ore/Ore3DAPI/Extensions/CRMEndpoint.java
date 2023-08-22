@@ -20,12 +20,11 @@ public interface CRMEndpoint extends ExtensionPoint
 	/*
 	 * Updates the <code>Transaction</code> associated with the id, to be handled by the CRM.
 	 * 
-	 * @param   id            a unique id to be handled by the CRM as a location for the <code>Transaction</code>
 	 * @param   transaction   the <code>Transaction</code> to be updated.
 	 * @return                true if successful, otherwise false.
 	 * @see                   Transaction
 	 */
-	boolean updateTransaction(String id, Transaction transaction);
+	boolean updateTransaction(Transaction transaction);
 	
 	/*
 	 * Adds a new <code>Transaction</code> to the CRM.
@@ -53,7 +52,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return              true if successful, otherwise false.
 	 * @see                 Customer
 	 */
-	boolean updateCustomer(String id, Customer transaction);
+	boolean updateCustomer(Customer transaction);
 	
 	/*
 	 * Adds a new <code>Customer</code> to the CRM.
@@ -72,6 +71,14 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @see          Employee
 	 */
 	Employee getEmployee(String id);
+
+	/*
+	 * Retrieves the <code>Employee</code> that correlates to the current user.
+	 * 
+	 * @return       the Employee associated with the current user, or null if not found.
+	 * @see          Employee
+	 */
+	Employee getUsingEmployee();
 	
 	/*
 	 * Updates the <code>Employee</code> associated with the id, to be handled by the CRM.
@@ -81,7 +88,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return               true if successful, otherwise false.
 	 * @see                  Employee
 	 */
-	boolean updateEmployee(String id, Employee employee);
+	boolean updateEmployee(Employee employee);
 	
 	/*
 	 * Adds a new <code>Employee</code> to the CRM.
