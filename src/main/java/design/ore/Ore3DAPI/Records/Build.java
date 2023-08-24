@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.Records;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,8 +12,8 @@ import design.ore.Ore3DAPI.Records.Subtypes.Description;
 import design.ore.Ore3DAPI.Records.Subtypes.Routing;
 import design.ore.Ore3DAPI.Records.Subtypes.Tag;
 import design.ore.Ore3DAPI.Records.Subtypes.Pricing.BuildPrice;
+import design.ore.Ore3DAPI.Records.Subtypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.Records.Subtypes.Specs.Spec;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,7 +27,7 @@ public abstract class Build
 	@Getter UUID buildUUID = UUID.randomUUID();
 	@Getter List<UUID> children = new ArrayList<>();
 	
-	@Getter SimpleIntegerProperty quantityProperty = new SimpleIntegerProperty(0);
+	@Getter Spec<Integer> quantity = new PositiveIntSpec("Quantity", 1, false, "Overview");
 	
 	@Getter BuildPrice price = new BuildPrice(this);
 	
@@ -41,5 +42,5 @@ public abstract class Build
 	
 	public abstract String calculateDefaultDescription();
 	public abstract void runCalculations();
-	public abstract List<Spec<?>> getSpecs();
+	public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
 }

@@ -20,7 +20,7 @@ public class BuildPrice
 		overriddenPrice = 0;
 	}
 	
-	public double total() { return overridden ? overriddenPrice : unitPrice * ((double) parent.getQuantityProperty().get()); }
+	public double total() { return overridden ? overriddenPrice : unitPrice * ((double) parent.getQuantity().getValue()); }
 	
 	public void reset() { overridden = false; }
 	public void override(double price)
