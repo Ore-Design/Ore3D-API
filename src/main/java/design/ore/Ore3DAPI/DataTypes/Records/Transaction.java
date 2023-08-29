@@ -1,9 +1,9 @@
-package design.ore.Ore3DAPI.Records;
+package design.ore.Ore3DAPI.DataTypes.Records;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import design.ore.Ore3DAPI.Records.Subtypes.Pricing.PricingData;
+import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
 import lombok.Getter;
 import lombok.Setter;
 

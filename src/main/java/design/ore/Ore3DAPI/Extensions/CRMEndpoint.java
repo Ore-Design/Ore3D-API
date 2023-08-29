@@ -2,9 +2,9 @@ package design.ore.Ore3DAPI.Extensions;
 
 import org.pf4j.ExtensionPoint;
 
-import design.ore.Ore3DAPI.Records.Customer;
-import design.ore.Ore3DAPI.Records.Employee;
-import design.ore.Ore3DAPI.Records.Transaction;
+import design.ore.Ore3DAPI.DataTypes.Records.Customer;
+import design.ore.Ore3DAPI.DataTypes.Records.Employee;
+import design.ore.Ore3DAPI.DataTypes.Records.Transaction;
 
 public interface CRMEndpoint extends ExtensionPoint
 {	

@@ -1,8 +1,9 @@
-package design.ore.Ore3DAPI.Records.Subtypes;
+package design.ore.Ore3DAPI.DataTypes;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import javafx.scene.paint.Color;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class BOMComponent
+public class Tag
 {
-	String id;
+	String name;
+	Color color;
 }

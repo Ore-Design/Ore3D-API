@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.Records.Subtypes.Specs;
+package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
@@ -7,11 +7,11 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 
 public class BooleanSpec extends Spec<Boolean>
 {
@@ -24,8 +24,6 @@ public class BooleanSpec extends Spec<Boolean>
 		idLabel.getStyleClass().add("spec-label");
 		
 		CheckBox check = new CheckBox();
-		check.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-		Util.UI.checkboxMatchSize(check);
 		if(readOnly) check.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
@@ -64,8 +62,9 @@ public class BooleanSpec extends Spec<Boolean>
 
 		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		check.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
-		check.setMaxWidth(Control.USE_PREF_SIZE);
+		check.setMaxWidth(Double.MAX_VALUE);
+		Util.UI.checkboxMatchSize(check);
+		HBox.setHgrow(check, Priority.ALWAYS);
 		
 		input.setPrefHeight(25);
 		input.setMaxHeight(Control.USE_PREF_SIZE);

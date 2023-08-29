@@ -51,7 +51,7 @@ public class Util
 		
 		public static void checkboxMatchSize(CheckBox box)
 		{
-			box.prefHeightProperty().addListener(l -> ((Region)box.lookup(".mark")).setPadding(new Insets(box.getHeight()/2))); // Divide by two because the padding is a type of radius
+			box.heightProperty().addListener(l -> ((Region) box.lookup(".mark")).setPadding(new Insets((box.getHeight()/2) - 7)));
 		}
 	}
 }

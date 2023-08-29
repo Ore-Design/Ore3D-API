@@ -1,11 +1,11 @@
-package design.ore.Ore3DAPI.Records;
+package design.ore.Ore3DAPI.DataTypes.Records;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import design.ore.Ore3DAPI.Records.Subtypes.Specs.Spec;
+import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 
-public class ValueStorageRecord
+public abstract class ValueStorageRecord
 {
 	private Map<String, Spec> values = new HashMap<String, Spec>();
 

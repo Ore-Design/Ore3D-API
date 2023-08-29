@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.Records.Subtypes;
+package design.ore.Ore3DAPI.DataTypes;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

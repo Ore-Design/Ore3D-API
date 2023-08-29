@@ -1,10 +1,10 @@
-package design.ore.Ore3DAPI.Records.Subtypes.Specs;
+package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
-import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
+import design.ore.Ore3DAPI.JavaFX.DecimalTextFormatter;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -13,11 +13,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.util.converter.IntegerStringConverter;
+import javafx.util.converter.DoubleStringConverter;
 
-public class IntSpec extends Spec<Integer>
+public class DoubleSpec extends Spec<Double>
 {
-	public IntSpec(String id, int initialValue, boolean readOnly, String section) { super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section); }
+	public DoubleSpec(String id, double initialValue, boolean readOnly, String section) { super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section); }
 	
 	private String preEdit = "";
 
@@ -46,11 +46,11 @@ public class IntSpec extends Spec<Integer>
 			String firstVal = "";
 			try
 			{
-				firstVal = ((int) toBind.get(0).getValue()) + "";
+				firstVal = ((double) toBind.get(0).getValue()) + "";
 				for(int x = 1 ; x < toBind.size() ; x++)
 				{
 					String nextVal = "";
-					try { nextVal = (int) toBind.get(x).getValue() + ""; } catch(Exception e) {}
+					try { nextVal = (double) toBind.get(x).getValue() + ""; } catch(Exception e) {}
 					if(!firstVal.equals(nextVal))
 					{
 						firstVal = "-";
@@ -66,21 +66,21 @@ public class IntSpec extends Spec<Integer>
 				try
 				{
 					String text = inputField.getText();
-					int val = text.equals("") ? 0 : Integer.parseInt(inputField.getText());
-					toBind.forEach(p -> { ((Property<Integer>)p).setValue(val); });
+					double val = text.equals("") ? 0.0 : Double.parseDouble(text);
+					toBind.forEach(p -> { ((Property<Double>)p).setValue(val); });
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}
 		else
 		{
-			inputField.setTextFormatter(new IntegerTextFormatter());
-			inputField.textProperty().bindBidirectional(this.property, new IntegerStringConverter());
+			inputField.setTextFormatter(new DecimalTextFormatter(0, 4));
+			inputField.textProperty().bindBidirectional(this.property, new DoubleStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override
 			    public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
 			    {
-			        if (!newPropertyValue) { if(inputField.getText().equals("")) inputField.setText("0"); }
+			        if (!newPropertyValue) { if(inputField.getText().equals("")) inputField.setText("0.0"); }
 			    }
 			});
 		}

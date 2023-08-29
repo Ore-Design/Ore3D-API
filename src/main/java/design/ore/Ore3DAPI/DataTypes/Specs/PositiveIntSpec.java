@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.Records.Subtypes.Specs;
+package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 

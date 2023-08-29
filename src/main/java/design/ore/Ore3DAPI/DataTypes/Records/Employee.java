@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.Records;
+package design.ore.Ore3DAPI.DataTypes.Records;
 
 import java.util.Map;
 
