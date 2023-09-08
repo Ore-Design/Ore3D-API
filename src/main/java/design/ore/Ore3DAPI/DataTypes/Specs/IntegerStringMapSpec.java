@@ -1,10 +1,11 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
@@ -13,12 +14,21 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
-public class StringFromSetSpec extends Spec<String>
+public class IntegerStringMapSpec extends Spec<Integer>
 {
-	public StringFromSetSpec(String id, Set<String> valueSet, String initialValue, boolean readOnly, String section)
-	{ super(id, new SimpleStringProperty(initialValue), readOnly, section); this.valueSet = valueSet; }
+	public IntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
+	{
+		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section);
+		this.valueSet = valueSet;
+	}
 	
-	Set<String> valueSet;
+	Map<Integer, String> valueSet;
+	
+	@Override
+	public void setValue(Integer val)
+	{
+		if(!readOnly && valueSet.containsKey(val)) property.setValue(val);
+	}
 	
 	@Override
 	public Pane getUI(List<Property<?>> toBind)
@@ -26,22 +36,24 @@ public class StringFromSetSpec extends Spec<String>
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
 		
-		ChoiceBox<String> dropdown = new ChoiceBox<>();
-		dropdown.getItems().setAll(valueSet);
-		// This converter makes the multiselect appear as dash
-		dropdown.setConverter(new StringConverter<String>()
+		ChoiceBox<Integer> dropdown = new ChoiceBox<>();
+		dropdown.getItems().setAll(valueSet.keySet());
+		// This converter makes the multiselect appear as dash, and converts from integer value to string display
+		dropdown.setConverter(new StringConverter<Integer>()
 		{
 			@Override
-			public String toString(String object)
+			public String toString(Integer object)
 			{
 				if(object == null) return "-";
-				else return object.toString();
+				else return valueSet.get(object);
 			}
 
 			@Override
-			public String fromString(String string)
+			public Integer fromString(String string)
 			{
-				return string;
+				for(Entry<Integer, String> entry : valueSet.entrySet()) { if(entry.getValue().equals(string)) return entry.getKey(); }
+				
+				return 0;
 			}
 		});
 		if(readOnly) dropdown.setDisable(true);
@@ -50,12 +62,12 @@ public class StringFromSetSpec extends Spec<String>
 		{
 			try
 			{
-				String firstVal = (String) toBind.get(0).getValue();
+				Integer firstVal = (Integer) toBind.get(0).getValue();
 				for(int x = 1 ; x < toBind.size() ; x++)
 				{
 					try
 					{
-						String nextVal = (String) toBind.get(x).getValue();
+						Integer nextVal = (Integer) toBind.get(x).getValue();
 						if(firstVal != nextVal)
 						{
 							dropdown.getSelectionModel().clearSelection();
@@ -70,7 +82,7 @@ public class StringFromSetSpec extends Spec<String>
 			
 			dropdown.valueProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<String>)p).setValue(dropdown.getValue()); });
+				toBind.forEach(p -> { ((Property<Integer>)p).setValue(dropdown.getValue()); });
 			});
 		}
 		else

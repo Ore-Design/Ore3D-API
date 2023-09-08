@@ -9,26 +9,26 @@ import java.util.function.UnaryOperator;
 import javafx.scene.control.TextFormatter;
 import javafx.util.StringConverter;
 
-public class DecimalTextFormatter extends TextFormatter<Number>
+public class DecimalTextFormatter extends TextFormatter<Double>
 {
 	private static DecimalFormat format = new DecimalFormat("#.0;-#.0");
 
     public DecimalTextFormatter(int minDecimals, int maxDecimals) {
-        super(getStringConverter(minDecimals, maxDecimals), 0, getUnaryOperator(maxDecimals, true,-1));
+        super(getStringConverter(minDecimals, maxDecimals), 0.0, getUnaryOperator(maxDecimals, true,-1));
     }
 
     public DecimalTextFormatter(int minDecimals, int maxDecimals, boolean allowsNegative) {
-        super(getStringConverter(minDecimals, maxDecimals), 0, getUnaryOperator(maxDecimals, allowsNegative,-1));
+        super(getStringConverter(minDecimals, maxDecimals), 0.0, getUnaryOperator(maxDecimals, allowsNegative,-1));
     }
 
     public DecimalTextFormatter(int minDecimals, int maxDecimals, boolean allowsNegative , int maxNoOfDigitsBeforeDecimal) {
-        super(getStringConverter(minDecimals, maxDecimals), 0, getUnaryOperator(maxDecimals, allowsNegative, maxNoOfDigitsBeforeDecimal));
+        super(getStringConverter(minDecimals, maxDecimals), 0.0, getUnaryOperator(maxDecimals, allowsNegative, maxNoOfDigitsBeforeDecimal));
     }
 
-    private static StringConverter<Number> getStringConverter(int minDecimals, int maxDecimals) {
-        return new StringConverter<Number>() {
+    private static StringConverter<Double> getStringConverter(int minDecimals, int maxDecimals) {
+        return new StringConverter<Double>() {
             @Override
-            public String toString(Number object) {
+            public String toString(Double object) {
                 if (object == null) {
                     return "";
                 }
@@ -47,12 +47,12 @@ public class DecimalTextFormatter extends TextFormatter<Number>
             }
 
             @Override
-            public Number fromString(String string) {
+            public Double fromString(String string) {
                 try {
                     if (string == null) {
                         return null;
                     }
-                    return format.parse(string);
+                    return (Double) format.parse(string);
                 } catch (ParseException e) {
                     return null;
                 }

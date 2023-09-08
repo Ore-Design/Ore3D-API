@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import design.ore.Ore3DAPI.DataTypes.Records.Build;
+import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -21,7 +22,9 @@ public class BuildPrice
 		overriddenProperty = new SimpleBooleanProperty(false);
 	}
 	
-	public DoubleBinding total() { return unitPriceProperty.multiply(parent.getQuantity().getNumberProperty()); }
+	public void reAttachUnitSource(DoubleBinding unitSource) { unitPriceProperty.bind(unitSource); }
+	
+	public DoubleBinding total() { return unitPriceProperty.multiply(((PositiveIntSpec)parent.getQuantity()).getNumberProperty()); }
 	
 	public void reset() { overriddenProperty.setValue(false); }
 	public void override(double price)

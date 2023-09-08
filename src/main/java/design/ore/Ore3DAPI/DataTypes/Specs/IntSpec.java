@@ -3,9 +3,11 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 import java.util.List;
 
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableNumberValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -14,10 +16,21 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.converter.IntegerStringConverter;
+import lombok.Getter;
 
 public class IntSpec extends Spec<Integer>
 {
-	public IntSpec(String id, int initialValue, boolean readOnly, String section) { super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section); }
+	public IntSpec(String id, int initialValue, boolean readOnly, String section)
+	{
+		this.id = id;
+		this.readOnly = readOnly;
+		this.section = section;
+		intProperty = new SimpleIntegerProperty(initialValue);
+		this.property = intProperty.asObject();
+	}
+	
+	@Getter private IntegerProperty intProperty = null;
+	public ObservableNumberValue getNumberProperty() { return intProperty; }
 	
 	private String preEdit = "";
 
