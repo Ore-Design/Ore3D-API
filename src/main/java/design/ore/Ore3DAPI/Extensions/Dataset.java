@@ -1,14 +1,15 @@
 package design.ore.Ore3DAPI.Extensions;
 
 import java.util.List;
+import java.util.Map;
 
 import org.pf4j.ExtensionPoint;
 
 import design.ore.Ore3DAPI.DataTypes.BOMEntry;
-import design.ore.Ore3DAPI.DataTypes.Records.Build;
+import design.ore.Ore3DAPI.DataTypes.ProductFamily;
 
 public interface Dataset extends ExtensionPoint
 {
-	List<? extends Build> retrieveCatalog();
-	List<? extends BOMEntry> retrieveBOM();
+	List<ProductFamily> retrieveCatalog();
+	Map<Integer, ? extends BOMEntry> retrieveBOM();
 }

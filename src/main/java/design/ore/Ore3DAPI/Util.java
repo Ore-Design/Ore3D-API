@@ -7,9 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.effect.Blend;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.ColorAdjust;
@@ -53,5 +56,23 @@ public class Util
 		{
 			box.heightProperty().addListener(l -> ((Region) box.lookup(".mark")).setPadding(new Insets((box.getHeight()/2) - 7)));
 		}
+	}
+	
+	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
+	{
+		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
+		{ return Pattern.compile("\\d*|\\d+\\.\\d{0," + decimalPlaces + "}").matcher(change.getControlNewText()).matches() ? change : null; });
+	}
+	
+	public static TextFormatter<?> getIntegerFormatter()
+	{
+		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
+		{ return Pattern.compile("\\d*").matcher(change.getControlNewText()).matches() ? change : null; });
+	}
+	
+	public static TextFormatter<?> get0to99IntegerFormatter()
+	{
+		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
+		{ return Pattern.compile("(^$)|(^(0?[1-9]|[1-9][0-9])$)").matcher(change.getControlNewText()).matches() ? change : null; });
 	}
 }

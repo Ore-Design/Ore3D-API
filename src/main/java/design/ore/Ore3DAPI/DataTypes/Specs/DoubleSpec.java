@@ -2,7 +2,7 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
-import design.ore.Ore3DAPI.JavaFX.DecimalTextFormatter;
+import design.ore.Ore3DAPI.Util;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -73,7 +73,7 @@ public class DoubleSpec extends Spec<Double>
 		}
 		else
 		{
-			inputField.setTextFormatter(new DecimalTextFormatter(0, 4));
+			inputField.setTextFormatter(Util.getDecimalFormatter(4));
 			inputField.textProperty().bindBidirectional(this.property, new DoubleStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
@@ -88,9 +88,9 @@ public class DoubleSpec extends Spec<Double>
 		HBox input = new HBox(idLabel, inputField);
 		input.setAlignment(Pos.CENTER_LEFT);
 
-		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		
 		input.setPrefHeight(25);

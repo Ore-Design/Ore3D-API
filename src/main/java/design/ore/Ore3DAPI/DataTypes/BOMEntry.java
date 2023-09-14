@@ -16,8 +16,11 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableNumberValue;
 import lombok.Getter;
 
@@ -39,8 +42,8 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 	@Getter protected final SimpleDoubleProperty overridenQuantityProperty;
 	@Getter protected BooleanBinding quantityOverriddenProperty;
 
-	@Getter protected final SimpleDoubleProperty unoverriddenMarginProperty;
-	@Getter protected final SimpleDoubleProperty overridenMarginProperty;
+	@Getter protected final SimpleIntegerProperty unoverriddenMarginProperty;
+	@Getter protected final SimpleIntegerProperty overridenMarginProperty;
 	@Getter protected BooleanBinding marginOverriddenProperty;
 	
 	@Getter protected SimpleBooleanProperty ignoreParentQuantityProperty;
@@ -49,14 +52,16 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 	public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyDoubleWrapper totalCostProperty;
 	public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
-	protected final ReadOnlyDoubleWrapper marginProperty;
-	public ReadOnlyDoubleProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
+	protected final ReadOnlyIntegerWrapper marginProperty;
+	public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
 	protected final DoubleBinding marginDenominatorProperty;
 	@Getter protected final DoubleBinding totalPriceProperty;
+	@Getter protected final DoubleBinding unitCostProperty;
+	@Getter protected final DoubleBinding unitPriceProperty;
 	
 	@Getter protected List<Conflict> conflicts;
 	
-	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, double margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
+	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
 		this.id = id;
 		this.shortName = shortName;
@@ -69,10 +74,10 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
-		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not());
+		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 
-		this.unoverriddenMarginProperty = new SimpleDoubleProperty(margin);
-		this.overridenMarginProperty = new SimpleDoubleProperty(-1.0);
+		this.unoverriddenMarginProperty = new SimpleIntegerProperty(margin);
+		this.overridenMarginProperty = new SimpleIntegerProperty(-1);
 		this.marginOverriddenProperty = overridenMarginProperty.greaterThanOrEqualTo(0.0);
 		
 		this.ignoreParentQuantityProperty = new SimpleBooleanProperty(ignoreParentQuantity);
@@ -89,20 +94,22 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 			else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		});
 		
+		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
+		
 		this.totalCostProperty = new ReadOnlyDoubleWrapper();
 		
-		if(ignoreParentQuantityProperty.get()) this.totalCostProperty.bind(quantityProperty.multiply(costPerQuantity));
-		else this.totalCostProperty.bind(quantityProperty.multiply(costPerQuantity).multiply(parentQuantity));
+		if(ignoreParentQuantityProperty.get()) this.totalCostProperty.bind(unitCostProperty);
+		else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
 		
 		ignoreParentQuantityProperty.addListener((observable, oldValue, newValue) ->
 		{
 			log.debug("IgnoreParentQuantity property has been changed! Updating bindings...");
-			if(newValue) this.totalCostProperty.bind(quantityProperty.multiply(costPerQuantity));
-			else this.totalCostProperty.bind(quantityProperty.multiply(costPerQuantity).multiply(parentQuantity));
+			if(newValue) this.totalCostProperty.bind(unitCostProperty);
+			else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
 		});
 		
 		
-		this.marginProperty = new ReadOnlyDoubleWrapper();
+		this.marginProperty = new ReadOnlyIntegerWrapper();
 		
 		if(marginOverriddenProperty.get()) this.marginProperty.bind(overridenMarginProperty.add(0));
 		else this.marginProperty.bind(unoverriddenMarginProperty.add(0));
@@ -116,9 +123,10 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		this.marginDenominatorProperty = new ReadOnlyDoubleWrapper(1.0).subtract(marginProperty.getReadOnlyProperty().divide(100.0));
 		this.totalPriceProperty = totalCostProperty.getReadOnlyProperty().divide(marginDenominatorProperty);
+		this.unitPriceProperty = unitCostProperty.divide(marginDenominatorProperty);
 	}
 	
-	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, double margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
+	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
 		this(log, id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
 	}

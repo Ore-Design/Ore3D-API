@@ -20,7 +20,6 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 
@@ -31,7 +30,7 @@ public abstract class Build extends ValueStorageRecord
 	@Getter protected List<UUID> children = new ArrayList<>();
 	
 	@Getter protected Spec<Integer> quantity = new PositiveIntSpec("Quantity", 1, false, "Overview");
-	
+
 	@Getter protected BuildPrice price;
 	
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
@@ -47,17 +46,13 @@ public abstract class Build extends ValueStorageRecord
 	
 	public Build()
 	{
-		this.price = new BuildPrice(this, getUnitPrice());
-		bom.addListener((ListChangeListener.Change<?> c) -> price.reAttachUnitSource(getUnitPrice()));
-		routings.addListener((ListChangeListener.Change<?> c) -> price.reAttachUnitSource(getUnitPrice()));
+		this.price = new BuildPrice(this);
 	}
 	
 	public Build(Logger log)
 	{
 		this.LOG = log;
-		this.price = new BuildPrice(this, getUnitPrice());
-		bom.addListener((ListChangeListener.Change<?> c) -> price.reAttachUnitSource(getUnitPrice()));
-		routings.addListener((ListChangeListener.Change<?> c) -> price.reAttachUnitSource(getUnitPrice()));
+		this.price = new BuildPrice(this);
 	}
 	
 	public abstract String calculateDefaultDescription();
@@ -75,18 +70,37 @@ public abstract class Build extends ValueStorageRecord
 		
 		for(BOMEntry bomEntry : bom)
 		{
+			if(binding == null ) binding = bomEntry.getUnitPriceProperty().add(0);
+			else binding = binding.add(bomEntry.getUnitPriceProperty());
+		}
+		// TODO: Unit price for routings
+//		for(RoutingEntry routingEntry : routings)
+//		{
+//			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
+//			else binding = binding.add(routingEntry.getTotalPriceProperty());
+//		}
+
+		if(binding != null) debug("Final binding value is now " + binding.get());
+		else warn("Final binding is null!");
+		
+		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
+	}
+	public DoubleBinding getTotalPrice()
+	{
+		DoubleBinding binding = null;
+		
+		DoubleBinding additionalMods = getAdditionalPriceModifiers();
+		if(additionalMods != null) binding = additionalMods.multiply(((PositiveIntSpec)this.quantity).getNumberProperty());
+		
+		for(BOMEntry bomEntry : bom)
+		{
 			if(binding == null ) binding = bomEntry.getTotalPriceProperty().add(0);
 			else binding = binding.add(bomEntry.getTotalPriceProperty());
-			
-			debug("New BOM added to binding! Binding value is now " + binding.get());
-			debug("BOM Data:\n" + bomEntry.getLongName() + "\n" + bomEntry.getCostPerQuantity() + "\n" + bomEntry.getTotalCostProperty().get() + "\n" + bomEntry.getMarginProperty().get() + "\n" + bomEntry.getTotalPriceProperty().get());
 		}
 		for(RoutingEntry routingEntry : routings)
 		{
 			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
 			else binding = binding.add(routingEntry.getTotalPriceProperty());
-			
-			debug("New routing added to binding! Binding value is now " + binding.get());
 		}
 
 		if(binding != null) debug("Final binding value is now " + binding.get());
@@ -95,25 +109,25 @@ public abstract class Build extends ValueStorageRecord
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
 	}
 	
-	private void debug(String message)
+	protected void debug(String message)
 	{
 		if(this.LOG != null) LOG.debug(message);
 		else System.out.println(message);
 	}
 	
-	private void info(String message)
+	protected void info(String message)
 	{
 		if(this.LOG != null) LOG.info(message);
 		else System.out.println(message);
 	}
 	
-	private void warn(String message)
+	protected void warn(String message)
 	{
 		if(this.LOG != null) LOG.debug(message);
 		else System.out.println("WARN: " + message);
 	}
 	
-	private void error(String message)
+	protected void error(String message)
 	{
 		if(this.LOG != null) LOG.debug(message);
 		else System.err.println(message);

@@ -4,19 +4,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.controlsfx.control.SearchableComboBox;
+
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 
-public class IntegerStringMapSpec extends Spec<Integer>
+public class SearchableIntegerStringMapSpec extends Spec<Integer>
 {
-	public IntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
+	public SearchableIntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
 	{
 		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section);
 		this.valueSet = valueSet;
@@ -36,15 +37,12 @@ public class IntegerStringMapSpec extends Spec<Integer>
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
 		
-		ChoiceBox<Integer> dropdown = new ChoiceBox<>();
-		dropdown.getItems().setAll(valueSet.keySet());
-		// This converter makes the multiselect appear as dash, and converts from integer value to string display
-		dropdown.setConverter(new StringConverter<Integer>()
+		StringConverter<Integer> converter = new StringConverter<Integer>()
 		{
 			@Override
 			public String toString(Integer object)
 			{
-				if(object == null) return "-";
+				if(object == null || !valueSet.containsKey(object)) return "-";
 				else return valueSet.get(object);
 			}
 
@@ -55,7 +53,13 @@ public class IntegerStringMapSpec extends Spec<Integer>
 				
 				return 0;
 			}
-		});
+		};
+		
+		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
+		dropdown.getItems().setAll(valueSet.keySet());
+		dropdown.setMinHeight(0);
+		// This converter makes the multiselect appear as dash, and converts from integer value to string display
+		dropdown.setConverter(converter);
 		if(readOnly) dropdown.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)

@@ -60,7 +60,7 @@ public class BooleanSpec extends Spec<Boolean>
 		HBox input = new HBox(idLabel, check);
 		input.setAlignment(Pos.CENTER_LEFT);
 
-		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
 		check.setMaxWidth(Double.MAX_VALUE);
 		Util.UI.checkboxMatchSize(check);

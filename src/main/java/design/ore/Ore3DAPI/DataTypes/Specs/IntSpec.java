@@ -101,9 +101,9 @@ public class IntSpec extends Spec<Integer>
 		HBox input = new HBox(idLabel, inputField);
 		input.setAlignment(Pos.CENTER_LEFT);
 
-		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		
 		input.setPrefHeight(25);

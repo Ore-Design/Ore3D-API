@@ -82,9 +82,9 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 		HBox input = new HBox(idLabel, dropdown);
 		input.setAlignment(Pos.CENTER_LEFT);
 
-		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		dropdown.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
+		dropdown.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		dropdown.setMaxWidth(Control.USE_PREF_SIZE);
 		
 		input.setPrefHeight(25);
