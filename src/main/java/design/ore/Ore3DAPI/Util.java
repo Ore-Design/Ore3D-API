@@ -42,22 +42,6 @@ public class Util
 		return sw.toString();
 	}
 	
-	public static class UI
-	{
-		public static void colorize(ImageView img, Color color)
-		{
-			ColorAdjust monochrome = new ColorAdjust();
-	        monochrome.setSaturation(-1.0);
-	        Blend colorify = new Blend(BlendMode.MULTIPLY, monochrome, new ColorInput( 0, 0, img.getImage().getWidth(), img.getImage().getHeight(), color));
-	        img.setEffect(colorify);
-		}
-		
-		public static void checkboxMatchSize(CheckBox box)
-		{
-			box.heightProperty().addListener(l -> ((Region) box.lookup(".mark")).setPadding(new Insets((box.getHeight()/2) - 7)));
-		}
-	}
-	
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
 	{
 		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
@@ -74,5 +58,28 @@ public class Util
 	{
 		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
 		{ return Pattern.compile("(^$)|(^(0?[1-9]|[1-9][0-9])$)").matcher(change.getControlNewText()).matches() ? change : null; });
+	}
+	
+	public static class UI
+	{
+		public static void colorize(ImageView img, Color color)
+		{
+
+			ImageView checkClip = new ImageView(img.getImage());
+			img.setClip(checkClip);
+			img.setPreserveRatio(true);
+			checkClip.setPreserveRatio(true);
+			checkClip.fitWidthProperty().bind(img.fitWidthProperty());
+			
+			ColorAdjust monochrome = new ColorAdjust();
+	        monochrome.setSaturation(-1.0);
+	        Blend colorify = new Blend(BlendMode.MULTIPLY, monochrome, new ColorInput( 0, 0, img.getImage().getWidth(), img.getImage().getHeight(), color));
+	        img.setEffect(colorify);
+		}
+		
+		public static void checkboxMatchSize(CheckBox box)
+		{
+			box.heightProperty().addListener(l -> ((Region) box.lookup(".mark")).setPadding(new Insets((box.getHeight()/2) - 7)));
+		}
 	}
 }

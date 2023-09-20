@@ -55,6 +55,8 @@ public abstract class Build extends ValueStorageRecord
 		this.price = new BuildPrice(this);
 	}
 	
+	public abstract Build duplicate();
+	
 	public abstract String calculateDefaultDescription();
 	public abstract void runCalculations();
 

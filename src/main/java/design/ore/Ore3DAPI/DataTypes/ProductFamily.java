@@ -5,11 +5,12 @@ import java.util.List;
 import design.ore.Ore3DAPI.DataTypes.Records.Build;
 import javafx.scene.image.Image;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
 public class ProductFamily
 {
-	String name;
-	Image thumbnail;
-	List<? extends Build> builds;
+	@Getter String name;
+	@Getter Image thumbnail;
+	@Getter List<? extends Build> builds;
 }
