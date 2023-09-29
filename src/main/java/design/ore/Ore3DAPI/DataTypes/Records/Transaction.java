@@ -1,9 +1,8 @@
 package design.ore.Ore3DAPI.DataTypes.Records;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
+import design.ore.Ore3DAPI.DataTypes.Records.Pricing.PricingData;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,12 +12,12 @@ public class Transaction extends ValueStorageRecord
 {
 	public Transaction() {}
 	
-	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder)
+	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy)
 	{
-		this(id, displayName, customer, pricing, isSalesOrder, new ArrayList<Build>());
+		this(id, displayName, customer, pricing, isSalesOrder, lockedBy, FXCollections.observableArrayList());
 	}
 	
-	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, List<Build> builds)
+	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy, ObservableList<Build> builds)
 	{
 		this.id = id;
 		this.customer = customer;
@@ -26,12 +25,14 @@ public class Transaction extends ValueStorageRecord
 		this.salesOrder = isSalesOrder;
 		this.displayName = displayName;
 		this.builds = builds;
+		this.lockedBy = lockedBy;
 	}
 	
 	String id;
 	String displayName;
 	PricingData pricing;
-	List<Build> builds;
+	ObservableList<Build> builds;
 	Customer customer;
 	boolean salesOrder;
+	String lockedBy;
 }

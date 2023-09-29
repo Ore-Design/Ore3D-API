@@ -1,8 +1,5 @@
 package design.ore.Ore3DAPI.DataTypes;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -22,6 +19,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableNumberValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -59,7 +58,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 	@Getter protected final DoubleBinding unitCostProperty;
 	@Getter protected final DoubleBinding unitPriceProperty;
 	
-	@Getter protected List<Conflict> conflicts;
+	@Getter protected ObservableList<Conflict> conflicts;
 	
 	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
@@ -69,7 +68,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this.unitOfMeasure = unitOfMeasure;
 		this.costPerQuantity = costPerQuantity;
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
-		this.conflicts = new ArrayList<Conflict>();
+		this.conflicts = FXCollections.observableArrayList();
 		this.log = log;
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);

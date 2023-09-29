@@ -60,6 +60,8 @@ public class Util
 		{ return Pattern.compile("(^$)|(^(0?[1-9]|[1-9][0-9])$)").matcher(change.getControlNewText()).matches() ? change : null; });
 	}
 	
+	public static double squareInchesToSquareFeet(double squareInches) { return squareInches / 144.0; }
+	
 	public static class UI
 	{
 		public static void colorize(ImageView img, Color color)

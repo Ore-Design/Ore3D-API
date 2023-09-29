@@ -34,6 +34,16 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @see                   Transaction
 	 */
 	String addTransaction(Transaction transaction);
+	
+	/*
+	 * Marks a <code>Transaction</code> as locked. When another user loads a locked proposal, a warning will be given that they cannot save their work as someone already has it open.
+	 * 
+	 * @param   transaction   the <code>Transaction</code> to be locked.
+	 * @param   lockedBy	  the name pf the person locking the order.
+	 * @return                true if successful, otherwise false.
+	 * @see                   Transaction
+	 */
+	boolean markTransactionAsLocked(Transaction transaction, String lockedBy);
 
 	/*
 	 * Retrieves the <code>Customer</code> stored under a given <code>id</code>.

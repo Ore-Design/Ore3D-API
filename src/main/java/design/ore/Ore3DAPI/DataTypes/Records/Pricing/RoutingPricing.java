@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Pricing;
+package design.ore.Ore3DAPI.DataTypes.Records.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -15,9 +15,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-public class BOMPricing
+public class RoutingPricing
 {
-	@JsonProperty("cpu") double costPerUnit;
-	@JsonProperty("pcpu") double publishedCostPerUnit;
-	@JsonProperty("id") int internalID;
+	String id;
+	@JsonProperty("cpm") double costPerMinute;
 }

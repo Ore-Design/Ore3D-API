@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Pricing;
+package design.ore.Ore3DAPI.DataTypes.Records.Pricing;
 
 import java.time.OffsetDateTime;
 import java.util.List;

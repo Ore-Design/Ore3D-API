@@ -3,6 +3,7 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 import java.util.List;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -13,7 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.util.converter.DoubleStringConverter;
 
 public class DoubleSpec extends Spec<Double>
 {
@@ -74,7 +74,7 @@ public class DoubleSpec extends Spec<Double>
 		else
 		{
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
-			inputField.textProperty().bindBidirectional(this.property, new DoubleStringConverter());
+			inputField.textProperty().bindBidirectional(this.property, new NonNullDoubleStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override
