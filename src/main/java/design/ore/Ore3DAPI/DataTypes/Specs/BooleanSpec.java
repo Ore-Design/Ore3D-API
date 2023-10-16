@@ -2,7 +2,11 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
@@ -13,6 +17,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 
+@JsonSerialize(using = SpecSerialization.BooleanSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.BooleanSerialization.Deserializer.class)
 public class BooleanSpec extends Spec<Boolean>
 {
 	public BooleanSpec(String id, boolean initialValue, boolean readOnly, String section) { super(id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section); }

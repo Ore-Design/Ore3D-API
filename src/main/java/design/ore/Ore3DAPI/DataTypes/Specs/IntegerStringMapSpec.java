@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
@@ -13,7 +17,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
+import lombok.Getter;
 
+@JsonSerialize(using = SpecSerialization.IntStringMapSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.IntStringMapSerialization.Deserializer.class)
 public class IntegerStringMapSpec extends Spec<Integer>
 {
 	public IntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
@@ -22,7 +29,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 		this.valueSet = valueSet;
 	}
 	
-	Map<Integer, String> valueSet;
+	@Getter Map<Integer, String> valueSet;
 	
 	@Override
 	public void setValue(Integer val)

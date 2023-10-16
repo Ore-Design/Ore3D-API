@@ -1,23 +1,33 @@
 package design.ore.Ore3DAPI.DataTypes.Records;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import design.ore.Ore3DAPI.DataTypes.BuildList;
+import design.ore.Ore3DAPI.DataTypes.Conflict;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Records.Pricing.PricingData;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class Transaction extends ValueStorageRecord
+public class Transaction extends ValueStorageRecord implements Conflictable
 {
-	public Transaction() {}
+	public Transaction() { conflicts = FXCollections.observableArrayList(); }
+	
+	@JsonIgnore @Getter private ObservableList<Conflict> conflicts;
 	
 	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy)
 	{
-		this(id, displayName, customer, pricing, isSalesOrder, lockedBy, FXCollections.observableArrayList());
+		this(id, displayName, customer, pricing, isSalesOrder, lockedBy, new BuildList());
 	}
 	
-	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy, ObservableList<Build> builds)
+	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy, BuildList builds)
 	{
 		this.id = id;
 		this.customer = customer;
@@ -26,13 +36,41 @@ public class Transaction extends ValueStorageRecord
 		this.displayName = displayName;
 		this.builds = builds;
 		this.lockedBy = lockedBy;
+		
+		conflicts = FXCollections.observableArrayList();
+		
+		for(Build newBuild : builds) newBuild.getConflicts().addListener((ListChangeListener.Change<? extends Conflict> c) -> resetConflictList(builds));
+		
+		builds.addListener((ListChangeListener.Change<? extends Build> c) ->
+		{
+			resetConflictList(c.getList());
+			c.next();
+			for(Build b : c.getAddedSubList())
+			{
+				b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
+			}
+		});
+		
+		resetConflictList(builds);
+	}
+	
+	private void resetConflictList(List<? extends Build> blds)
+	{
+		conflicts.clear();
+		for(Build b : blds) conflicts.setAll(FXCollections.concat(conflicts, b.getConflicts()));
 	}
 	
 	String id;
 	String displayName;
 	PricingData pricing;
-	ObservableList<Build> builds;
+	BuildList builds;
 	Customer customer;
 	boolean salesOrder;
 	String lockedBy;
+
+	@Override
+	public void addConflict(Conflict conflict) { throw new UnsupportedOperationException("Add conflicts to individual children, not the transaction as a whole!"); }
+
+	@Override
+	public void clearConflicts() { throw new UnsupportedOperationException("Clear conflicts from individual children, not the transaction as a whole!"); }
 }

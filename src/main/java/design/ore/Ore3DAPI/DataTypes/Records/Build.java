@@ -10,15 +10,21 @@ import java.util.UUID;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.Description;
 import design.ore.Ore3DAPI.DataTypes.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Tag;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
+import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
+import design.ore.Ore3DAPI.Jackson.PropertySerialization;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -27,28 +33,54 @@ import javafx.collections.ObservableList;
 import javafx.util.Pair;
 import lombok.Getter;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 public abstract class Build extends ValueStorageRecord implements Conflictable
 {
 	@Getter protected UUID buildUUID = UUID.randomUUID();
-	@Getter protected List<UUID> children = new ArrayList<>();
+	
+	// TODO: Children
+	//@Getter protected List<UUID> children = new ArrayList<>();
 	
 	@Getter protected PositiveIntSpec quantity;
 
-	@Getter protected BuildPrice price;
-	
+	@JsonIgnore @Getter protected BuildPrice price;
+
+	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
+	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
 	
-	@Getter protected Description description = new Description();
+	// TODO: Description
+	//String description;
+	//boolean descriptionIsOverriden;
+
+	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
+	@Getter
+	protected ObservableList<Tag> tags = FXCollections.observableArrayList();
+
+	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
+	@Getter
+	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
 	
-	@Getter protected List<Tag> tags = new ArrayList<>();
+	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.RoutingEntryList.Deserializer.class)
+	@Getter
+	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
+
+	@JsonSerialize(using = ObservableListSerialization.ConflictList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.ConflictList.Deserializer.class)
+	@Getter
+	protected ObservableList<Conflict> conflicts;
 	
-	@Getter protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
-	@Getter protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
+	@JsonIgnore protected Logger LOG;
 	
-	@Getter protected ObservableList<Conflict> conflicts;
-	
-	protected Logger LOG;
+	public Build()
+	{
+		this(null);
+	}
 	
 	public Build(Logger log)
 	{
@@ -56,14 +88,20 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		conflicts = FXCollections.observableArrayList();
 		
 		initializeSpecs();
-		this.price = new BuildPrice(this);
 		
-		for(Spec<?> s : getSpecs()) { s.getProperty().addListener((obsv, oldVal, newVal) -> refresh()); }
+		resetSpecListeners();
 		refresh();
+	}
+	
+	public void resetSpecListeners()
+	{
+		this.price = new BuildPrice(this);
+		for(Spec<?> s : getSpecs()) { s.getProperty().addListener((obsv, oldVal, newVal) -> refresh()); }
 	}
 
 	public abstract Build duplicate();
 	public abstract List<BOMEntry> calculateStandardBOMs();
+	public abstract List<RoutingEntry> calculateRoutings();
 	
 	public abstract String calculateDefaultDescription();
 	public abstract void runCalculations();
@@ -73,8 +111,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	}
 
 	protected abstract DoubleBinding getAdditionalPriceModifiers();	
-	public abstract String id();
-	public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
+	public abstract String buildTypeID();
+	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
 	protected DoubleBinding getUnitPrice()
 	{
 		DoubleBinding binding = null;
@@ -87,15 +125,11 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			if(binding == null ) binding = bomEntry.getUnitPriceProperty().add(0);
 			else binding = binding.add(bomEntry.getUnitPriceProperty());
 		}
-		// TODO: Unit price for routings
-//		for(RoutingEntry routingEntry : routings)
-//		{
-//			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
-//			else binding = binding.add(routingEntry.getTotalPriceProperty());
-//		}
-
-		if(binding != null) debug("Final binding value is now " + binding.get());
-		else warn("Final binding is null!");
+		for(RoutingEntry routingEntry : routings)
+		{
+			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
+			else binding = binding.add(routingEntry.getTotalPriceProperty());
+		}
 		
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
 	}
@@ -103,10 +137,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	private void refresh()
 	{
 		conflicts.clear();
-		
+
 		Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 		
-		List<BOMEntry> toRemove = new ArrayList<>();
+		List<BOMEntry> bomToRemove = new ArrayList<>();
 		for(BOMEntry e : bom)
 		{
 			if(!e.getCustomEntryProperty().get())
@@ -118,11 +152,25 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				
 				if(quantityOverride != null || marginOverride != null) overriddenStandardBOMS.put(e.getId(), new Pair<Double, Integer>(quantityOverride, marginOverride));
 				
-				toRemove.add(e);
+				bomToRemove.add(e);
 			}
 		}
 		
-		bom.removeAll(toRemove);
+		Map<String, Double> overriddenRoutings = new HashMap<>();
+		
+		List<RoutingEntry> routingsToRemove = new ArrayList<>();
+		for(RoutingEntry e : routings)
+		{
+				Double quantityOverride = null;
+				if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
+				
+				if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
+				
+				routingsToRemove.add(e);
+		}
+		
+		bom.removeAll(bomToRemove);
+		routings.removeAll(routingsToRemove);
 		
 		for(BOMEntry e : calculateStandardBOMs())
 		{
@@ -136,6 +184,17 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			}
 			
 			bom.add(e);
+		}
+		
+		for(RoutingEntry r : calculateRoutings())
+		{
+			if(overriddenRoutings.containsKey(r.getId()))
+			{
+				Double overrides = overriddenRoutings.get(r.getId());
+				if(overrides != null) r.getOverridenQuantityProperty().set(overrides);
+			}
+			
+			routings.add(r);
 		}
 	}
 	

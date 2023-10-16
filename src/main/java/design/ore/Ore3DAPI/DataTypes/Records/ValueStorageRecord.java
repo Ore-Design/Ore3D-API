@@ -8,6 +8,7 @@ public abstract class ValueStorageRecord
 	private Map<String, String> values = new HashMap<String, String>();
 
 	public String getStoredValue(String key) { return values.get(key); }
+	public Map<String, String> getStoredValues() { return values; }
 	public String putStoredValue(String key, String value) { return values.put(key, value); }
-	public void putStoredValues(Map<String, String> values) { values.putAll(values); }
+	public void putStoredValues(Map<String, String> values) { this.values.putAll(values); }
 }

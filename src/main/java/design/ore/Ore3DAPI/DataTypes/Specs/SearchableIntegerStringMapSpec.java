@@ -6,6 +6,10 @@ import java.util.Map.Entry;
 
 import org.controlsfx.control.SearchableComboBox;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
@@ -14,7 +18,10 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
+import lombok.Getter;
 
+@JsonSerialize(using = SpecSerialization.SearchableIntStringMapSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.SearchableIntStringMapSerialization.Deserializer.class)
 public class SearchableIntegerStringMapSpec extends Spec<Integer>
 {
 	public SearchableIntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
@@ -23,7 +30,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 		this.valueSet = valueSet;
 	}
 	
-	Map<Integer, String> valueSet;
+	@Getter Map<Integer, String> valueSet;
 	
 	@Override
 	public void setValue(Integer val)

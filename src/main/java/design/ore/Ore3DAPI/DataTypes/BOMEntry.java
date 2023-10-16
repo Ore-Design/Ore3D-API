@@ -4,9 +4,12 @@ import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Records.ValueStorageRecord;
+import design.ore.Ore3DAPI.Jackson.BOMSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -25,9 +28,12 @@ import lombok.Getter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
+@JsonSerialize(using = BOMSerialization.Serializer.class)
+@JsonDeserialize(using = BOMSerialization.Deserializer.class)
 public class BOMEntry extends ValueStorageRecord implements Conflictable
 {
-	protected final Logger log;
+	protected Logger log;
+	public void setLogger(Logger log) { this.log = log; }
 	
 	@Getter protected final String id;
 	@Getter protected final String shortName;
@@ -88,7 +94,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
-			log.debug("QuantityOverriden property has been changed! Updating bindings...");
+			if(log != null) log.debug("QuantityOverriden property has been changed! Updating bindings...");
 			if(newValue) this.quantityProperty.bind(overridenQuantityProperty);
 			else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		});
@@ -102,7 +108,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		ignoreParentQuantityProperty.addListener((observable, oldValue, newValue) ->
 		{
-			log.debug("IgnoreParentQuantity property has been changed! Updating bindings...");
+			if(log != null) log.debug("IgnoreParentQuantity property has been changed! Updating bindings...");
 			if(newValue) this.totalCostProperty.bind(unitCostProperty);
 			else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
 		});
@@ -115,7 +121,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		marginOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
-			log.debug("MarginOverridden property has been changed! Updating bindings...");
+			if(log != null) log.debug("MarginOverridden property has been changed! Updating bindings...");
 			if(newValue) this.marginProperty.bind(overridenMarginProperty.add(0));
 			else this.marginProperty.bind(unoverriddenMarginProperty.add(0));
 		});
@@ -123,6 +129,18 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this.marginDenominatorProperty = new ReadOnlyDoubleWrapper(1.0).subtract(marginProperty.getReadOnlyProperty().divide(100.0));
 		this.totalPriceProperty = totalCostProperty.getReadOnlyProperty().divide(marginDenominatorProperty);
 		this.unitPriceProperty = unitCostProperty.divide(marginDenominatorProperty);
+	}
+	
+	public BOMEntry(String id, boolean custom, boolean ignoreParentQuantity, double qty, double overriddenQty, int margin, int overriddenMargin)
+	{
+		this(null, id, "", "", "", 0, custom, qty, margin, ignoreParentQuantity, new SimpleDoubleProperty(0));
+		this.overridenQuantityProperty.set(overriddenQty);
+		this.overridenMarginProperty.set(overriddenMargin);
+	}
+	
+	public BOMEntry(String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
+	{
+		this(null, id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
 	}
 	
 	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)

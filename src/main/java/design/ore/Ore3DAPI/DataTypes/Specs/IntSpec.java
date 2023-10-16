@@ -2,6 +2,10 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
@@ -18,6 +22,8 @@ import javafx.scene.layout.Pane;
 import javafx.util.converter.IntegerStringConverter;
 import lombok.Getter;
 
+@JsonSerialize(using = SpecSerialization.IntSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.IntSerialization.Deserializer.class)
 public class IntSpec extends Spec<Integer>
 {
 	public IntSpec(String id, int initialValue, boolean readOnly, String section)

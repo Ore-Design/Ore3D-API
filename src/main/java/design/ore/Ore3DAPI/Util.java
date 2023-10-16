@@ -20,9 +20,14 @@ import javafx.scene.effect.ColorInput;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import lombok.Getter;
 
 public class Util
 {
+	@Getter private static final List<ClassLoader> registeredClassLoaders = new ArrayList<ClassLoader>();
+	
+	public static void registerClassLoader(ClassLoader cl) { registeredClassLoaders.add(cl); }
+	
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map)
 	{
 	    List<Entry<K, V>> list = new ArrayList<>(map.entrySet());

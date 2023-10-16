@@ -2,6 +2,10 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
@@ -11,12 +15,24 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
+import lombok.Getter;
+import lombok.Setter;
 
+@JsonSerialize(using = SpecSerialization.EnumSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.EnumSerialization.Deserializer.class)
 public class EnumSpec<E extends Enum<E>> extends Spec<E>
 {
-	public EnumSpec(Class<E> clazz, String id, E initialValue, boolean readOnly, String section) { super(id, new SimpleObjectProperty<E>(initialValue), readOnly, section); this.clazz = clazz; }
+	public EnumSpec(String id, E initialValue, boolean readOnly, String section)
+	{
+		super(id, new SimpleObjectProperty<E>(initialValue), readOnly, section);
+		this.clazz = initialValue.getDeclaringClass();
+	}
+	
+	public EnumSpec() { this.property = new SimpleObjectProperty<E>(); }
 
-	Class<E> clazz;
+	@Getter @Setter Class<E> clazz;
+	
+	public void setValue(Enum<?> value) { if(!readOnly) property.setValue((E) value); }
 	
 	@Override
 	public Pane getUI(List<Property<?>> toBind)

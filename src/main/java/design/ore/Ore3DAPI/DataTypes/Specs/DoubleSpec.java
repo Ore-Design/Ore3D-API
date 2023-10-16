@@ -2,7 +2,11 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -15,6 +19,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
+@JsonSerialize(using = SpecSerialization.DoubleSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.DoubleSerialization.Deserializer.class)
 public class DoubleSpec extends Spec<Double>
 {
 	public DoubleSpec(String id, double initialValue, boolean readOnly, String section) { super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section); }
