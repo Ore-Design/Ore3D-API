@@ -52,8 +52,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
 	
 	// TODO: Description
-	//String description;
-	//boolean descriptionIsOverriden;
+	@Getter String description;
+	boolean descriptionIsOverriden;
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)

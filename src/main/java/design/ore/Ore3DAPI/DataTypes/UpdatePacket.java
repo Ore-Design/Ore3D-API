@@ -1,63 +1,94 @@
 package design.ore.Ore3DAPI.DataTypes;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
+import javafx.util.Pair;
+import lombok.Getter;
 
 public class UpdatePacket
 {
-	public UpdatePacket(String title, String subtitle)
-	{
-		this(title, subtitle, FXCollections.observableArrayList());
-	}
-	
-	public UpdatePacket(String title, String subtitle, ObservableList<Task<Boolean>> tasks)
+	public UpdatePacket(String title, boolean canRunSimultaneaously)
 	{
 		this.title = title;
-		this.subtitle = subtitle;
-		this.updateTasks = tasks;
+		this.updateTasks = FXCollections.observableHashMap();
+		this.runSimultaneaously = canRunSimultaneaously;
 		
-		maxProgressBinding = new ReadOnlyDoubleWrapper();
-		maxProgressBinding.bind(Bindings.createDoubleBinding(() -> (double) updateTasks.size(), updateTasks));
+		maxProgressProperty = new ReadOnlyDoubleWrapper();
+		maxProgressProperty.bind(Bindings.createDoubleBinding(() -> (double) updateTasks.size(), updateTasks));
 		
 		progressBinding = new SimpleDoubleProperty(0).add(0);
 		
-		for(Task<Boolean> tsk : tasks)
+		totalProgressBinding = progressBinding.divide(maxProgressProperty);
+		
+		isCompleteBinding = totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0));
+		
+		this.updateTasks.addListener(new MapChangeListener<Pair<String, String>, Task<Object>>()
 		{
-			if(progressBinding == null) progressBinding = tsk.progressProperty().add(0);
-			else progressBinding = progressBinding.add(tsk.progressProperty());
-		}
+			@Override
+			public void onChanged(Change<? extends Pair<String, String>, ? extends Task<Object>> c)
+			{
+				Task<Object> added = c.getValueAdded();
+				Task<Object> removed = c.getValueRemoved();
+				if(added != null)
+				{
+					if(progressBinding == null) progressBinding = Bindings.createDoubleBinding(() -> added.progressProperty().get() < 0 ? 0.0 : added.progressProperty().get(), added.progressProperty());
+					else progressBinding = progressBinding.add(Bindings.createDoubleBinding(() -> added.progressProperty().get() < 0 ? 0.0 : added.progressProperty().get(), added.progressProperty()));
+				}
+				
+				if(removed != null)
+				{
+					if(progressBinding != null) progressBinding = progressBinding.subtract(removed.progressProperty());
+				}
+				
+				totalProgressBinding = progressBinding.divide(maxProgressProperty);
+				
+				isCompleteBinding = totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0));
+			}
+		});
 	}
 	
-	@SafeVarargs
-	public UpdatePacket(String title, String subtitle, Task<Boolean>... tasks)
+	@Getter String title;
+	boolean runSimultaneaously;
+	public boolean canRunSimultaneaously() { return runSimultaneaously; }
+	@Getter ObservableMap<Pair<String, String>, Task<Object>> updateTasks; 
+	@Getter DoubleBinding totalProgressBinding;
+	DoubleBinding progressBinding; 
+	ReadOnlyDoubleWrapper maxProgressProperty;
+	public ReadOnlyDoubleProperty getMaxProgressProperty() { return maxProgressProperty.getReadOnlyProperty(); }
+	@Getter BooleanBinding isCompleteBinding;
+	
+	public void addTask(String title, String subtitle, Task<Object> updateTask) { updateTasks.put(new Pair<>(title, subtitle), updateTask); }
+	
+	public void run(ExecutorService executor)
 	{
-		this.title = title;
-		this.subtitle = subtitle;
-		this.updateTasks = FXCollections.observableArrayList();
-		
-		maxProgressBinding = new ReadOnlyDoubleWrapper();
-		maxProgressBinding.bind(Bindings.createDoubleBinding(() -> (double) updateTasks.size(), updateTasks));
-		
-		progressBinding = new SimpleDoubleProperty(0).add(0);
-		
-		for(Task<Boolean> tsk : tasks)
+		List<Callable<Object>> toRun = new ArrayList<>();
+		for(Task<Object> t : updateTasks.values())
 		{
-			updateTasks.add(tsk);
-			if(progressBinding == null) progressBinding = tsk.progressProperty().add(0);
-			else progressBinding = progressBinding.add(tsk.progressProperty());
+			toRun.add(new Callable<Object>()
+			{
+				@Override
+				public Object call() throws Exception
+				{
+					t.run();
+					return t.getValue();
+				}
+			});
 		}
+		
+		try { executor.invokeAll(toRun); }
+		catch (InterruptedException e) { e.printStackTrace(); }
 	}
-	
-	String title;
-	String subtitle;
-	ObservableList<Task<Boolean>> updateTasks;
-	DoubleBinding progressBinding;
-	ReadOnlyDoubleWrapper maxProgressBinding;
-	
-	public void addTask(Task<Boolean> updateTask) { updateTasks.add(updateTask); }
 }

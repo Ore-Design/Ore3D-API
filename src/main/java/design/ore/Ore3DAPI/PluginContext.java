@@ -5,18 +5,24 @@ import java.util.Map;
 import org.pf4j.RuntimeMode;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.Getter;
+
 public class PluginContext
 {
 	private final RuntimeMode runtimeMode;
 	private final Logger logger;
+	@Getter private final ObjectMapper mapper;
 	private final boolean debug;
 	private final Map<String, String> valueMap;
 	private final boolean sandbox;
 	
-	public PluginContext(RuntimeMode runtimeMode, Logger logger, boolean debug, Map<String, String> valueMap, boolean sandbox)
+	public PluginContext(RuntimeMode runtimeMode, Logger logger, ObjectMapper mapper, boolean debug, Map<String, String> valueMap, boolean sandbox)
 	{
 		this.runtimeMode = runtimeMode;
 		this.logger = logger;
+		this.mapper = mapper;
 		this.debug = debug;
 		this.valueMap = valueMap;
 		this.sandbox = sandbox;
