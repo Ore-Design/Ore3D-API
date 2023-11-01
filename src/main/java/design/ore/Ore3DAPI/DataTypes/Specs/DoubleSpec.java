@@ -28,7 +28,7 @@ public class DoubleSpec extends Spec<Double>
 	private String preEdit = "";
 
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

@@ -35,7 +35,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 	public void setValue(Enum<?> value) { if(!readOnly) property.setValue((E) value); }
 	
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

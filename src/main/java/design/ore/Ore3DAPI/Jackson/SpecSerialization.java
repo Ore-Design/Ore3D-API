@@ -1,7 +1,6 @@
 package design.ore.Ore3DAPI.Jackson;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -80,7 +78,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				return new StringSpec(id, value, readOnly, section);
 			}
 		}
@@ -128,7 +126,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				return new PositiveIntSpec(id, value, readOnly, section);
 			}
 		}
@@ -176,7 +174,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				return new IntSpec(id, value, readOnly, section);
 			}
 		}
@@ -227,7 +225,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				Map<Integer, String> map = MAP.convertValue(specNode.get(MAPTAG), ctxt.getTypeFactory().constructMapType(HashMap.class, Integer.class, String.class));
 				return new IntegerStringMapSpec(id, map, value, readOnly, section);
 			}
@@ -279,7 +277,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				Map<Integer, String> map = MAP.convertValue(specNode.get(MAPTAG), ctxt.getTypeFactory().constructMapType(HashMap.class, Integer.class, String.class));
 				return new SearchableIntegerStringMapSpec(id, map, value, readOnly, section);
 			}
@@ -328,7 +326,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				boolean value = specNode.get(VALUE).asBoolean();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				return new BooleanSpec(id, value, readOnly, section);
 			}
 		}
@@ -376,7 +374,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				return new DoubleSpec(id, value, readOnly, section);
 			}
 		}
@@ -440,7 +438,7 @@ public class SpecSerialization
 				Enum<?> value = Enum.valueOf(clazz, specNode.get(VALUE).asText());
 				
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).asText();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				
 				EnumSpec<?> s = new EnumSpec<>();
 				s.setId(id);
@@ -450,13 +448,6 @@ public class SpecSerialization
 				s.setSection(section);
 				
 				return s;
-				
-//				try { return EnumSpec.class.getDeclaredConstructor(String.class, clazz, Boolean.class, String.class).newInstance(id, value, readOnly, section); }
-//				catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e)
-//				{
-//					e.printStackTrace();
-//					return null;
-//				}
 			}
 		}
 	}

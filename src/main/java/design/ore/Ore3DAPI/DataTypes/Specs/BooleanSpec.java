@@ -24,7 +24,7 @@ public class BooleanSpec extends Spec<Boolean>
 	public BooleanSpec(String id, boolean initialValue, boolean readOnly, String section) { super(id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section); }
 
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

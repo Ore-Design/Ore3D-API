@@ -10,6 +10,7 @@ import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableNumberValue;
 import javafx.beans.value.ObservableValue;
@@ -19,6 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.util.StringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import lombok.Getter;
 
@@ -37,11 +39,12 @@ public class PositiveIntSpec extends Spec<Integer>
 	
 	@Getter private IntegerProperty intProperty = null;
 	public ObservableNumberValue getNumberProperty() { return intProperty; }
+	public void bindBidirectional(StringProperty other, StringConverter<Number> converter) { if(!readOnly) other.bindBidirectional(intProperty, converter); }
 	
 	private String preEdit = "";
 
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

@@ -35,13 +35,13 @@ public class UpdatePacket
 		
 		isCompleteBinding = totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0));
 		
-		this.updateTasks.addListener(new MapChangeListener<Pair<String, String>, Task<Object>>()
+		this.updateTasks.addListener(new MapChangeListener<Pair<String, String>, Task<?>>()
 		{
 			@Override
-			public void onChanged(Change<? extends Pair<String, String>, ? extends Task<Object>> c)
+			public void onChanged(Change<? extends Pair<String, String>, ? extends Task<?>> c)
 			{
-				Task<Object> added = c.getValueAdded();
-				Task<Object> removed = c.getValueRemoved();
+				Task<?> added = c.getValueAdded();
+				Task<?> removed = c.getValueRemoved();
 				if(added != null)
 				{
 					if(progressBinding == null) progressBinding = Bindings.createDoubleBinding(() -> added.progressProperty().get() < 0 ? 0.0 : added.progressProperty().get(), added.progressProperty());
@@ -63,19 +63,19 @@ public class UpdatePacket
 	@Getter String title;
 	boolean runSimultaneaously;
 	public boolean canRunSimultaneaously() { return runSimultaneaously; }
-	@Getter ObservableMap<Pair<String, String>, Task<Object>> updateTasks; 
+	@Getter ObservableMap<Pair<String, String>, Task<?>> updateTasks; 
 	@Getter DoubleBinding totalProgressBinding;
 	DoubleBinding progressBinding; 
 	ReadOnlyDoubleWrapper maxProgressProperty;
 	public ReadOnlyDoubleProperty getMaxProgressProperty() { return maxProgressProperty.getReadOnlyProperty(); }
 	@Getter BooleanBinding isCompleteBinding;
 	
-	public void addTask(String title, String subtitle, Task<Object> updateTask) { updateTasks.put(new Pair<>(title, subtitle), updateTask); }
+	public void addTask(String title, String subtitle, Task<?> updateTask) { updateTasks.put(new Pair<>(title, subtitle), updateTask); }
 	
 	public void run(ExecutorService executor)
 	{
 		List<Callable<Object>> toRun = new ArrayList<>();
-		for(Task<Object> t : updateTasks.values())
+		for(Task<?> t : updateTasks.values())
 		{
 			toRun.add(new Callable<Object>()
 			{

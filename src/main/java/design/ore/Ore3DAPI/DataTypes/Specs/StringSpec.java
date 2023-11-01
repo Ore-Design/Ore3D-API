@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
@@ -20,9 +21,10 @@ import javafx.scene.layout.Pane;
 public class StringSpec extends Spec<String>
 {
 	public StringSpec(String id, String initialValue, boolean readOnly, String section) { super(id, new SimpleStringProperty(initialValue), readOnly, section); }
+	public StringSpec(String id, String initialValue, boolean readOnly, String section, ObservableValue<String> bindTo) { super(id, new SimpleStringProperty(initialValue), readOnly, section, bindTo); }
 
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

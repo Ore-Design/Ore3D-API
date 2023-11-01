@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.DataTypes.Records;
 
 import java.util.List;
+import java.util.Random;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -47,6 +48,22 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 			c.next();
 			for(Build b : c.getAddedSubList())
 			{
+				while(true)
+				{
+					boolean duplicateUIDFound = false;
+					for(Build bld : c.getList())
+					{
+						if(bld.equals(b)) continue;
+						
+						if(bld.getBuildUUID() == b.getBuildUUID())
+						{
+							duplicateUIDFound = true;
+							break;
+						}
+					}
+					if(duplicateUIDFound) b.regenerateBuildUUID();
+					else break;
+				}
 				b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
 			}
 		});

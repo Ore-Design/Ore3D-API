@@ -38,7 +38,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 	}
 	
 	@Override
-	public Pane getUI(List<Property<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

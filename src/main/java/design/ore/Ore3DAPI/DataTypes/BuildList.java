@@ -64,6 +64,12 @@ public class BuildList implements ObservableList<Build>
 	@Override
 	public Build get(int index) { return list.get(index); }
 
+	public Build getByUID(int buildUUID)
+	{
+		try{ return list.stream().filter(b -> b.getBuildUUID() == buildUUID).findFirst().get(); }
+		catch(Exception e) { return null; }
+	}
+
 	@Override
 	public Build set(int index, Build element) { return list.set(index, element); }
 

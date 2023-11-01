@@ -1,5 +1,6 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import javafx.beans.property.Property;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +32,7 @@ import lombok.Setter;
 })
 @NoArgsConstructor
 public abstract class Spec<T>
-{	
+{
 	public Spec(String id, Property<T> value, boolean readOnly, String section)
 	{
 		this.id = id;
@@ -38,15 +41,38 @@ public abstract class Spec<T>
 		this.section = section;
 	}
 	
+	public Spec(String id, Property<T> value, boolean readOnly, String section, ObservableValue<T> bindTo)
+	{
+		this.id = id;
+		this.property = value;
+		this.readOnly = readOnly;
+		this.section = section;
+		property.bind(bindTo);
+	}
+	
 	@Getter @Setter protected boolean readOnly;
 	@Getter @Setter protected String section;
-	@Getter protected Property<T> property;
+	protected Property<T> property;
 	@Getter @Setter protected String id;
+	
+	List<ChangeListener<? super T>> listeners = new ArrayList<>();
 
 	public void setValue(T val) { if(!readOnly) property.setValue(val); }
 	public T getValue() { return property.getValue(); }
+	public void addListener(ChangeListener<? super T> listener)
+	{
+		property.addListener(listener);
+		listeners.add(listener);
+	}
+	public void clearListeners()
+	{
+		for(ChangeListener<? super T> listener : listeners) property.removeListener(listener);
+		listeners.clear();
+	}
+	public void bind(ObservableValue<? extends T> obs) { if(!readOnly) property.bind(obs); }
+	public void bindBidirectional(Property<T> other) { if(!readOnly) property.bindBidirectional(other); }
 	
-	public abstract Pane getUI(List<Property<?>> props);
+	public abstract Pane getUI(List<Spec<?>> props);
 	
 	@Override
 	public boolean equals(Object o)

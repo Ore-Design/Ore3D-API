@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Random;
 
 import org.slf4j.Logger;
 
@@ -26,7 +26,9 @@ import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.PropertySerialization;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,12 +40,18 @@ import lombok.Getter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 public abstract class Build extends ValueStorageRecord implements Conflictable
 {
-	@Getter protected UUID buildUUID = UUID.randomUUID();
+	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
+	public void regenerateBuildUUID()
+	{
+		buildUUID = new Random().nextInt(111111, 1000000);
+	}
 	
 	// TODO: Children
 	//@Getter protected List<UUID> children = new ArrayList<>();
 	
 	@Getter protected PositiveIntSpec quantity;
+	
+	protected BooleanProperty buildIsDirty;
 
 	@JsonIgnore @Getter protected BuildPrice price;
 
@@ -86,6 +94,15 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	{
 		this.LOG = log;
 		conflicts = FXCollections.observableArrayList();
+		buildIsDirty = new SimpleBooleanProperty(false);
+		buildIsDirty.addListener((obs, oldVal, newVal) ->
+		{
+			if(newVal)
+			{
+				refresh();
+				buildIsDirty.setValue(false);
+			}
+		});
 		
 		initializeSpecs();
 		
@@ -96,7 +113,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public void resetSpecListeners()
 	{
 		this.price = new BuildPrice(this);
-		for(Spec<?> s : getSpecs()) { s.getProperty().addListener((obsv, oldVal, newVal) -> refresh()); }
+		for(Spec<?> s : getSpecs()) { s.clearListeners(); if(!s.isReadOnly()) s.addListener((obsv, oldVal, newVal) -> { if(!oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
 	}
 
 	public abstract Build duplicate();
@@ -134,7 +151,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
 	}
 	
-	private void refresh()
+	protected void refresh()
 	{
 		conflicts.clear();
 
