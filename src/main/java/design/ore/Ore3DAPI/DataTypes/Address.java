@@ -55,7 +55,7 @@ public class Address
 		Bulgaria,
 		BurkinaFaso,
 		Burundi,
-		CôtedIvoire,
+		CotedIvoire,
 		CaboVerde,
 		Cambodia,
 		Cameroon,
