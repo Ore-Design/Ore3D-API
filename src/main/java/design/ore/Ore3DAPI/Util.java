@@ -3,6 +3,7 @@ package design.ore.Ore3DAPI;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,14 @@ import lombok.Getter;
 public class Util
 {
 	@Getter private static final List<ClassLoader> registeredClassLoaders = new ArrayList<ClassLoader>();
-	
 	public static void registerClassLoader(ClassLoader cl) { registeredClassLoaders.add(cl); }
+	
+	@Getter private static final Map<String, Map<Integer, String>> registeredIntegerStringMaps = new HashMap<>();
+	public static void registerIntStringMap(String mapID, Map<Integer, String> map)
+	{
+		if(registeredIntegerStringMaps.containsKey(mapID)) throw new IllegalArgumentException("A map with the ID " + mapID + " has already been registered!");
+		else registeredIntegerStringMaps.put(mapID, map);
+	}
 	
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map)
 	{

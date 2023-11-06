@@ -9,6 +9,7 @@ import org.controlsfx.control.SearchableComboBox;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -24,23 +25,36 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.SearchableIntStringMapSerialization.Deserializer.class)
 public class SearchableIntegerStringMapSpec extends Spec<Integer>
 {
-	public SearchableIntegerStringMapSpec(String id, Map<Integer, String> valueSet, Integer initialValue, boolean readOnly, String section)
+	public SearchableIntegerStringMapSpec(String id, String mapID, Integer initialValue, boolean readOnly, String section)
 	{
 		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section);
-		this.valueSet = valueSet;
+		
+		if(!Util.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
+		else this.mapID = mapID;
 	}
 	
-	@Getter Map<Integer, String> valueSet;
+	@Getter String mapID;
 	
 	@Override
 	public void setValue(Integer val)
 	{
-		if(!readOnly && valueSet.containsKey(val)) property.setValue(val);
+		if(readOnly) return;
+		Map<Integer, String> matchingMap = Util.getRegisteredIntegerStringMaps().get(mapID);
+		
+		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
+		else
+		{
+			if(matchingMap.containsKey(val)) property.setValue(val);
+			else throw new IllegalArgumentException("No matching value exists in " + mapID + " for value " + val + "!");
+		}
 	}
 	
 	@Override
 	public Pane getUI(List<Spec<?>> toBind)
 	{
+		Map<Integer, String> matchingMap = Util.getRegisteredIntegerStringMaps().get(mapID);
+		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
+		
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
 		
@@ -49,21 +63,21 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 			@Override
 			public String toString(Integer object)
 			{
-				if(object == null || !valueSet.containsKey(object)) return "-";
-				else return valueSet.get(object);
+				if(object == null || !matchingMap.containsKey(object)) return "-";
+				else return matchingMap.get(object);
 			}
 
 			@Override
 			public Integer fromString(String string)
 			{
-				for(Entry<Integer, String> entry : valueSet.entrySet()) { if(entry.getValue().equals(string)) return entry.getKey(); }
+				for(Entry<Integer, String> entry : matchingMap.entrySet()) { if(entry.getValue().equals(string)) return entry.getKey(); }
 				
 				return 0;
 			}
 		};
 		
 		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
-		dropdown.getItems().setAll(valueSet.keySet());
+		dropdown.getItems().setAll(matchingMap.keySet());
 		dropdown.setMinHeight(0);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);

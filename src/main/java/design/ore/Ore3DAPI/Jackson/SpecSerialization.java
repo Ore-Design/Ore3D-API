@@ -1,8 +1,6 @@
 package design.ore.Ore3DAPI.Jackson;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -182,7 +180,7 @@ public class SpecSerialization
 	
 	public static class IntStringMapSerialization
 	{
-		private static final String MAPTAG = "map";
+		private static final String MAPIDTAG = "mapID";
 		public static class Serializer extends StdSerializer<IntegerStringMapSpec>
 		{
 			protected Serializer() { this(null); }
@@ -195,8 +193,8 @@ public class SpecSerialization
 				gen.writeString(value.getId());
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getValue());
-				gen.writeFieldName(MAPTAG);
-				gen.writeObject(value.getValueSet());
+				gen.writeFieldName(MAPIDTAG);
+				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
 				gen.writeFieldName(SECTION);
@@ -226,15 +224,15 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				Map<Integer, String> map = MAP.convertValue(specNode.get(MAPTAG), ctxt.getTypeFactory().constructMapType(HashMap.class, Integer.class, String.class));
-				return new IntegerStringMapSpec(id, map, value, readOnly, section);
+				String mapID = specNode.get(MAPIDTAG).asText();
+				return new IntegerStringMapSpec(id, mapID, value, readOnly, section);
 			}
 		}
 	}
 	
 	public static class SearchableIntStringMapSerialization
 	{
-		private static final String MAPTAG = "map";
+		private static final String MAPIDTAG = "mapID";
 		public static class Serializer extends StdSerializer<SearchableIntegerStringMapSpec>
 		{
 			protected Serializer() { this(null); }
@@ -247,8 +245,8 @@ public class SpecSerialization
 				gen.writeString(value.getId());
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getValue());
-				gen.writeFieldName(MAPTAG);
-				gen.writeObject(value.getValueSet());
+				gen.writeFieldName(MAPIDTAG);
+				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
 				gen.writeFieldName(SECTION);
@@ -278,8 +276,8 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				Map<Integer, String> map = MAP.convertValue(specNode.get(MAPTAG), ctxt.getTypeFactory().constructMapType(HashMap.class, Integer.class, String.class));
-				return new SearchableIntegerStringMapSpec(id, map, value, readOnly, section);
+				String mapID = specNode.get(MAPIDTAG).asText();
+				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section);
 			}
 		}
 	}

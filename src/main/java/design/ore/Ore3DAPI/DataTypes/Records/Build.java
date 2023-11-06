@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.slf4j.Logger;
 
@@ -28,6 +29,8 @@ import design.ore.Ore3DAPI.Jackson.PropertySerialization;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -62,6 +65,42 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	// TODO: Description
 	@Getter String description;
 	boolean descriptionIsOverriden;
+	
+	@JsonIgnore protected ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
+	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
+
+	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
+	protected ObservableList<Build> childBuilds = FXCollections.observableArrayList();
+	
+	@Getter @JsonIgnore private ObservableList<Build> readOnlyChildBuilds = FXCollections.unmodifiableObservableList(childBuilds);
+	
+	public void addChild(Build build)
+	{
+		if(build.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
+		if(this.allowedChildClasses().size() <= 0) throw new IllegalArgumentException(titleProperty.get() + " has a type (" + buildTypeID() + ") that does not allow for child builds!");
+		build.parentBuildProperty.setValue(this);
+		this.childBuilds.add(build);
+	}
+	
+	public void insertChild(int index, Build build)
+	{
+		if(build.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to insert already has a parent!");
+		if(this.allowedChildClasses().size() <= 0) throw new IllegalArgumentException(titleProperty.get() + " has a type (" + buildTypeID() + ") that does not allow for child builds!");
+		build.parentBuildProperty.setValue(this);
+		this.childBuilds.add(index, build);
+	}
+	
+	public boolean removeChild(Build build)
+	{
+		if(this.childBuilds.contains(build))
+		{
+			build.parentBuildProperty.setValue(null);
+			return this.childBuilds.remove(build);
+		}
+		
+		return false;
+	}
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
@@ -85,10 +124,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	@JsonIgnore protected Logger LOG;
 	
-	public Build()
-	{
-		this(null);
-	}
+	public Build() { this(null); }
 	
 	public Build(Logger log)
 	{
@@ -113,7 +149,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public void resetSpecListeners()
 	{
 		this.price = new BuildPrice(this);
-		for(Spec<?> s : getSpecs()) { s.clearListeners(); if(!s.isReadOnly()) s.addListener((obsv, oldVal, newVal) -> { if(!oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
+		for(Spec<?> s : getSpecs()) { s.clearListeners(); if(!s.isReadOnly()) s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
 	}
 
 	public abstract Build duplicate();
@@ -128,7 +164,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	}
 
 	protected abstract DoubleBinding getAdditionalPriceModifiers();	
-	public abstract String buildTypeID();
+	protected abstract String buildTypeID();
+	public abstract Set<String> allowedChildClasses();
 	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
 	protected DoubleBinding getUnitPrice()
 	{

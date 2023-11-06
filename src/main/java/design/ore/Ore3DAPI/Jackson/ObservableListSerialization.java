@@ -179,6 +179,7 @@ public class ObservableListSerialization
 			}
 		}
 	}
+	
 	public static class TagList
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Tag>>
@@ -212,6 +213,44 @@ public class ObservableListSerialization
 			public ObservableList<Tag> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
 			{	
 				ArrayList<Tag> list = p.readValueAs(new TypeReference<ArrayList<Tag>>() {});
+				return FXCollections.observableArrayList(list);
+			}
+		}
+	}
+
+	public static class IntList
+	{
+		public static class Serializer extends StdSerializer<ObservableList<Integer>>
+		{
+			protected Serializer() { this(null); }
+			protected Serializer(Class<ObservableList<Integer>> t) { super(t); }
+		
+			@Override
+			public void serialize(ObservableList<Integer> value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeObject(new ArrayList<Integer>(value));
+			}
+			
+			@Override
+			public void serializeWithType(ObservableList<Integer> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				gen.writeFieldName("tagobslist");
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<ObservableList<Integer>>
+		{
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<ObservableList<Integer>> t) { super(t); }
+	
+			@Override
+			public ObservableList<Integer> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{	
+				ArrayList<Integer> list = p.readValueAs(new TypeReference<ArrayList<Integer>>() {});
 				return FXCollections.observableArrayList(list);
 			}
 		}
