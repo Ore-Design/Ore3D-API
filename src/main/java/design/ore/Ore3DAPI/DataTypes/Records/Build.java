@@ -1,14 +1,11 @@
 package design.ore.Ore3DAPI.DataTypes.Records;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-
-import org.slf4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.RoutingEntry;
@@ -62,7 +60,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		buildUUID = new Random().nextInt(111111, 1000000);
 	}
 	
-	@Getter protected PositiveIntSpec quantity;
+	@Getter protected PositiveIntSpec quantity = new PositiveIntSpec("Quantity", 1, false, "Overview");
 	
 	protected SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
 	public void setDirty() { buildIsDirty.setValue(true); }
@@ -114,14 +112,12 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter
 	protected ObservableList<Conflict> conflicts;
 	
-	@JsonIgnore protected Logger LOG;
+	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
 	
-	public Build() { this(null); }
-	
-	public Build(Logger log)
+	public Build()
 	{
-		this.LOG = log;
-
+		this.price = new BuildPrice(this);
+		
 		childBuilds.addListener((ListChangeListener.Change<? extends Build> l) ->
 		{
 			while(l.next())
@@ -166,11 +162,28 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			buildIsDirty.setValue(false);
 		});
 		
-		initializeSpecs();
+		specs = FXCollections.observableArrayList();
+		specs.addListener((ListChangeListener.Change<? extends Spec<?>> l) ->
+		{
+			while(l.next())
+			{
+				if(l.wasAdded())
+				{
+					for(Spec<?> s : l.getAddedSubList())
+					{
+						if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
+						if(s.getCalculateOnDirty() != null /*&& s.isReadOnly()*/) this.registerDirtyListenerEvent((obs, oldVal, newVal) -> { Util.debugLog("Build is dirty! Setting property to callable..."); s.setPropertyToCallable(); });
+						
+						price.rebindPricing(this);
+					}
+				}
+				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
+			}
+		});
 		
-		resetSpecListeners();
+		specs.add(quantity);
 		
-		buildIsDirty.setValue(true);
+//		buildIsDirty.setValue(true);
 	}
 
 	public abstract Build duplicate();
@@ -182,22 +195,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	protected abstract DoubleBinding getAdditionalPriceModifiers();	
 	protected abstract String buildTypeID();
 	
-	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
-	protected void initializeSpecs()
-	{
-		quantity = new PositiveIntSpec("Quantity", 1, false, "Overview");
-	}
-	public void resetSpecListeners()
-	{
-		this.price = new BuildPrice(this);
-		for(Spec<?> s : getSpecs())
-		{
-			s.clearListeners();
-			if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
-
-			if(s.getCalculateOnDirty() != null && s.isReadOnly()) this.registerDirtyListenerEvent((obs, oldVal, newVal) -> { s.setPropertyToCallable(); });
-		}
-	}
+//	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
 	
 	public Map<Integer, Build> getAllChildBuilds()
 	{
@@ -311,30 +309,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
-	}
-	
-	protected void debug(String message)
-	{
-		if(this.LOG != null) LOG.debug(message);
-		else System.out.println(message);
-	}
-	
-	protected void info(String message)
-	{
-		if(this.LOG != null) LOG.info(message);
-		else System.out.println(message);
-	}
-	
-	protected void warn(String message)
-	{
-		if(this.LOG != null) LOG.debug(message);
-		else System.out.println("WARN: " + message);
-	}
-	
-	protected void error(String message)
-	{
-		if(this.LOG != null) LOG.debug(message);
-		else System.err.println(message);
 	}
 
 	@Override

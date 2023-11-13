@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -61,9 +60,9 @@ public abstract class Spec<T>
 	}
 
 	@Getter @Setter protected boolean readOnly;
-	@JsonMerge @Getter @Setter protected String section;
-	protected Property<T> property;
+	@Getter @Setter protected String section;
 	@Getter @Setter protected String id;
+	protected Property<T> property;
 	@JsonIgnore @Getter protected final Callable<T> calculateOnDirty;
 	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
 
@@ -81,8 +80,10 @@ public abstract class Spec<T>
 		{
 			try
 			{
+				Util.debugLog("Setting " + id + " to callable value...");
 				T var = calculateOnDirty.call();
 				property.setValue(var);
+				Util.debugLog("Set! New value: " + property.getValue());
 			}
 			catch (Exception e) { Util.warnLog("Error assigning value from Callable to property!\n" + Util.stackTraceArrayToString(e)); }
 		}

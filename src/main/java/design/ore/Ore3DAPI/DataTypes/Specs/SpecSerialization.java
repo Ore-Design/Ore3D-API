@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.Jackson;
+package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.io.IOException;
 
@@ -15,20 +15,13 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import design.ore.Ore3DAPI.Util;
-import design.ore.Ore3DAPI.DataTypes.Specs.BooleanSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.DoubleSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.EnumSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.IntSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.IntegerStringMapSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.SearchableIntegerStringMapSpec;
-import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
 
 public class SpecSerialization
 {
 	private static final String ID = "id";
 	private static final String VALUE = "val";
 	private static final String READ_ONLY = "ro";
+	private static final String SECTION = "sec";
 	
 	public static class StringSerialization
 	{
@@ -47,6 +40,8 @@ public class SpecSerialization
 				gen.writeString(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -72,7 +67,16 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				return new StringSpec(id, value, readOnly, null);
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new StringSpec(id, value, readOnly, section);
+			}
+	
+			@Override
+			public StringSpec deserialize(JsonParser p, DeserializationContext ctxt, StringSpec in) throws IOException, JacksonException
+			{
+				StringSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -94,6 +98,8 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -119,7 +125,16 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				return new PositiveIntSpec(id, value, readOnly, null);
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new PositiveIntSpec(id, value, readOnly, section);
+			}
+	
+			@Override
+			public PositiveIntSpec deserialize(JsonParser p, DeserializationContext ctxt, PositiveIntSpec in) throws IOException, JacksonException
+			{
+				PositiveIntSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -141,6 +156,8 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -166,7 +183,16 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				return new IntSpec(id, value, readOnly, null);
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new IntSpec(id, value, readOnly, section);
+			}
+	
+			@Override
+			public IntSpec deserialize(JsonParser p, DeserializationContext ctxt, IntSpec in) throws IOException, JacksonException
+			{
+				IntSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -191,6 +217,8 @@ public class SpecSerialization
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -216,8 +244,17 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new IntegerStringMapSpec(id, mapID, value, readOnly, null);
+				return new IntegerStringMapSpec(id, mapID, value, readOnly, section);
+			}
+	
+			@Override
+			public IntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt, IntegerStringMapSpec in) throws IOException, JacksonException
+			{
+				IntegerStringMapSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -242,6 +279,8 @@ public class SpecSerialization
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -267,8 +306,17 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, null);
+				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section);
+			}
+	
+			@Override
+			public SearchableIntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt, SearchableIntegerStringMapSpec in) throws IOException, JacksonException
+			{
+				SearchableIntegerStringMapSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -290,6 +338,8 @@ public class SpecSerialization
 				gen.writeBoolean(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -315,7 +365,16 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				boolean value = specNode.get(VALUE).asBoolean();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				return new BooleanSpec(id, value, readOnly, null);
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new BooleanSpec(id, value, readOnly, section);
+			}
+	
+			@Override
+			public BooleanSpec deserialize(JsonParser p, DeserializationContext ctxt, BooleanSpec in) throws IOException, JacksonException
+			{
+				BooleanSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -337,6 +396,8 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -362,7 +423,16 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				return new DoubleSpec(id, value, readOnly, null);
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new DoubleSpec(id, value, readOnly, section);
+			}
+	
+			@Override
+			public DoubleSpec deserialize(JsonParser p, DeserializationContext ctxt, DoubleSpec in) throws IOException, JacksonException
+			{
+				DoubleSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}
@@ -388,6 +458,8 @@ public class SpecSerialization
 				gen.writeString(value.getClazz().getName());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -425,14 +497,24 @@ public class SpecSerialization
 				Enum<?> value = Enum.valueOf(clazz, specNode.get(VALUE).asText());
 				
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				
 				EnumSpec<?> s = new EnumSpec<>();
 				s.setId(id);
 				s.setValue(value);
 				s.setClazz(clazz);
 				s.setReadOnly(readOnly);
+				s.setSection(section);
 				
 				return s;
+			}
+	
+			@Override
+			public EnumSpec deserialize(JsonParser p, DeserializationContext ctxt, EnumSpec in) throws IOException, JacksonException
+			{
+				EnumSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
 			}
 		}
 	}

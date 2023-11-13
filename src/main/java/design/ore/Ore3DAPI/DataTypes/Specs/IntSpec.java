@@ -5,7 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
