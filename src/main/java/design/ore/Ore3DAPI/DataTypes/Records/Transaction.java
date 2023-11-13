@@ -1,7 +1,8 @@
 package design.ore.Ore3DAPI.DataTypes.Records;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -84,6 +85,18 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	Customer customer;
 	boolean salesOrder;
 	String lockedBy;
+	
+	@JsonIgnore
+	public Map<Integer, Build> getAllBuildsByUID()
+	{
+		Map<Integer, Build> allBuilds = new HashMap<>();
+		for(Build b : builds)
+		{
+			allBuilds.put(b.getBuildUUID(), b);
+			allBuilds.putAll(b.getAllChildBuilds());
+		}
+		return allBuilds;
+	}
 
 	@Override
 	public void addConflict(Conflict conflict) { throw new UnsupportedOperationException("Add conflicts to individual children, not the transaction as a whole!"); }

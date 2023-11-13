@@ -1,14 +1,16 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Jackson.SpecSerialization;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
@@ -21,7 +23,8 @@ import javafx.scene.layout.Pane;
 public class StringSpec extends Spec<String>
 {
 	public StringSpec(String id, String initialValue, boolean readOnly, String section) { super(id, new SimpleStringProperty(initialValue), readOnly, section); }
-	public StringSpec(String id, String initialValue, boolean readOnly, String section, ObservableValue<String> bindTo) { super(id, new SimpleStringProperty(initialValue), readOnly, section, bindTo); }
+	public StringSpec(String id, String initialValue, boolean readOnly, String section, Callable<String> calculateOnDirty)
+	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, calculateOnDirty); addListener((obs, oldVal, newVal) -> Util.debugLog("String spec " + id + " changed to: " + newVal)); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind)

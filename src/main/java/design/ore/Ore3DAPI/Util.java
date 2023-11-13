@@ -11,6 +11,8 @@ import java.util.Map.Entry;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+
 import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextFormatter;
@@ -27,6 +29,13 @@ public class Util
 {
 	@Getter private static final List<ClassLoader> registeredClassLoaders = new ArrayList<ClassLoader>();
 	public static void registerClassLoader(ClassLoader cl) { registeredClassLoaders.add(cl); }
+	
+	private static Logger LOG = null;
+	public static void debugLog(String message) { if(LOG != null) LOG.debug(message); }
+	public static void infoLog(String message) { if(LOG != null) LOG.debug(message); }
+	public static void warnLog(String message) { if(LOG != null) LOG.debug(message); }
+	public static void errorLog(String message) { if(LOG != null) LOG.debug(message); }
+	public static void registerLogger(Logger log) { if(LOG == null) { LOG = log; } else { LOG.warn("Someone attempted to register a different logger, but it's locked!"); } }
 	
 	@Getter private static final Map<String, Map<Integer, String>> registeredIntegerStringMaps = new HashMap<>();
 	public static void registerIntStringMap(String mapID, Map<Integer, String> map)

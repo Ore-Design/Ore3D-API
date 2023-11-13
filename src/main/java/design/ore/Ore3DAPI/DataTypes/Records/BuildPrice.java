@@ -3,11 +3,9 @@ package design.ore.Ore3DAPI.DataTypes.Records;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.collections.ListChangeListener;
 import lombok.Getter;
 
 public class BuildPrice
@@ -26,35 +24,27 @@ public class BuildPrice
 		overriddenUnitPriceProperty = new SimpleDoubleProperty(-1.0);
 		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThanOrEqualTo(0.0);
 		
-		rebindTotalPrice(parent.getTotalPrice(), ((PositiveIntSpec) parent.getQuantity()).getIntProperty());
-
-		parent.getBom().addListener((ListChangeListener.Change<?> c) ->
-		{
-			rebindTotalPrice(parent.getTotalPrice(), ((PositiveIntSpec) parent.getQuantity()).getIntProperty());
-			rebindUnitPrice(parent.getUnitPrice());
-		});
-		parent.getRoutings().addListener((ListChangeListener.Change<?> c) ->
-		{
-			rebindTotalPrice(parent.getTotalPrice(), ((PositiveIntSpec) parent.getQuantity()).getIntProperty());
-			rebindUnitPrice(parent.getUnitPrice());
-		});
-		unitPriceOverriddenProperty.addListener((observable, oldVal, newVal) ->
-		{
-			rebindTotalPrice(parent.getTotalPrice(), ((PositiveIntSpec) parent.getQuantity()).getIntProperty());
-			rebindUnitPrice(parent.getUnitPrice());
-		});
+		rebindPricing(parent);
+		
+		unitPriceOverriddenProperty.addListener((observable, oldVal, newVal) -> rebindPricing(parent));
 	}
 	
-	private void rebindUnitPrice(DoubleBinding newBind)
+	public void rebindPricing(Build parent)
+	{
+		rebindTotalPrice(parent);
+		rebindUnitPrice(parent);
+	}
+	
+	private void rebindUnitPrice(Build parent)
 	{
 		if(unitPriceOverriddenProperty.get()) unitPriceProperty.bind(overriddenUnitPriceProperty);
-		else unitPriceProperty.bind(newBind);
+		else unitPriceProperty.bind(parent.getUnitPrice());
 	}
 	
-	private void rebindTotalPrice(DoubleBinding newBind, IntegerProperty quantityBinding)
+	private void rebindTotalPrice(Build parent)
 	{
-		if(unitPriceOverriddenProperty.get()) totalPrice = overriddenUnitPriceProperty.multiply(quantityBinding);
-		else totalPrice = newBind;
+		if(unitPriceOverriddenProperty.get()) totalPrice = overriddenUnitPriceProperty.multiply(((PositiveIntSpec) parent.getQuantity()).getIntProperty());
+		else totalPrice = parent.getTotalPrice();
 	}
 	
 	public void reset() { overriddenUnitPriceProperty.setValue(-1.0); }

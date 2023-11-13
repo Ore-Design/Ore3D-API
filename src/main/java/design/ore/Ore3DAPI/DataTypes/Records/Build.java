@@ -26,14 +26,18 @@ import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.PropertySerialization;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.util.Pair;
 import lombok.Getter;
@@ -43,19 +47,30 @@ import lombok.Getter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 public abstract class Build extends ValueStorageRecord implements Conflictable
 {
+	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
+	{
+		@Override
+		public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal)
+		{
+			if(newVal) { buildIsDirty.setValue(true); }
+		}
+	};
+	
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
 	public void regenerateBuildUUID()
 	{
 		buildUUID = new Random().nextInt(111111, 1000000);
 	}
 	
-	// TODO: Children
-	//@Getter protected List<UUID> children = new ArrayList<>();
-	
 	@Getter protected PositiveIntSpec quantity;
 	
-	protected BooleanProperty buildIsDirty;
-
+	protected SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
+	public void setDirty() { buildIsDirty.setValue(true); }
+	
+	private List<ChangeListener<Boolean>> registeredDirtyUpdates = new ArrayList<>();
+	public void registerDirtyListenerEvent(ChangeListener<Boolean> listener) { registeredDirtyUpdates.add(listener); }
+	public boolean unregisterDirtyListenerEvent(ChangeListener<Boolean> listener) { return registeredDirtyUpdates.remove(listener); }
+	
 	@JsonIgnore @Getter protected BuildPrice price;
 
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
@@ -69,53 +84,30 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonIgnore protected ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
 	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
 
-	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
+	/*
+	 * We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
+	 */
 	@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
-	protected ObservableList<Build> childBuilds = FXCollections.observableArrayList();
-	
-	@Getter @JsonIgnore private ObservableList<Build> readOnlyChildBuilds = FXCollections.unmodifiableObservableList(childBuilds);
-	
-	public void addChild(Build build)
-	{
-		if(build.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
-		if(this.allowedChildClasses().size() <= 0) throw new IllegalArgumentException(titleProperty.get() + " has a type (" + buildTypeID() + ") that does not allow for child builds!");
-		build.parentBuildProperty.setValue(this);
-		this.childBuilds.add(build);
-	}
-	
-	public void insertChild(int index, Build build)
-	{
-		if(build.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to insert already has a parent!");
-		if(this.allowedChildClasses().size() <= 0) throw new IllegalArgumentException(titleProperty.get() + " has a type (" + buildTypeID() + ") that does not allow for child builds!");
-		build.parentBuildProperty.setValue(this);
-		this.childBuilds.add(index, build);
-	}
-	
-	public boolean removeChild(Build build)
-	{
-		if(this.childBuilds.contains(build))
-		{
-			build.parentBuildProperty.setValue(null);
-			return this.childBuilds.remove(build);
-		}
-		
-		return false;
-	}
+	@Getter protected final ObservableList<Build> childBuilds = FXCollections.observableArrayList();
+	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
+	private void setChildBuilds(List<Build> children) { childBuilds.clear(); childBuilds.addAll(children); }
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
 	@Getter
 	protected ObservableList<Tag> tags = FXCollections.observableArrayList();
 
-	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
 	@Getter
 	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
+	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
+	private void setBOMs(List<BOMEntry> boms) { bom.clear(); bom.addAll(boms); }
 	
-	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.RoutingEntryList.Deserializer.class)
 	@Getter
 	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
+	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
+	private void setRoutings(List<RoutingEntry> routings) { this.routings.clear(); this.routings.addAll(routings); }
 
 	@JsonSerialize(using = ObservableListSerialization.ConflictList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.ConflictList.Deserializer.class)
@@ -129,63 +121,93 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public Build(Logger log)
 	{
 		this.LOG = log;
+
+		childBuilds.addListener((ListChangeListener.Change<? extends Build> l) ->
+		{
+			while(l.next())
+			{
+				if(l.wasPermutated())
+				{}
+				else if(l.wasAdded())
+				{
+					for(Build cb : l.getAddedSubList())
+					{
+						if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
+//						if(this.allowedChildClasses().size() <= 0) throw new IllegalArgumentException(titleProperty.get() + " has a type (" + buildTypeID() + ") that does not allow for child builds!");
+						
+						cb.parentBuildProperty.setValue(this);
+						cb.registerDirtyListenerEvent(childUpdateListener);
+						this.setDirty();
+					}
+				}
+				else if(l.wasRemoved())
+				{
+					for(Build cb : l.getRemoved())
+					{
+						cb.parentBuildProperty.setValue(null);
+						cb.unregisterDirtyListenerEvent(childUpdateListener);
+						this.setDirty();
+					}
+				}
+			}
+		});
+		
 		conflicts = FXCollections.observableArrayList();
-		buildIsDirty = new SimpleBooleanProperty(false);
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
-			if(newVal)
+			for(Build cb : childBuilds)
 			{
-				refresh();
-				buildIsDirty.setValue(false);
+				if(newVal) cb.refresh();
+				for(ChangeListener<Boolean> listener : cb.registeredDirtyUpdates) listener.changed(obs, oldVal, newVal);
 			}
+			
+			if(newVal) refresh();
+			for(ChangeListener<Boolean> listener : registeredDirtyUpdates) listener.changed(obs, oldVal, newVal);
+			buildIsDirty.setValue(false);
 		});
 		
 		initializeSpecs();
 		
 		resetSpecListeners();
-		refresh();
-	}
-	
-	public void resetSpecListeners()
-	{
-		this.price = new BuildPrice(this);
-		for(Spec<?> s : getSpecs()) { s.clearListeners(); if(!s.isReadOnly()) s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
+		
+		buildIsDirty.setValue(true);
 	}
 
 	public abstract Build duplicate();
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
-	
 	public abstract String calculateDefaultDescription();
 	public abstract void runCalculations();
+	public abstract Set<String> allowedChildClasses();
+	protected abstract DoubleBinding getAdditionalPriceModifiers();	
+	protected abstract String buildTypeID();
+	
+	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
 	protected void initializeSpecs()
 	{
 		quantity = new PositiveIntSpec("Quantity", 1, false, "Overview");
 	}
-
-	protected abstract DoubleBinding getAdditionalPriceModifiers();	
-	protected abstract String buildTypeID();
-	public abstract Set<String> allowedChildClasses();
-	@JsonIgnore public List<Spec<?>> getSpecs() { return new ArrayList<>(Arrays.asList(quantity)); }
-	protected DoubleBinding getUnitPrice()
+	public void resetSpecListeners()
 	{
-		DoubleBinding binding = null;
-		
-		DoubleBinding additionalMods = getAdditionalPriceModifiers();
-		if(additionalMods != null) binding = additionalMods.add(0);
-		
-		for(BOMEntry bomEntry : bom)
+		this.price = new BuildPrice(this);
+		for(Spec<?> s : getSpecs())
 		{
-			if(binding == null ) binding = bomEntry.getUnitPriceProperty().add(0);
-			else binding = binding.add(bomEntry.getUnitPriceProperty());
+			s.clearListeners();
+			if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
+
+			if(s.getCalculateOnDirty() != null && s.isReadOnly()) this.registerDirtyListenerEvent((obs, oldVal, newVal) -> { s.setPropertyToCallable(); });
 		}
-		for(RoutingEntry routingEntry : routings)
+	}
+	
+	public Map<Integer, Build> getAllChildBuilds()
+	{
+		Map<Integer, Build> allBuilds = new HashMap<>();
+		for(Build cb : childBuilds)
 		{
-			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
-			else binding = binding.add(routingEntry.getTotalPriceProperty());
+			allBuilds.put(cb.getBuildUUID(), cb);
+			allBuilds.putAll(cb.getAllChildBuilds());
 		}
-		
-		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
+		return allBuilds;
 	}
 	
 	protected void refresh()
@@ -194,6 +216,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 		Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 		
+		// We only clear non-custom BOMs, hence the usage of bomToRemove
 		List<BOMEntry> bomToRemove = new ArrayList<>();
 		for(BOMEntry e : bom)
 		{
@@ -211,20 +234,15 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		
 		Map<String, Double> overriddenRoutings = new HashMap<>();
-		
-		List<RoutingEntry> routingsToRemove = new ArrayList<>();
 		for(RoutingEntry e : routings)
 		{
-				Double quantityOverride = null;
-				if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
-				
-				if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
-				
-				routingsToRemove.add(e);
+			Double quantityOverride = null;
+			if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
+			if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
 		}
 		
 		bom.removeAll(bomToRemove);
-		routings.removeAll(routingsToRemove);
+		routings.clear();
 		
 		for(BOMEntry e : calculateStandardBOMs())
 		{
@@ -250,24 +268,46 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			
 			routings.add(r);
 		}
+		
+		price.rebindPricing(this);
 	}
 	
-	protected DoubleBinding getTotalPrice()
+	protected DoubleBinding getUnitPrice()
 	{
 		DoubleBinding binding = null;
 		
 		DoubleBinding additionalMods = getAdditionalPriceModifiers();
-		if(additionalMods != null) binding = additionalMods.multiply(((PositiveIntSpec)this.quantity).getNumberProperty());
+		if(additionalMods != null) binding = additionalMods.add(0);
 		
 		for(BOMEntry bomEntry : bom)
 		{
-			if(binding == null ) binding = bomEntry.getTotalPriceProperty().add(0);
-			else binding = binding.add(bomEntry.getTotalPriceProperty());
+			DoubleBinding bomBinding = (DoubleBinding) Bindings.when(bomEntry.getIgnoreParentQuantityProperty()).then(new SimpleDoubleProperty(0).add(0)).otherwise(bomEntry.getUnitPriceProperty());
+			if(binding == null ) binding = bomBinding;
+			else binding = binding.add(bomBinding);
 		}
 		for(RoutingEntry routingEntry : routings)
 		{
-			if(binding == null ) binding = routingEntry.getTotalPriceProperty().add(0);
-			else binding = binding.add(routingEntry.getTotalPriceProperty());
+			if(binding == null ) binding = routingEntry.getUnitPriceProperty().add(0);
+			else binding = binding.add(routingEntry.getUnitPriceProperty());
+		}
+		for(Build childBuild : childBuilds)
+		{
+			if(binding == null ) binding = childBuild.getPrice().getTotalPrice().add(0);
+			else binding = binding.add(childBuild.getPrice().getTotalPrice());
+		}
+		
+		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
+	}
+	
+	protected DoubleBinding getTotalPrice()
+	{
+		DoubleBinding binding = getUnitPrice().multiply(this.quantity.getNumberProperty());
+		
+		for(BOMEntry bomEntry : bom)
+		{
+			DoubleBinding bomBinding = (DoubleBinding) Bindings.when(bomEntry.getIgnoreParentQuantityProperty().not()).then(new SimpleDoubleProperty(0).add(0)).otherwise(bomEntry.getTotalPriceProperty());
+			if(binding == null) binding = bomBinding;
+			else binding = binding.add(bomBinding);
 		}
 		
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;

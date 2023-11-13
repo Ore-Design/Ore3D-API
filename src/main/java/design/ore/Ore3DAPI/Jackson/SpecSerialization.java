@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
@@ -30,14 +29,12 @@ public class SpecSerialization
 	private static final String ID = "id";
 	private static final String VALUE = "val";
 	private static final String READ_ONLY = "ro";
-	private static final String SECTION = "sec";
-	
-	private static final ObjectMapper MAP = new ObjectMapper();
 	
 	public static class StringSerialization
 	{
 		public static class Serializer extends StdSerializer<StringSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<StringSpec> t) { super(t); }
 		
@@ -50,8 +47,6 @@ public class SpecSerialization
 				gen.writeString(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -66,6 +61,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<StringSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<StringSpec> t) { super(t); }
 	
@@ -76,8 +72,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new StringSpec(id, value, readOnly, section);
+				return new StringSpec(id, value, readOnly, null);
 			}
 		}
 	}
@@ -86,6 +81,7 @@ public class SpecSerialization
 	{
 		public static class Serializer extends StdSerializer<PositiveIntSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<PositiveIntSpec> t) { super(t); }
 		
@@ -98,8 +94,6 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -114,6 +108,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<PositiveIntSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<PositiveIntSpec> t) { super(t); }
 	
@@ -124,8 +119,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new PositiveIntSpec(id, value, readOnly, section);
+				return new PositiveIntSpec(id, value, readOnly, null);
 			}
 		}
 	}
@@ -134,6 +128,7 @@ public class SpecSerialization
 	{
 		public static class Serializer extends StdSerializer<IntSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<IntSpec> t) { super(t); }
 		
@@ -146,8 +141,6 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -162,6 +155,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<IntSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<IntSpec> t) { super(t); }
 	
@@ -172,8 +166,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new IntSpec(id, value, readOnly, section);
+				return new IntSpec(id, value, readOnly, null);
 			}
 		}
 	}
@@ -183,6 +176,7 @@ public class SpecSerialization
 		private static final String MAPIDTAG = "mapID";
 		public static class Serializer extends StdSerializer<IntegerStringMapSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<IntegerStringMapSpec> t) { super(t); }
 		
@@ -197,8 +191,6 @@ public class SpecSerialization
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -213,6 +205,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<IntegerStringMapSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<IntegerStringMapSpec> t) { super(t); }
 	
@@ -223,9 +216,8 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new IntegerStringMapSpec(id, mapID, value, readOnly, section);
+				return new IntegerStringMapSpec(id, mapID, value, readOnly, null);
 			}
 		}
 	}
@@ -235,6 +227,7 @@ public class SpecSerialization
 		private static final String MAPIDTAG = "mapID";
 		public static class Serializer extends StdSerializer<SearchableIntegerStringMapSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<SearchableIntegerStringMapSpec> t) { super(t); }
 		
@@ -249,8 +242,6 @@ public class SpecSerialization
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -265,6 +256,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<SearchableIntegerStringMapSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<SearchableIntegerStringMapSpec> t) { super(t); }
 	
@@ -275,9 +267,8 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section);
+				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, null);
 			}
 		}
 	}
@@ -286,6 +277,7 @@ public class SpecSerialization
 	{
 		public static class Serializer extends StdSerializer<BooleanSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<BooleanSpec> t) { super(t); }
 		
@@ -298,8 +290,6 @@ public class SpecSerialization
 				gen.writeBoolean(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -314,6 +304,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<BooleanSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<BooleanSpec> t) { super(t); }
 	
@@ -324,8 +315,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				boolean value = specNode.get(VALUE).asBoolean();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new BooleanSpec(id, value, readOnly, section);
+				return new BooleanSpec(id, value, readOnly, null);
 			}
 		}
 	}
@@ -334,6 +324,7 @@ public class SpecSerialization
 	{
 		public static class Serializer extends StdSerializer<DoubleSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<DoubleSpec> t) { super(t); }
 		
@@ -346,8 +337,6 @@ public class SpecSerialization
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -362,6 +351,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<DoubleSpec>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<DoubleSpec> t) { super(t); }
 	
@@ -372,8 +362,7 @@ public class SpecSerialization
 				String id = specNode.get(ID).asText();
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new DoubleSpec(id, value, readOnly, section);
+				return new DoubleSpec(id, value, readOnly, null);
 			}
 		}
 	}
@@ -384,6 +373,7 @@ public class SpecSerialization
 		
 		public static class Serializer extends StdSerializer<EnumSpec<?>>
 		{
+			private static final long serialVersionUID = 1L;
 			protected Serializer() { this(null); }
 			protected Serializer(Class<EnumSpec<?>> t) { super(t); }
 		
@@ -398,8 +388,6 @@ public class SpecSerialization
 				gen.writeString(value.getClazz().getName());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
-				gen.writeFieldName(SECTION);
-				gen.writeString(value.getSection());
 			}
 			
 			@Override
@@ -414,6 +402,7 @@ public class SpecSerialization
 		
 		public static class Deserializer extends StdDeserializer<EnumSpec<?>>
 		{
+			private static final long serialVersionUID = 1L;
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<EnumSpec<?>> t) { super(t); }
 	
@@ -436,14 +425,12 @@ public class SpecSerialization
 				Enum<?> value = Enum.valueOf(clazz, specNode.get(VALUE).asText());
 				
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
-				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				
 				EnumSpec<?> s = new EnumSpec<>();
 				s.setId(id);
 				s.setValue(value);
 				s.setClazz(clazz);
 				s.setReadOnly(readOnly);
-				s.setSection(section);
 				
 				return s;
 			}
