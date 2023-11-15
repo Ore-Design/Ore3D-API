@@ -78,14 +78,8 @@ public abstract class Spec<T>
 	{
 		if(calculateOnDirty != null)
 		{
-			try
-			{
-				Util.debugLog("Setting " + id + " to callable value...");
-				T var = calculateOnDirty.call();
-				property.setValue(var);
-				Util.debugLog("Set! New value: " + property.getValue());
-			}
-			catch (Exception e) { Util.warnLog("Error assigning value from Callable to property!\n" + Util.stackTraceArrayToString(e)); }
+			try { property.setValue(calculateOnDirty.call()); }
+			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!\n" + Util.stackTraceArrayToString(e)); }
 		}
 	}
 	

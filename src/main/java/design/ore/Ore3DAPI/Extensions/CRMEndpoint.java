@@ -1,7 +1,5 @@
 package design.ore.Ore3DAPI.Extensions;
 
-import java.util.List;
-
 import org.pf4j.ExtensionPoint;
 
 import design.ore.Ore3DAPI.DataTypes.UpdatePacket;
@@ -27,7 +25,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return                true if successful, otherwise false.
 	 * @see                   Transaction
 	 */
-	List<UpdatePacket> updateTransaction(Transaction transaction);
+	UpdatePacket updateTransaction(Transaction transaction);
 	
 	/*
 	 * Adds a new <code>Transaction</code> to the CRM.

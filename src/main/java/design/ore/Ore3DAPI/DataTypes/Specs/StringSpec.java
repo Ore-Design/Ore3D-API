@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.Util;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
@@ -22,7 +21,7 @@ public class StringSpec extends Spec<String>
 {
 	public StringSpec(String id, String initialValue, boolean readOnly, String section) { super(id, new SimpleStringProperty(initialValue), readOnly, section); }
 	public StringSpec(String id, String initialValue, boolean readOnly, String section, Callable<String> calculateOnDirty)
-	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, calculateOnDirty); addListener((obs, oldVal, newVal) -> Util.debugLog("String spec " + id + " changed to: " + newVal)); }
+	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, calculateOnDirty); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind)

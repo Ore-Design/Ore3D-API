@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import design.ore.Ore3DAPI.Util;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -17,14 +18,18 @@ import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
 import javafx.util.Pair;
 import lombok.Getter;
+import lombok.Setter;
 
 public class UpdatePacket
 {
-	public UpdatePacket(String title, boolean canRunSimultaneaously)
+	public UpdatePacket(String title, boolean canRunSimultaneaously) { this(title, canRunSimultaneaously, null); }
+	
+	public UpdatePacket(String title, boolean canRunSimultaneaously, Callable<UpdatePacket> generateNextUpdatePacket)
 	{
 		this.title = title;
 		this.updateTasks = FXCollections.observableHashMap();
 		this.runSimultaneaously = canRunSimultaneaously;
+		this.generateNextUpdatePacket = generateNextUpdatePacket;
 		
 		maxProgressProperty = new ReadOnlyDoubleWrapper();
 		maxProgressProperty.bind(Bindings.createDoubleBinding(() -> (double) updateTasks.size(), updateTasks));
@@ -69,6 +74,18 @@ public class UpdatePacket
 	ReadOnlyDoubleWrapper maxProgressProperty;
 	public ReadOnlyDoubleProperty getMaxProgressProperty() { return maxProgressProperty.getReadOnlyProperty(); }
 	@Getter BooleanBinding isCompleteBinding;
+	@Setter private Callable<UpdatePacket> generateNextUpdatePacket;
+	public UpdatePacket getNextUpdate()
+	{
+		if(generateNextUpdatePacket == null) return null;
+		
+		try { return generateNextUpdatePacket.call(); }
+		catch (Exception e)
+		{
+			Util.Log.getLogger().warn("An error occured while creating the next update packet!");
+			return null;
+		}
+	}
 	
 	public void addTask(String title, String subtitle, Task<?> updateTask) { updateTasks.put(new Pair<>(title, subtitle), updateTask); }
 	

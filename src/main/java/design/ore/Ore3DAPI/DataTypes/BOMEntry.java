@@ -1,7 +1,5 @@
 package design.ore.Ore3DAPI.DataTypes;
 
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -32,9 +30,6 @@ import lombok.Getter;
 @JsonDeserialize(using = BOMSerialization.Deserializer.class)
 public class BOMEntry extends ValueStorageRecord implements Conflictable
 {
-	protected Logger log;
-	public void setLogger(Logger log) { this.log = log; }
-	
 	@Getter protected final String id;
 	@Getter protected final String shortName;
 	@Getter protected final String longName;
@@ -66,7 +61,7 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 	
 	@Getter protected ObservableList<Conflict> conflicts;
 	
-	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
+	public BOMEntry(String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
 		this.id = id;
 		this.shortName = shortName;
@@ -75,7 +70,6 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this.costPerQuantity = costPerQuantity;
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		this.conflicts = FXCollections.observableArrayList();
-		this.log = log;
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
@@ -94,7 +88,6 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
-			if(log != null) log.debug("QuantityOverriden property has been changed! Updating bindings...");
 			if(newValue) this.quantityProperty.bind(overridenQuantityProperty);
 			else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		});
@@ -108,7 +101,6 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		ignoreParentQuantityProperty.addListener((observable, oldValue, newValue) ->
 		{
-			if(log != null) log.debug("IgnoreParentQuantity property has been changed! Updating bindings...");
 			if(newValue) this.totalCostProperty.bind(unitCostProperty);
 			else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
 		});
@@ -121,7 +113,6 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		
 		marginOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
-			if(log != null) log.debug("MarginOverridden property has been changed! Updating bindings...");
 			if(newValue) this.marginProperty.bind(overridenMarginProperty.add(0));
 			else this.marginProperty.bind(unoverriddenMarginProperty.add(0));
 		});
@@ -133,29 +124,24 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 	
 	public BOMEntry(String id, boolean custom, boolean ignoreParentQuantity, double qty, double overriddenQty, int margin, int overriddenMargin)
 	{
-		this(null, id, "", "", "", 0, custom, qty, margin, ignoreParentQuantity, new SimpleDoubleProperty(0));
+		this(id, "", "", "", 0, custom, qty, margin, ignoreParentQuantity, new SimpleDoubleProperty(0));
 		this.overridenQuantityProperty.set(overriddenQty);
 		this.overridenMarginProperty.set(overriddenMargin);
 	}
 	
 	public BOMEntry(String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
-		this(null, id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
-	}
-	
-	public BOMEntry(Logger log, String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean custom, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
-	{
-		this(log, id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
+		this(id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
 	}
 
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom, boolean ignoreParentQuantity)
-	{ return new BOMEntry(log, id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity); }
+	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity); }
 
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
-	{ return new BOMEntry(log, id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
+	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
 	
 	public BOMEntry duplicate(ObservableNumberValue parentQuantity)
-	{ return new BOMEntry(log, id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), unoverriddenQuantityProperty.get(), unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
+	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), unoverriddenQuantityProperty.get(), unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
 
 	@Override
 	public void addConflict(Conflict conflict) { conflicts.add(conflict); }

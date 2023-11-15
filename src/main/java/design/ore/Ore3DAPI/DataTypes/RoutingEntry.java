@@ -1,7 +1,5 @@
 package design.ore.Ore3DAPI.DataTypes;
 
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -27,8 +25,6 @@ import lombok.Getter;
 @JsonDeserialize(using = RoutingSerialization.Deserializer.class)
 public class RoutingEntry implements Conflictable
 {
-	protected final Logger log;
-	
 	@Getter protected final String id;
 	@Getter protected final String name;
 	@Getter protected final double costPerQuantity;
@@ -50,13 +46,12 @@ public class RoutingEntry implements Conflictable
 	
 	@Getter protected ObservableList<Conflict> conflicts;
 	
-	public RoutingEntry(Logger log, String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity)
+	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity)
 	{
 		this.id = id;
 		this.name = name;
 		this.costPerQuantity = costPerQuantity;
 		this.conflicts = FXCollections.observableArrayList();
-		this.log = log;
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
@@ -69,7 +64,6 @@ public class RoutingEntry implements Conflictable
 		
 		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
-			if(log != null) log.debug("QuantityOverriden property has been changed! Updating bindings...");
 			if(newValue) this.quantityProperty.bind(overridenQuantityProperty);
 			else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		});
@@ -87,22 +81,22 @@ public class RoutingEntry implements Conflictable
 		this.unitPriceProperty = unitCostProperty.divide(marginDenominatorProperty);
 	}
 	
-	public RoutingEntry(Logger log, String id, String name, double costPerQuantity, int margin, ObservableNumberValue parentQuantity)
+	public RoutingEntry(String id, String name, double costPerQuantity, int margin, ObservableNumberValue parentQuantity)
 	{
-		this(log, id, name, costPerQuantity, 0.0, margin, parentQuantity);
+		this(id, name, costPerQuantity, 0.0, margin, parentQuantity);
 	}
 	
 	public RoutingEntry(String id, String name, double qty, double overriddenQty, int margin)
 	{
-		this(null, id, "", 0, qty, margin, new SimpleDoubleProperty(0));
+		this(id, "", 0, qty, margin, new SimpleDoubleProperty(0));
 		this.overridenQuantityProperty.set(overriddenQty);
 	}
 
 	public RoutingEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
-	{ return new RoutingEntry(log, id, name, costPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }
+	{ return new RoutingEntry(id, name, costPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }
 	
 	public RoutingEntry duplicate(ObservableNumberValue parentQuantity)
-	{ return new RoutingEntry(log, id, name, costPerQuantity, unoverriddenQuantityProperty.get(), marginProperty.get(), parentQuantity); }
+	{ return new RoutingEntry(id, name, costPerQuantity, unoverriddenQuantityProperty.get(), marginProperty.get(), parentQuantity); }
 
 	@Override
 	public void addConflict(Conflict conflict) { conflicts.add(conflict); }

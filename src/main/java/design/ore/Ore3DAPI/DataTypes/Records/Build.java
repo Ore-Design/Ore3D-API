@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.RoutingEntry;
@@ -26,6 +25,7 @@ import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.PropertySerialization;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.IntegerBinding;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -114,6 +114,9 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
 	
+	@JsonIgnore @Getter private IntegerBinding childDepth = Bindings.createIntegerBinding(() ->
+		parentBuildProperty.getValue() == null ? 0 : parentBuildProperty.get().getChildDepth().get() + 1, parentBuildProperty);
+	
 	public Build()
 	{
 		this.price = new BuildPrice(this);
@@ -172,7 +175,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					for(Spec<?> s : l.getAddedSubList())
 					{
 						if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
-						if(s.getCalculateOnDirty() != null /*&& s.isReadOnly()*/) this.registerDirtyListenerEvent((obs, oldVal, newVal) -> { Util.debugLog("Build is dirty! Setting property to callable..."); s.setPropertyToCallable(); });
+						if(s.getCalculateOnDirty() != null /*&& s.isReadOnly()*/) this.registerDirtyListenerEvent((obs, oldVal, newVal) -> s.setPropertyToCallable());
 						
 						price.rebindPricing(this);
 					}
