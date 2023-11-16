@@ -5,11 +5,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.BuildList;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
+import design.ore.Ore3DAPI.DataTypes.Tag;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Records.Pricing.PricingData;
+import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,9 +24,7 @@ import lombok.Setter;
 @Setter
 public class Transaction extends ValueStorageRecord implements Conflictable
 {
-	public Transaction() { conflicts = FXCollections.observableArrayList(); }
-	
-	@JsonIgnore @Getter private ObservableList<Conflict> conflicts;
+	public Transaction() { this(null, null, null, null, false, null); }
 	
 	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy)
 	{
@@ -40,6 +42,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		this.lockedBy = lockedBy;
 		
 		conflicts = FXCollections.observableArrayList();
+		tags = FXCollections.observableArrayList();
 		
 		for(Build newBuild : builds) newBuild.getConflicts().addListener((ListChangeListener.Change<? extends Conflict> c) -> resetConflictList(builds));
 		
@@ -85,6 +88,12 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	Customer customer;
 	boolean salesOrder;
 	String lockedBy;
+
+	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
+	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
+	@Getter ObservableList<Tag> tags;
+	
+	@JsonIgnore @Getter private ObservableList<Conflict> conflicts;
 	
 	@JsonIgnore
 	public Map<Integer, Build> getAllBuildsByUID()

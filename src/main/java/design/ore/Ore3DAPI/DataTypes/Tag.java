@@ -17,6 +17,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Tag
 {
-	String name;
+	int id;
+	String displayName;
 	Color color;
 }

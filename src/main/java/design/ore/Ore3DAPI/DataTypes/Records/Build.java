@@ -90,10 +90,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
 	private void setChildBuilds(List<Build> children) { childBuilds.clear(); childBuilds.addAll(children); }
 
-	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
-	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
-	@Getter
-	protected ObservableList<Tag> tags = FXCollections.observableArrayList();
+	@Getter protected List<Integer> tags;
 
 	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
 	@Getter
@@ -150,6 +147,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				}
 			}
 		});
+		
+		tags = new ArrayList<>();
 		
 		conflicts = FXCollections.observableArrayList();
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
