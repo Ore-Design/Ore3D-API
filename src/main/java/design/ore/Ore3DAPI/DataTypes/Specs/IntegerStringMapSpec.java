@@ -23,9 +23,9 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.IntStringMapSerialization.Deserializer.class)
 public class IntegerStringMapSpec extends Spec<Integer>
 {
-	public IntegerStringMapSpec(String id, String mapID, Integer initialValue, boolean readOnly, String section)
+	public IntegerStringMapSpec(String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section);
+		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
 		
 		if(!Util.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
@@ -48,7 +48,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 	}
 	
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Map<Integer, String> matchingMap = Util.getRegisteredIntegerStringMaps().get(mapID);
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");

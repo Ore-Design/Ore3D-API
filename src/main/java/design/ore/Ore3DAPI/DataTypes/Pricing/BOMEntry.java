@@ -1,12 +1,13 @@
-package design.ore.Ore3DAPI.DataTypes;
+package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
-import design.ore.Ore3DAPI.DataTypes.Records.ValueStorageRecord;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.BOMSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -134,14 +135,48 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this(id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parentQuantity);
 	}
 
+	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom, boolean ignoreParentQuantity)
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
+
+	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom)
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
+
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom, boolean ignoreParentQuantity)
-	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity); }
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
+
+	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom)
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
 
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
-	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
 	
 	public BOMEntry duplicate(ObservableNumberValue parentQuantity)
-	{ return new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), unoverriddenQuantityProperty.get(), unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity); }
+	{
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), unoverriddenQuantityProperty.get(),
+			unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
+		newEntry.putStoredValues(getStoredValues());
+		return newEntry;
+	}
 
 	@Override
 	public void addConflict(Conflict conflict) { conflicts.add(conflict); }

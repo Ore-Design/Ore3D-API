@@ -19,12 +19,12 @@ import javafx.scene.layout.Pane;
 @JsonDeserialize(using = SpecSerialization.StringSerialization.Deserializer.class)
 public class StringSpec extends Spec<String>
 {
-	public StringSpec(String id, String initialValue, boolean readOnly, String section) { super(id, new SimpleStringProperty(initialValue), readOnly, section); }
-	public StringSpec(String id, String initialValue, boolean readOnly, String section, Callable<String> calculateOnDirty)
-	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, calculateOnDirty); }
+	public StringSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch) { super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch); }
+	public StringSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
+	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
 
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

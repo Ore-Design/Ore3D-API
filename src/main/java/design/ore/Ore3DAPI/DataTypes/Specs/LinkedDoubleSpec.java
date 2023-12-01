@@ -7,7 +7,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
+import design.ore.Ore3DAPI.UI.ToggleIconButton;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -15,16 +18,41 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import lombok.Getter;
 
-@JsonSerialize(using = SpecSerialization.DoubleSerialization.Serializer.class)
-@JsonDeserialize(using = SpecSerialization.DoubleSerialization.Deserializer.class)
-public class DoubleSpec extends Spec<Double>
+@JsonSerialize(using = SpecSerialization.LinkedDoubleSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.LinkedDoubleSerialization.Deserializer.class)
+public class LinkedDoubleSpec extends Spec<Double>
 {
-	public DoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
+	public LinkedDoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{
+		super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		linkActiveProperty = new SimpleBooleanProperty();
+	}
 	
+	public LinkedDoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
+	{
+		super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		linkActiveProperty = new SimpleBooleanProperty();
+		
+		linkedSpec = toLink;
+		toLink.linkedSpec = this;
+
+		this.linkActiveProperty.bindBidirectional(linkedSpec.getLinkActiveProperty());
+		linkActiveProperty.addListener((obs, oldVal, newVal) ->
+		{
+			if(newVal) this.property.bindBidirectional(linkedSpec.property);
+			else this.property.unbindBidirectional(linkedSpec.property);
+		});
+		linkActiveProperty.setValue(linked);
+		
+	}
+	
+	private LinkedDoubleSpec linkedSpec;
+	@Getter private BooleanProperty linkActiveProperty;
 	private String preEdit = "";
 
 	@Override
@@ -32,6 +60,12 @@ public class DoubleSpec extends Spec<Double>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		ToggleIconButton button = new ToggleIconButton(
+			Util.UI.colorize(new ImageView(Util.getChainIcon()), Util.Colors.getAccent()),
+			Util.UI.colorize(new ImageView(Util.getBrokenChainIcon()), Util.Colors.getAccent()),
+			true, linkActiveProperty);
+		button.setOnAction(e -> linkActiveProperty.setValue(!linkActiveProperty.get()));
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
@@ -91,14 +125,28 @@ public class DoubleSpec extends Spec<Double>
 			});
 		}
 		
-		HBox input = new HBox(idLabel, inputField);
-		input.setAlignment(Pos.CENTER_LEFT);
-
-		idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
-		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
-		inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		
+		HBox input = null;
+		if(linkedSpec != null)
+		{
+			input = new HBox(idLabel, button, inputField);
+			idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
+			idLabel.setMaxWidth(Control.USE_PREF_SIZE);
+			button.prefWidthProperty().bind(input.widthProperty().multiply(0.2));
+			button.setMaxWidth(Control.USE_PREF_SIZE);
+			inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
+			inputField.setMaxWidth(Control.USE_PREF_SIZE);
+		}
+		else
+		{
+			input = new HBox(idLabel, inputField);
+			idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
+			idLabel.setMaxWidth(Control.USE_PREF_SIZE);
+			inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
+			inputField.setMaxWidth(Control.USE_PREF_SIZE);
+		}
+		
+		input.setAlignment(Pos.CENTER_LEFT);
 		input.setPrefHeight(25);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		

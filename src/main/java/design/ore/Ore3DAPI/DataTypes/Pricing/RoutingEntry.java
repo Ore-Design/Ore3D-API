@@ -1,10 +1,11 @@
-package design.ore.Ore3DAPI.DataTypes;
+package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.Jackson.RoutingSerialization;
 import javafx.beans.binding.BooleanBinding;
@@ -91,6 +92,9 @@ public class RoutingEntry implements Conflictable
 		this(id, "", 0, qty, margin, new SimpleDoubleProperty(0));
 		this.overridenQuantityProperty.set(overriddenQty);
 	}
+
+	public RoutingEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity)
+	{ return new RoutingEntry(id, name, newCostPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }
 
 	public RoutingEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
 	{ return new RoutingEntry(id, name, costPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }

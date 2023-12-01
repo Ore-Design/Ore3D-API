@@ -31,6 +31,8 @@ import lombok.Setter;
 	@Type(value = IntSpec.class, name = "intspec"),
 	@Type(value = SearchableIntegerStringMapSpec.class, name = "sismspec"),
 	@Type(value = IntegerStringMapSpec.class, name = "ismspec"),
+	@Type(value = LinkedDoubleSpec.class, name = "ldspec"),
+	@Type(value = LargeTextSpec.class, name = "ltspec"),
 })
 public abstract class Spec<T>
 {
@@ -39,31 +41,29 @@ public abstract class Spec<T>
 		this.calculateOnDirty = null;
 	}
 	
-	public Spec(String id, Property<T> value, boolean readOnly, String section)
+	public Spec(String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		this.id = id;
-		this.property = value;
-		this.property.addListener((obs, oldVal, newVal) -> runListeners(obs, oldVal, newVal));
-		this.readOnly = readOnly;
-		this.section = section;
-		this.calculateOnDirty = null;
+		this(id, value, readOnly, section, countsAsMatch, null);
 	}
 	
-	public Spec(String id, Property<T> value, boolean readOnly, String section, Callable<T> calculateOnDirty)
+	public Spec(String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
 	{
 		this.id = id;
 		this.property = value;
 		this.property.addListener((obs, oldVal, newVal) -> runListeners(obs, oldVal, newVal));
 		this.readOnly = readOnly;
 		this.section = section;
+		this.countsAsMatch = countsAsMatch;
 		this.calculateOnDirty = calculateOnDirty;
 	}
 
 	@Getter @Setter protected boolean readOnly;
+	@Setter protected boolean countsAsMatch;
+	public boolean countsAsMatch() { return countsAsMatch; }
 	@Getter @Setter protected String section;
 	@Getter @Setter protected String id;
 	protected Property<T> property;
-	@JsonIgnore @Getter protected final Callable<T> calculateOnDirty;
+	@JsonIgnore @Getter protected Callable<T> calculateOnDirty;
 	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
 
 	public void setValue(T val) { if(!readOnly) property.setValue(val); }
@@ -83,7 +83,14 @@ public abstract class Spec<T>
 		}
 	}
 	
-	public abstract Pane getUI(List<Spec<?>> props);
+	public abstract Pane getUI(List<Spec<?>> props, String popoutID);
+	
+	public boolean matches(Spec<?> spec)
+	{
+		if(spec == this) return true;
+		
+		return this.id.equals(spec.id) && this.getValue().equals(spec.getValue());
+	}
 	
 	@Override
 	public boolean equals(Object o)

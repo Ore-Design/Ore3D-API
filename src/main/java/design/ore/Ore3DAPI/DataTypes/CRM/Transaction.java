@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Records;
+package design.ore.Ore3DAPI.DataTypes.CRM;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,11 +8,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.DataTypes.BuildList;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.Tag;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Build.Tag;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
-import design.ore.Ore3DAPI.DataTypes.Records.Pricing.PricingData;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
+import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
+import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -46,29 +48,33 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		
 		for(Build newBuild : builds) newBuild.getConflicts().addListener((ListChangeListener.Change<? extends Conflict> c) -> resetConflictList(builds));
 		
-		builds.addListener((ListChangeListener.Change<? extends Build> c) ->
+		this.builds.addListener((ListChangeListener.Change<? extends Build> c) ->
 		{
 			resetConflictList(c.getList());
-			c.next();
-			for(Build b : c.getAddedSubList())
+			while(c.next())
 			{
-				while(true)
+				for(Build b : c.getAddedSubList())
 				{
-					boolean duplicateUIDFound = false;
-					for(Build bld : c.getList())
+					b.getParentTransactionProperty().set(this);
+					while(true)
 					{
-						if(bld.equals(b)) continue;
-						
-						if(bld.getBuildUUID() == b.getBuildUUID())
+						boolean duplicateUIDFound = false;
+						for(Build bld : c.getList())
 						{
-							duplicateUIDFound = true;
-							break;
+							if(bld.equals(b)) continue;
+							
+							if(bld.getBuildUUID() == b.getBuildUUID())
+							{
+								duplicateUIDFound = true;
+								break;
+							}
 						}
+						if(duplicateUIDFound) b.regenerateBuildUUID();
+						else break;
 					}
-					if(duplicateUIDFound) b.regenerateBuildUUID();
-					else break;
+					b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
 				}
-				b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
+				for(Build rb : c.getRemoved()) { rb.getParentTransactionProperty().set(null); }
 			}
 		});
 		
@@ -102,7 +108,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		for(Build b : builds)
 		{
 			allBuilds.put(b.getBuildUUID(), b);
-			allBuilds.putAll(b.getAllChildBuilds());
+			allBuilds.putAll(b.getChildBuildsMap());
 		}
 		return allBuilds;
 	}

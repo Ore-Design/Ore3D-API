@@ -1,7 +1,8 @@
-package design.ore.Ore3DAPI.DataTypes.Records;
+package design.ore.Ore3DAPI.DataTypes.CRM;
 
 import java.util.Map;
 
+import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

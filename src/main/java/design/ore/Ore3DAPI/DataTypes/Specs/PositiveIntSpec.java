@@ -27,13 +27,14 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.PositiveIntSerialization.Deserializer.class)
 public class PositiveIntSpec extends Spec<Integer>
 {
-	public PositiveIntSpec(String id, int initialValue, boolean readOnly, String section)
+	public PositiveIntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
 		this.id = id;
 		this.readOnly = readOnly;
 		this.section = section;
 		intProperty = new SimpleIntegerProperty(initialValue);
 		this.property = intProperty.asObject();
+		this.countsAsMatch = countsAsMatch;
 	}
 	
 	@Getter private IntegerProperty intProperty = null;
@@ -43,7 +44,7 @@ public class PositiveIntSpec extends Spec<Integer>
 	private String preEdit = "";
 
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

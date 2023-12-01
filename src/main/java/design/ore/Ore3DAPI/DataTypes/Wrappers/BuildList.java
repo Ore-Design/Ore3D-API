@@ -1,11 +1,11 @@
-package design.ore.Ore3DAPI.DataTypes;
+package design.ore.Ore3DAPI.DataTypes.Wrappers;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import design.ore.Ore3DAPI.DataTypes.Records.Build;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;

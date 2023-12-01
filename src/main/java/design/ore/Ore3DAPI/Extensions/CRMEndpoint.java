@@ -2,10 +2,10 @@ package design.ore.Ore3DAPI.Extensions;
 
 import org.pf4j.ExtensionPoint;
 
-import design.ore.Ore3DAPI.DataTypes.UpdatePacket;
-import design.ore.Ore3DAPI.DataTypes.Records.Customer;
-import design.ore.Ore3DAPI.DataTypes.Records.Employee;
-import design.ore.Ore3DAPI.DataTypes.Records.Transaction;
+import design.ore.Ore3DAPI.DataTypes.CRM.Customer;
+import design.ore.Ore3DAPI.DataTypes.CRM.Employee;
+import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
+import design.ore.Ore3DAPI.DataTypes.Wrappers.UpdatePacket;
 
 public interface CRMEndpoint extends ExtensionPoint
 {	
@@ -22,10 +22,19 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * Updates the <code>Transaction</code> associated with the id, to be handled by the CRM.
 	 * 
 	 * @param   transaction   the <code>Transaction</code> to be updated.
-	 * @return                true if successful, otherwise false.
+	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                   Transaction
 	 */
 	UpdatePacket updateTransaction(Transaction transaction);
+	
+	/*
+	 * Creates a copy of the <code>Transaction</code> passed in.
+	 * 
+	 * @param   transaction   the <code>Transaction</code> to be duplicated.
+	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
+	 * @see                   Transaction
+	 */
+	UpdatePacket duplicateTransaction(Transaction transaction);
 	
 	/*
 	 * Adds a new <code>Transaction</code> to the CRM.

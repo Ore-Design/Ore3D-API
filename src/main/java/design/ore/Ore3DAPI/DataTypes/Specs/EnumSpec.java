@@ -21,9 +21,9 @@ import lombok.Setter;
 @JsonDeserialize(using = SpecSerialization.EnumSerialization.Deserializer.class)
 public class EnumSpec<E extends Enum<E>> extends Spec<E>
 {
-	public EnumSpec(String id, E initialValue, boolean readOnly, String section)
+	public EnumSpec(String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		super(id, new SimpleObjectProperty<E>(initialValue), readOnly, section);
+		super(id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch);
 		this.clazz = initialValue.getDeclaringClass();
 	}
 	
@@ -34,7 +34,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 	public void setValue(Enum<?> value) { if(!readOnly) property.setValue((E) value); }
 	
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

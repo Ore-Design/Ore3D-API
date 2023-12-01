@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes;
+package design.ore.Ore3DAPI.DataTypes.CRM;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

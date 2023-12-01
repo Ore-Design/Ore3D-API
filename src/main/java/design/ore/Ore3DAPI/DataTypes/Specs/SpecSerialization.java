@@ -68,13 +68,71 @@ public class SpecSerialization
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new StringSpec(id, value, readOnly, section);
+				return new StringSpec(id, value, readOnly, section, true);
 			}
 	
 			@Override
 			public StringSpec deserialize(JsonParser p, DeserializationContext ctxt, StringSpec in) throws IOException, JacksonException
 			{
 				StringSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
+			}
+		}
+	}
+	
+	public static class LargeTextSerialization
+	{
+		public static class Serializer extends StdSerializer<LargeTextSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			protected Serializer() { this(null); }
+			protected Serializer(Class<LargeTextSpec> t) { super(t); }
+		
+			@Override
+			public void serialize(LargeTextSpec value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeFieldName(ID);
+				gen.writeString(value.getId());
+				gen.writeFieldName(VALUE);
+				gen.writeString(value.getValue());
+				gen.writeFieldName(READ_ONLY);
+				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
+			}
+			
+			@Override
+			public void serializeWithType(LargeTextSpec value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<LargeTextSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<LargeTextSpec> t) { super(t); }
+	
+			@Override
+			public LargeTextSpec deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{
+				JsonNode specNode = p.getCodec().readTree(p);
+				String id = specNode.get(ID).asText();
+				String value = specNode.get(VALUE).asText();
+				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new LargeTextSpec(id, value, readOnly, section, true);
+			}
+	
+			@Override
+			public LargeTextSpec deserialize(JsonParser p, DeserializationContext ctxt, LargeTextSpec in) throws IOException, JacksonException
+			{
+				LargeTextSpec spec = deserialize(p, ctxt);
 				in.property.setValue(spec.getValue());
 				return in;
 			}
@@ -126,7 +184,7 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new PositiveIntSpec(id, value, readOnly, section);
+				return new PositiveIntSpec(id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -184,7 +242,7 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new IntSpec(id, value, readOnly, section);
+				return new IntSpec(id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -246,7 +304,7 @@ public class SpecSerialization
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new IntegerStringMapSpec(id, mapID, value, readOnly, section);
+				return new IntegerStringMapSpec(id, mapID, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -308,7 +366,7 @@ public class SpecSerialization
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section);
+				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -366,7 +424,7 @@ public class SpecSerialization
 				boolean value = specNode.get(VALUE).asBoolean();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new BooleanSpec(id, value, readOnly, section);
+				return new BooleanSpec(id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -424,13 +482,71 @@ public class SpecSerialization
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new DoubleSpec(id, value, readOnly, section);
+				return new DoubleSpec(id, value, readOnly, section, true);
 			}
 	
 			@Override
 			public DoubleSpec deserialize(JsonParser p, DeserializationContext ctxt, DoubleSpec in) throws IOException, JacksonException
 			{
 				DoubleSpec spec = deserialize(p, ctxt);
+				in.property.setValue(spec.getValue());
+				return in;
+			}
+		}
+	}
+	
+	public static class LinkedDoubleSerialization
+	{
+		public static class Serializer extends StdSerializer<LinkedDoubleSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			protected Serializer() { this(null); }
+			protected Serializer(Class<LinkedDoubleSpec> t) { super(t); }
+		
+			@Override
+			public void serialize(LinkedDoubleSpec value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeFieldName(ID);
+				gen.writeString(value.getId());
+				gen.writeFieldName(VALUE);
+				gen.writeNumber(value.getValue());
+				gen.writeFieldName(READ_ONLY);
+				gen.writeBoolean(value.isReadOnly());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
+			}
+			
+			@Override
+			public void serializeWithType(LinkedDoubleSpec value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<LinkedDoubleSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<LinkedDoubleSpec> t) { super(t); }
+	
+			@Override
+			public LinkedDoubleSpec deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{
+				JsonNode specNode = p.getCodec().readTree(p);
+				String id = specNode.get(ID).asText();
+				double value = specNode.get(VALUE).asDouble();
+				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				return new LinkedDoubleSpec(id, value, readOnly, section, true);
+			}
+	
+			@Override
+			public LinkedDoubleSpec deserialize(JsonParser p, DeserializationContext ctxt, LinkedDoubleSpec in) throws IOException, JacksonException
+			{
+				LinkedDoubleSpec spec = deserialize(p, ctxt);
 				in.property.setValue(spec.getValue());
 				return in;
 			}

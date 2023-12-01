@@ -20,10 +20,11 @@ import javafx.scene.layout.Priority;
 @JsonDeserialize(using = SpecSerialization.BooleanSerialization.Deserializer.class)
 public class BooleanSpec extends Spec<Boolean>
 {
-	public BooleanSpec(String id, boolean initialValue, boolean readOnly, String section) { super(id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section); }
+	public BooleanSpec(String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ super(id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
 
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -25,13 +26,19 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.IntSerialization.Deserializer.class)
 public class IntSpec extends Spec<Integer>
 {
-	public IntSpec(String id, int initialValue, boolean readOnly, String section)
+	public IntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
 		this.id = id;
 		this.readOnly = readOnly;
 		this.section = section;
 		intProperty = new SimpleIntegerProperty(initialValue);
 		this.property = intProperty.asObject();
+		this.countsAsMatch = countsAsMatch;
+	}
+	public IntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{
+		this(id, initialValue, readOnly, section, countsAsMatch);
+		this.calculateOnDirty = calculateOnDirty;
 	}
 	
 	@Getter private IntegerProperty intProperty = null;
@@ -40,7 +47,7 @@ public class IntSpec extends Spec<Integer>
 	private String preEdit = "";
 
 	@Override
-	public Pane getUI(List<Spec<?>> toBind)
+	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");

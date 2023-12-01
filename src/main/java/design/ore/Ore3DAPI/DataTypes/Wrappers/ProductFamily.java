@@ -1,8 +1,8 @@
-package design.ore.Ore3DAPI.DataTypes;
+package design.ore.Ore3DAPI.DataTypes.Wrappers;
 
 import java.util.List;
 
-import design.ore.Ore3DAPI.DataTypes.Records.Build;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.scene.image.Image;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

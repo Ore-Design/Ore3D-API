@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.DataTypes.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 
 public class BOMSerialization
 {

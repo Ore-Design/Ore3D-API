@@ -1,6 +1,7 @@
-package design.ore.Ore3DAPI.DataTypes.Records;
+package design.ore.Ore3DAPI.DataTypes.Build;
 
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -25,26 +26,15 @@ public class BuildPrice
 		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThanOrEqualTo(0.0);
 		
 		rebindPricing(parent);
-		
-		unitPriceOverriddenProperty.addListener((observable, oldVal, newVal) -> rebindPricing(parent));
 	}
 	
 	public void rebindPricing(Build parent)
 	{
-		rebindTotalPrice(parent);
-		rebindUnitPrice(parent);
-	}
-	
-	private void rebindUnitPrice(Build parent)
-	{
-		if(unitPriceOverriddenProperty.get()) unitPriceProperty.bind(overriddenUnitPriceProperty);
-		else unitPriceProperty.bind(parent.getUnitPrice());
-	}
-	
-	private void rebindTotalPrice(Build parent)
-	{
-		if(unitPriceOverriddenProperty.get()) totalPrice = overriddenUnitPriceProperty.multiply(((PositiveIntSpec) parent.getQuantity()).getIntProperty());
-		else totalPrice = parent.getTotalPrice();
+		unitPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
+			.then(overriddenUnitPriceProperty).otherwise(parent.getUnitPrice()));
+		totalPrice = (DoubleBinding) Bindings.when(unitPriceOverriddenProperty)
+			.then(overriddenUnitPriceProperty.multiply(((PositiveIntSpec) parent.getQuantity()).getIntProperty()))
+			.otherwise(parent.getTotalPrice());
 	}
 	
 	public void reset() { overriddenUnitPriceProperty.setValue(-1.0); }

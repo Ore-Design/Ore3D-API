@@ -15,11 +15,11 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.DataTypes.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.RoutingEntry;
-import design.ore.Ore3DAPI.DataTypes.Tag;
-import design.ore.Ore3DAPI.DataTypes.Records.Build;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Build.Tag;
+import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -139,6 +139,14 @@ public class ObservableListSerialization
 			{	
 				ArrayList<Build> list = p.readValueAs(new TypeReference<ArrayList<Build>>() {});
 				return FXCollections.observableArrayList(list);
+			}
+	
+			@Override
+			public ObservableList<Build> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<Build> originalList) throws IOException, JacksonException
+			{	
+				ArrayList<Build> list = p.readValueAs(new TypeReference<ArrayList<Build>>() {});
+				originalList.addAll(list);
+				return originalList;
 			}
 		}
 	}

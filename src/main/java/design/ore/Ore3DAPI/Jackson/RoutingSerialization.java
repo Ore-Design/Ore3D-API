@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.DataTypes.RoutingEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 
 public class RoutingSerialization
 {
