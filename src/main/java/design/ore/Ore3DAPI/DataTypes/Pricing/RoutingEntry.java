@@ -5,8 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.RoutingSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -24,11 +28,11 @@ import lombok.Getter;
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 @JsonSerialize(using = RoutingSerialization.Serializer.class)
 @JsonDeserialize(using = RoutingSerialization.Deserializer.class)
-public class RoutingEntry implements Conflictable
+public class RoutingEntry extends ValueStorageRecord implements Conflictable
 {
 	@Getter protected final String id;
 	@Getter protected final String name;
-	@Getter protected final double costPerQuantity;
+	@Getter protected double costPerQuantity;
 	
 	@Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
 	@Getter protected final SimpleDoubleProperty overridenQuantityProperty;
@@ -93,14 +97,20 @@ public class RoutingEntry implements Conflictable
 		this.overridenQuantityProperty.set(overriddenQty);
 	}
 
-	public RoutingEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity)
-	{ return new RoutingEntry(id, name, newCostPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }
-
-	public RoutingEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
-	{ return new RoutingEntry(id, name, costPerQuantity, newQuantity, marginProperty.get(), parentQuantity); }
-	
-	public RoutingEntry duplicate(ObservableNumberValue parentQuantity)
-	{ return new RoutingEntry(id, name, costPerQuantity, unoverriddenQuantityProperty.get(), marginProperty.get(), parentQuantity); }
+	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity)
+	{
+		try
+		{
+			String json = Mapper.getMapper().writeValueAsString(this);
+			RoutingEntry newEntry = Mapper.getMapper().readValue(json, RoutingEntry.class);
+			if(newCostPerQuantity != null) newEntry.costPerQuantity = newCostPerQuantity;
+			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
+			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));
+			return newEntry;
+		}
+		catch (Exception e) { Log.getLogger().error("Error duplicationg routing entry:\n" + Util.stackTraceArrayToString(e)); }
+		return null;
+	}
 
 	@Override
 	public void addConflict(Conflict conflict) { conflicts.add(conflict); }

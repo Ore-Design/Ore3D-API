@@ -26,6 +26,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
+import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableSetSerialization;
 import design.ore.Ore3DAPI.Jackson.PropertySerialization;
@@ -66,7 +67,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
 	public void regenerateBuildUUID() { buildUUID = new Random().nextInt(111111, 1000000); }
 	
-	@Getter protected PositiveIntSpec quantity = new PositiveIntSpec("Quantity", 1, false, "Overview", false);
+	@JsonMerge @Getter protected PositiveIntSpec quantity = new PositiveIntSpec("Quantity", 1, false, "Overview", false);
+	@JsonMerge @Getter protected Spec<String> workOrder = new StringSpec("Work Order", "", true, null, false);
 
 	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.DoubleSer.Deserializer.class)
@@ -207,7 +209,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			}
 		});
 		
-		specs.add(quantity);
+		specs.addAll(quantity, workOrder);
 	}
 
 	public abstract List<BOMEntry> calculateStandardBOMs();

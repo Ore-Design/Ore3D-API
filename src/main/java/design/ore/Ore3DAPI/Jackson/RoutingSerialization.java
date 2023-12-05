@@ -62,6 +62,7 @@ public class RoutingSerialization
 		@Override
 		public RoutingEntry deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
 		{
+			// TODO: Fix routing serialization to include value storage record data
 			JsonNode entryNode = p.getCodec().readTree(p);
 			String id = entryNode.get(ID).asText();
 			String name = entryNode.get(NAME).asText();

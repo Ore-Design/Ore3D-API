@@ -22,23 +22,21 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
 public class Transaction extends ValueStorageRecord implements Conflictable
 {
-	public Transaction() { this(null, null, null, null, false, null); }
+	public Transaction() { this("0.0.0", null, null, null, null, false, null); }
 	
-	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy)
+	public Transaction(String createdVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy)
 	{
-		this(id, displayName, customer, pricing, isSalesOrder, lockedBy, new BuildList());
+		this(createdVersion, id, displayName, customer, pricing, canGenerateWorkOrders, lockedBy, new BuildList());
 	}
 	
-	public Transaction(String id, String displayName, Customer customer, PricingData pricing, boolean isSalesOrder, String lockedBy, BuildList builds)
+	public Transaction(String createdVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList builds)
 	{
 		this.id = id;
 		this.customer = customer;
 		this.pricing = pricing;
-		this.salesOrder = isSalesOrder;
+		this.canGenerateWorkOrders = canGenerateWorkOrders;
 		this.displayName = displayName;
 		this.builds = builds;
 		this.lockedBy = lockedBy;
@@ -87,13 +85,15 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		for(Build b : blds) conflicts.setAll(FXCollections.concat(conflicts, b.getConflicts()));
 	}
 	
-	String id;
-	String displayName;
-	PricingData pricing;
-	BuildList builds;
-	Customer customer;
-	boolean salesOrder;
-	String lockedBy;
+	@Getter @Setter String createdVersion;
+	@Getter @Setter String id;
+	@Getter @Setter String displayName;
+	@Getter @Setter PricingData pricing;
+	@Getter @Setter BuildList builds;
+	@Getter @Setter Customer customer;
+	@Setter boolean canGenerateWorkOrders;
+	public boolean canGenerateWorkOrders() { return canGenerateWorkOrders; }
+	@Getter @Setter String lockedBy;
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)

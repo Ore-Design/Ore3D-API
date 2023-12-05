@@ -37,7 +37,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -88,8 +87,8 @@ public class Util
 	@Getter private static final Map<String, Map<Integer, String>> registeredIntegerStringMaps = new HashMap<>();
 	public static void registerIntStringMap(String mapID, Map<Integer, String> map)
 	{
-		if(registeredIntegerStringMaps.containsKey(mapID)) throw new IllegalArgumentException("A map with the ID " + mapID + " has already been registered!");
-		else registeredIntegerStringMaps.put(mapID, map);
+		if(registeredIntegerStringMaps.containsKey(mapID)) Log.getLogger().warn("A map with the ID " + mapID + " has already been registered! Overriding...");
+		registeredIntegerStringMaps.put(mapID, map);
 	}
 	
 //	private static StackPane
@@ -105,7 +104,15 @@ public class Util
 	    return result;
 	}
 
-	public static String stackTraceArrayToString(Exception e)
+//	public static String stackTraceArrayToString(Exception e)
+//	{
+//		StringWriter sw = new StringWriter();
+//		PrintWriter pw = new PrintWriter(sw);
+//		e.printStackTrace(pw);
+//		return sw.toString();
+//	}
+
+	public static String stackTraceArrayToString(Throwable e)
 	{
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
@@ -156,8 +163,8 @@ public class Util
 	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry)
 	{
 		Optional<RoutingPricing> pricing = transaction.getPricing().getRoutings().stream().filter(bp -> bp.getId().equals(entry.getId())).findFirst();
-		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1, parent.getQuantity().getIntProperty());
-		else return entry.duplicate(1, parent.getQuantity().getIntProperty());
+		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty());
+		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty());
 	}
 	
 	public static class UI

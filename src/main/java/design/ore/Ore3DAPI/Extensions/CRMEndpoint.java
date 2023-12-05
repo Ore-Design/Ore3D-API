@@ -1,5 +1,7 @@
 package design.ore.Ore3DAPI.Extensions;
 
+import java.util.List;
+
 import org.pf4j.ExtensionPoint;
 
 import design.ore.Ore3DAPI.DataTypes.CRM.Customer;
@@ -35,6 +37,16 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @see                   Transaction
 	 */
 	UpdatePacket duplicateTransaction(Transaction transaction);
+	
+	/*
+	 * Generates work orders for each build UID contained in the <code>Transaction</code>.
+	 * 
+	 * @param   transaction   the <code>Transaction</code> to be referenced.
+	 * @param   buildUIDs     a list of build UIDs. Each UID will have its own work order generated. Builds not included in the list will be included as components of the work order, with no work order generated.
+	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
+	 * @see                   Transaction
+	 */
+	UpdatePacket generateWorkOrders(Transaction transaction, List<Integer> buildUIDs);
 	
 	/*
 	 * Adds a new <code>Transaction</code> to the CRM.

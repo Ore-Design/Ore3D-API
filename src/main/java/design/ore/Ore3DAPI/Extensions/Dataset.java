@@ -16,14 +16,12 @@ import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.ProductFamily;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
-import javafx.util.Pair;
 
 public interface Dataset extends ExtensionPoint
 {
 	List<ProductFamily> retrieveProductFamilies();
 	Map<String, ? extends BOMEntry> retrieveBOM();
 	Map<String, ? extends RoutingEntry> retrieveRoutings();
-	List<Pair<String, Map<Integer, String>>> retrieveIntegerStringMaps();
 	List<NamedType> retrieveBuildSubtypes();
 	Map<String, Build> retrieveChildBuilds();
 	void reload();
