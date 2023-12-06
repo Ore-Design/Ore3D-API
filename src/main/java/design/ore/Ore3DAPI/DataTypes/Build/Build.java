@@ -249,28 +249,16 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	{
 		if(this == toMatch) return true;
 		
-		if(this.buildTypeID() != toMatch.buildTypeID())
-		{
-//			Util.Log.getLogger().debug("Build " + this.titleProperty.get() + " doesn't match " + toMatch.titleProperty.get() + " because the build type IDs dont match!");
-			return false;
-		}
+		if(this.buildTypeID() != toMatch.buildTypeID()) return false;
 		
 		for(Spec<?> s : this.specs)
 		{
 			if(s.countsAsMatch())
 			{
 				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId() == s.getId()).findFirst();
-				if(optionalMatch.isEmpty())
-				{
-//					Util.Log.getLogger().debug("Build " + this.titleProperty.get() + " doesn't match " + toMatch.titleProperty.get() + " because the spec " + s.getId() + " can't be found in toMatch!");
-					return false;
-				}
+				if(optionalMatch.isEmpty()) return false;
 				Spec<?> matching = optionalMatch.get();
-				if(!matching.getValue().equals(s.getValue()))
-				{
-//					Util.Log.getLogger().debug("Build " + this.titleProperty.get() + " doesn't match " + toMatch.titleProperty.get() + " because the spec " + s.getId() + " doesn't match toMatch!");
-					return false;
-				}
+				if(!matching.getValue().equals(s.getValue())) return false;
 			}
 		}
 		

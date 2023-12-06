@@ -1,8 +1,9 @@
 package design.ore.Ore3DAPI.UI;
 
 import design.ore.Ore3DAPI.Util;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.image.ImageView;
@@ -12,6 +13,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 public class PopoutPane extends VBox
 {
@@ -25,6 +27,8 @@ public class PopoutPane extends VBox
 	protected double mouseAnchorY;
 	protected double translateAnchorX;
 	protected double translateAnchorY;
+	
+	@Getter protected final BooleanProperty closeOnTrue;
 
 	private final EventHandler<MouseEvent> onMousePressedEventHandler = new EventHandler<MouseEvent>()
 	{
@@ -78,7 +82,7 @@ public class PopoutPane extends VBox
 		else
 		{
 			closeButton = new IconButton(Util.UI.colorize(new ImageView(Util.getXIcon()), Util.Colors.getAccent()), false);
-			closeButton.setOnAction(e -> { this.setVisible(false); parent.getChildren().remove(this); });
+			closeButton.setOnAction(e -> close(parent));
 		}
 		
 		dockBar = new HBox(closeButton);
@@ -90,6 +94,9 @@ public class PopoutPane extends VBox
 		dockBar.setAlignment(Pos.CENTER_RIGHT);
 		dockBar.addEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
 		dockBar.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
+		
+		closeOnTrue = new SimpleBooleanProperty(false);
+		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal) close(parent); });
 
 		this.setMinSize(50, 50);
 		this.setPrefSize(600, 400);
@@ -102,5 +109,11 @@ public class PopoutPane extends VBox
 		this.setTranslateX((parent.getHeight() / 2) - (this.getHeight() / 2));
 		
 		DragResizer.makeResizable(this);
+	}
+		
+	private void close(Pane parent)
+	{
+		this.setVisible(false);
+		parent.getChildren().remove(this);
 	}
 }

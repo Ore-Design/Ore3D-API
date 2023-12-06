@@ -24,6 +24,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.BOMPricing;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.UI.PopoutPane;
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -254,16 +255,17 @@ public class Util
 			else popoutAreas.put(ID, pane);
 		}
 		public static void unregisterPopoutArea(String ID) { popoutAreas.remove(ID); }
-		public static void showPopup(Pane content, String popoutID)
+		public static BooleanProperty showPopup(Pane content, String popoutID)
 		{
 			if(!popoutAreas.containsKey(popoutID))
 			{
 				Log.getLogger().warn("No popout area has been registered with ID " + popoutID + " yet!");
-				return;
+				return null;
 			}
 			
 			PopoutPane pop = new PopoutPane(content, popoutAreas.get(popoutID), null);
 			popoutAreas.get(popoutID).getChildren().add(pop);
+			return pop.getCloseOnTrue();
 		}
 	}
 }

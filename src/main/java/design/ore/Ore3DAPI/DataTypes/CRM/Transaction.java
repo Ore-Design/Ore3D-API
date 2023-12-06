@@ -26,12 +26,12 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 {
 	public Transaction() { this("0.0.0", null, null, null, null, false, null); }
 	
-	public Transaction(String createdVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy)
+	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy)
 	{
-		this(createdVersion, id, displayName, customer, pricing, canGenerateWorkOrders, lockedBy, new BuildList());
+		this(compatibleVersion, id, displayName, customer, pricing, canGenerateWorkOrders, lockedBy, new BuildList());
 	}
 	
-	public Transaction(String createdVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList builds)
+	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList builds)
 	{
 		this.id = id;
 		this.customer = customer;
@@ -40,6 +40,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		this.displayName = displayName;
 		this.builds = builds;
 		this.lockedBy = lockedBy;
+		this.compatibleVersion = compatibleVersion;
 		
 		conflicts = FXCollections.observableArrayList();
 		tags = FXCollections.observableArrayList();
@@ -85,7 +86,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		for(Build b : blds) conflicts.setAll(FXCollections.concat(conflicts, b.getConflicts()));
 	}
 	
-	@Getter @Setter String createdVersion;
+	@Getter @Setter String compatibleVersion;
 	@Getter @Setter String id;
 	@Getter @Setter String displayName;
 	@Getter @Setter PricingData pricing;
