@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -17,12 +18,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
+import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
@@ -67,14 +72,15 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
 	public void regenerateBuildUUID() { buildUUID = new Random().nextInt(111111, 1000000); }
 	
-	@JsonMerge @Getter protected PositiveIntSpec quantity = new PositiveIntSpec("Quantity", 1, false, "Overview", false);
-	@JsonMerge @Getter protected Spec<String> workOrder = new StringSpec("Work Order", "", true, null, false);
+	@JsonMerge @Getter protected PositiveIntSpec quantity = new PositiveIntSpec(this, "Quantity", 1, false, "Overview", false);
+	@JsonMerge @Getter protected StringSpec workOrder = new StringSpec(this, "Work Order", "", false, null, false);
 
 	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.DoubleSer.Deserializer.class)
 	@Getter protected DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
 	
 	@JsonIgnore @Getter protected ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
+	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
 	
 	protected SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
 	public void setDirty() { buildIsDirty.setValue(true); }
@@ -107,6 +113,9 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	@JsonIgnore protected ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
 	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
+	
+	@JsonIgnore @Getter protected BooleanBinding hasGeneratedWorkOrderBinding = workOrder.getProperty().isNotEqualTo("")
+			.or(Bindings.createBooleanBinding(() -> parentBuildProperty.getValue() != null ? parentBuildProperty.getValue().getHasGeneratedWorkOrderBinding().get() : false, parentBuildProperty));
 
 	// We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
 	@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
@@ -130,6 +139,12 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
 	private void setRoutings(List<RoutingEntry> routings) { this.routings.clear(); this.routings.addAll(routings); }
 
+	@JsonDeserialize(using = ObservableListSerialization.MiscEntryList.Deserializer.class)
+	@Getter
+	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
+	@JsonSerialize(using = ObservableListSerialization.MiscEntryList.Serializer.class)
+	private void setMiscs(List<MiscEntry> miscs) { misc.clear(); misc.addAll(miscs); }
+
 	@JsonSerialize(using = ObservableListSerialization.ConflictList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.ConflictList.Deserializer.class)
 	@Getter
@@ -143,6 +158,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public Build()
 	{
 		this.price = new BuildPrice(this);
+//		parentTransactionProperty.addListener((obs, oldVal, newVal) -> Log.getLogger().debug("Parent transaction property for " + titleProperty.get() + " set to " + newVal));
 		
 		childBuilds.addListener((ListChangeListener.Change<? extends Build> l) ->
 		{
@@ -157,6 +173,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 						if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
 						
 						cb.parentBuildProperty.setValue(this);
+						cb.parentTransactionProperty.bind(parentTransactionProperty);
 						cb.registerDirtyListenerEvent("ChildUpdateListener", childUpdateListener);
 						this.setDirty();
 					}
@@ -166,6 +183,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					for(Build cb : l.getRemoved())
 					{
 						cb.parentBuildProperty.setValue(null);
+						cb.parentTransactionProperty.unbind();
 						cb.unregisterDirtyListenerEvent("ChildUpdateListener");
 						this.setDirty();
 					}
@@ -266,7 +284,14 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	}
 	
 	protected void refresh()
-	{
+	{	
+		Transaction parentTran = parentTransactionProperty.get();
+		if(parentTran != null && parentTran.isExpired())
+		{
+			Log.getLogger().debug("Transaction is expired, skipping refresh!");
+			return;
+		}
+		
 		conflicts.clear();
 
 		Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
@@ -303,28 +328,26 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		
 		for(BOMEntry e : calculateStandardBOMs())
 		{
-			BOMEntry withPricing = e;
+			BOMEntry newBOM = e;
 			if(this.parentBuildProperty.get() != null)
 			{
-				Build topLevelParent = this.parentBuildProperty.get();
-				while(topLevelParent.parentBuildProperty.get() != null) topLevelParent = topLevelParent.parentBuildProperty.get();
-				
-				if(topLevelParent.parentTransactionProperty.get() != null) withPricing = Util.duplicateBOMWithPricing(topLevelParent.parentTransactionProperty.get(), this, e, e);
-				else Util.Log.getLogger().warn("No transaction parent is registered for the top-level parent of build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
+				if(parentTran != null) newBOM = Util.duplicateBOMWithPricing(parentTran, this, e, e);
+				else Util.Log.getLogger().debug("No transaction parent is registered for the top-level parent of build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
 			}
-			else if(parentTransactionProperty.get() != null) withPricing = Util.duplicateBOMWithPricing(parentTransactionProperty.get(), this, e, e);
-			else Util.Log.getLogger().warn("No transaction parent is registered for the build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
+			else if(parentTransactionProperty.get() != null) newBOM = Util.duplicateBOMWithPricing(parentTransactionProperty.get(), this, e, e);
+			else Util.Log.getLogger().debug("No transaction parent is registered for the build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
 				
 			if(overriddenStandardBOMS.containsKey(e.getId()))
 			{
 				Pair<Double, Integer> overrides = overriddenStandardBOMS.get(e.getId());
 				Double qtyOverride = overrides.getKey();
 				Integer marginOverride = overrides.getValue();
-				if(qtyOverride != null) withPricing.getOverridenQuantityProperty().set(qtyOverride);
-				if(marginOverride != null) withPricing.getOverridenMarginProperty().set(marginOverride);
+				if(qtyOverride != null) newBOM.getOverridenQuantityProperty().set(qtyOverride);
+				if(marginOverride != null) newBOM.getOverridenMarginProperty().set(marginOverride);
 			}
 			
-			bom.add(withPricing);
+			for(Entry<String, StoredValue> entry : Registry.getRegisteredBOMEntryStoredValues().entrySet()) { newBOM.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
+			bom.add(newBOM);
 		}
 		
 		for(RoutingEntry r : calculateRoutings())
@@ -334,7 +357,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				Double overrides = overriddenRoutings.get(r.getId());
 				if(overrides != null) r.getOverridenQuantityProperty().set(overrides);
 			}
-			
+
+			for(Entry<String, StoredValue> entry : Registry.getRegisteredRoutingEntryStoredValues().entrySet()) { r.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
 			routings.add(r);
 		}
 		
@@ -359,8 +383,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		for(RoutingEntry routingEntry : routings)
 		{
 			nonCatalogValues = nonCatalogValues.add(routingEntry.getUnitPriceProperty());
-//			if(binding == null) binding = routingEntry.getUnitPriceProperty().add(0);
-//			else binding = binding.add(routingEntry.getUnitPriceProperty());
+		}
+		for(MiscEntry miscEntry : misc)
+		{
+			nonCatalogValues = nonCatalogValues.add(miscEntry.getUnitPriceProperty());
 		}
 		for(Build childBuild : childBuilds)
 		{

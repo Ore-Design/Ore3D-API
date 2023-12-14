@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import design.ore.Ore3DAPI.UI.ToggleIconButton;
 import javafx.beans.property.BooleanProperty;
@@ -25,17 +26,17 @@ import lombok.Getter;
 
 @JsonSerialize(using = SpecSerialization.LinkedDoubleSerialization.Serializer.class)
 @JsonDeserialize(using = SpecSerialization.LinkedDoubleSerialization.Deserializer.class)
-public class LinkedDoubleSpec extends Spec<Double>
+public class LinkedDoubleSpec extends Spec<Number>
 {
-	public LinkedDoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	public LinkedDoubleSpec(Build parent, String id, Double initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch);
 		linkActiveProperty = new SimpleBooleanProperty();
 	}
 	
-	public LinkedDoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
+	public LinkedDoubleSpec(Build parent, String id, Double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
 	{
-		super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch);
 		linkActiveProperty = new SimpleBooleanProperty();
 		
 		linkedSpec = toLink;
@@ -50,6 +51,8 @@ public class LinkedDoubleSpec extends Spec<Double>
 		linkActiveProperty.setValue(linked);
 		
 	}
+	
+	public double getDoubleValue() { return property.getValue().doubleValue(); }
 	
 	private LinkedDoubleSpec linkedSpec;
 	@Getter private BooleanProperty linkActiveProperty;
@@ -69,7 +72,7 @@ public class LinkedDoubleSpec extends Spec<Double>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly) inputField.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -86,11 +89,11 @@ public class LinkedDoubleSpec extends Spec<Double>
 			String firstVal = "";
 			try
 			{
-				firstVal = ((double) toBind.get(0).getValue()) + "";
+				firstVal = ((Number) toBind.get(0).getValue()) + "";
 				for(int x = 1 ; x < toBind.size() ; x++)
 				{
 					String nextVal = "";
-					try { nextVal = (double) toBind.get(x).getValue() + ""; } catch(Exception e) {}
+					try { nextVal = (Number) toBind.get(x).getValue() + ""; } catch(Exception e) {}
 					if(!firstVal.equals(nextVal))
 					{
 						firstVal = "-";
@@ -106,8 +109,8 @@ public class LinkedDoubleSpec extends Spec<Double>
 				try
 				{
 					String text = inputField.getText();
-					double val = text.equals("") ? 0.0 : Double.parseDouble(text);
-					toBind.forEach(p -> { ((Property<Double>)p).setValue(val); });
+					Number val = text.equals("") ? 0.0 : Double.parseDouble(text);
+					toBind.forEach(p -> { ((Property<Number>)p).setValue(val); });
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

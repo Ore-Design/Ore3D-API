@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -41,12 +42,12 @@ public abstract class Spec<T>
 		this.calculateOnDirty = null;
 	}
 	
-	public Spec(String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch)
+	public Spec(Build parent, String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		this(id, value, readOnly, section, countsAsMatch, null);
+		this(parent, id, value, readOnly, section, countsAsMatch, null);
 	}
 	
-	public Spec(String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
+	public Spec(Build parent, String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
 	{
 		this.id = id;
 		this.property = value;
@@ -55,6 +56,7 @@ public abstract class Spec<T>
 		this.section = section;
 		this.countsAsMatch = countsAsMatch;
 		this.calculateOnDirty = calculateOnDirty;
+		this.parent = parent;
 	}
 
 	@Getter @Setter protected boolean readOnly;
@@ -65,14 +67,15 @@ public abstract class Spec<T>
 	protected Property<T> property;
 	@JsonIgnore @Getter protected Callable<T> calculateOnDirty;
 	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
+	@JsonIgnore Build parent;
 
 	public void setValue(T val) { if(!readOnly) property.setValue(val); }
 	public T getValue() { return property.getValue(); }
 	public void addListener(ChangeListener<? super T> listener) { listeners.add(listener); }
 	public void clearListeners() { listeners.clear(); }
 	private void runListeners(ObservableValue<? extends T> obs, T oldVal, T newVal) { for(ChangeListener<? super T> listener : listeners) { listener.changed(obs, oldVal, newVal); } }
-	public void bind(ObservableValue<? extends T> obs) { if(!readOnly) property.bind(obs); }
-	public void bindBidirectional(Property<T> other) { if(!readOnly) property.bindBidirectional(other); }
+	public void bind(ObservableValue<? extends T> obs) { property.bind(obs); }
+	public void bindBidirectional(Property<T> other) { property.bindBidirectional(other); }
 	
 	public void setPropertyToCallable()
 	{

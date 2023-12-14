@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
@@ -21,9 +22,9 @@ import lombok.Setter;
 @JsonDeserialize(using = SpecSerialization.EnumSerialization.Deserializer.class)
 public class EnumSpec<E extends Enum<E>> extends Spec<E>
 {
-	public EnumSpec(String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	public EnumSpec(Build parent, String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		super(id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch);
 		this.clazz = initialValue.getDeclaringClass();
 	}
 	
@@ -60,7 +61,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 				return null;
 			}
 		});
-		if(readOnly) dropdown.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) dropdown.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

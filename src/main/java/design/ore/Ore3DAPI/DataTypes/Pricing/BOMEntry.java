@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Jackson.BOMSerialization;
+import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -27,8 +27,8 @@ import lombok.Getter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonSerialize(using = BOMSerialization.Serializer.class)
-@JsonDeserialize(using = BOMSerialization.Deserializer.class)
+@JsonSerialize(using = ComponentSerialization.BOMs.Serializer.class)
+@JsonDeserialize(using = ComponentSerialization.BOMs.Deserializer.class)
 public class BOMEntry extends ValueStorageRecord implements Conflictable
 {
 	@Getter protected final String id;

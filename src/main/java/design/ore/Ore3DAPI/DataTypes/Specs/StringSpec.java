@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
@@ -19,9 +20,12 @@ import javafx.scene.layout.Pane;
 @JsonDeserialize(using = SpecSerialization.StringSerialization.Deserializer.class)
 public class StringSpec extends Spec<String>
 {
-	public StringSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch) { super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch); }
-	public StringSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch); }
+	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	
+	public SimpleStringProperty getProperty() { return (SimpleStringProperty) property; }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -31,7 +35,7 @@ public class StringSpec extends Spec<String>
 		
 		TextField inputField = new TextField(property.getValue());
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly) inputField.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

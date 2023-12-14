@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
@@ -23,9 +24,10 @@ import javafx.scene.layout.VBox;
 @JsonDeserialize(using = SpecSerialization.LargeTextSerialization.Deserializer.class)
 public class LargeTextSpec extends Spec<String>
 {
-	public LargeTextSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch) { super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch); }
-	public LargeTextSpec(String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ super(id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch); }
+	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -36,6 +38,7 @@ public class LargeTextSpec extends Spec<String>
 		Button openPopoutButton = new Button("Edit");
 		openPopoutButton.setId("build-select-button");
 		openPopoutButton.setPadding(new Insets(0));
+		if(readOnly || parent.parentIsExpired()) openPopoutButton.setDisable(true);
 		
 		HBox input = new HBox(idLabel, openPopoutButton);
 		input.setAlignment(Pos.CENTER_LEFT);

@@ -1,12 +1,15 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -20,12 +23,17 @@ import javafx.scene.layout.Pane;
 
 @JsonSerialize(using = SpecSerialization.DoubleSerialization.Serializer.class)
 @JsonDeserialize(using = SpecSerialization.DoubleSerialization.Deserializer.class)
-public class DoubleSpec extends Spec<Double>
+public class DoubleSpec extends Spec<Number>
 {
-	public DoubleSpec(String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ super(id, new SimpleDoubleProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
+	public DoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch); }
+	
+	public DoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
+	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
 	
 	private String preEdit = "";
+	
+	public double getDoubleValue() { return property.getValue().doubleValue(); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -35,7 +43,7 @@ public class DoubleSpec extends Spec<Double>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly) inputField.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -73,9 +81,18 @@ public class DoubleSpec extends Spec<Double>
 				{
 					String text = inputField.getText();
 					double val = text.equals("") ? 0.0 : Double.parseDouble(text);
-					toBind.forEach(p -> { ((Property<Double>)p).setValue(val); });
+					for(Spec<?> p : toBind)
+					{
+						if(!(p.getValue() instanceof Number)) throw new Exception("Spec to bind is not of matching generic type!");
+						((Property<Number>) p).setValue(val);
+					}
 				}
-				catch(Exception e) { inputField.setText(preEdit); } });
+				catch(Exception e)
+				{
+					Log.getLogger().debug("Error binding spec!\n" + e.getMessage());
+					inputField.setText(preEdit);
+				}
+			});
 		}
 		else
 		{

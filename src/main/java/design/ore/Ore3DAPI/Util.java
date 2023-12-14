@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -24,6 +27,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.BOMPricing;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.UI.PopoutPane;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
@@ -63,34 +67,18 @@ public class Util
 	
 	public class Log
 	{
-		@Getter private static Logger logger = null;
-//		public static void debug(String message) { if(LOG != null) LOG.debug(message); }
-//		public static void info(String message) { if(LOG != null) LOG.info(message); }
-//		public static void warn(String message) { if(LOG != null) LOG.warn(message); }
-//		public static void error(String message) { if(LOG != null) LOG.error(message); }
-		public static void registerLogger(Logger log) { if(logger == null) { logger = log; } else { logger.warn("Someone attempted to register a different logger, but it's locked!"); } }
+		@Getter protected static Logger logger = null;
 		public static Appender<ILoggingEvent> getAppender(String name) { if(logger != null) { return logger.getAppender(name); } else return null; }
 	}
 	
 	public class Mapper
 	{
-		@Getter private static ObjectMapper mapper = null;
-		public static void registerMapper(ObjectMapper map) { if(mapper == null) { mapper = map; } else { Log.logger.warn("Someone attempted to register a different logger, but it's locked!"); } }
+		@Getter protected static ObjectMapper mapper = null;
 	}
 	
 	@Getter private static final Image brokenChainIcon = new Image("ui/icons/BrokenChainIcon.png");
 	@Getter private static final Image chainIcon = new Image("ui/icons/ChainIcon.png");
 	@Getter private static final Image xIcon = new Image("ui/icons/XIcon.png");
-	
-	@Getter private static final List<ClassLoader> registeredClassLoaders = new ArrayList<ClassLoader>();
-	public static void registerClassLoader(ClassLoader cl) { registeredClassLoaders.add(cl); }
-	
-	@Getter private static final Map<String, Map<Integer, String>> registeredIntegerStringMaps = new HashMap<>();
-	public static void registerIntStringMap(String mapID, Map<Integer, String> map)
-	{
-		if(registeredIntegerStringMaps.containsKey(mapID)) Log.getLogger().warn("A map with the ID " + mapID + " has already been registered! Overriding...");
-		registeredIntegerStringMaps.put(mapID, map);
-	}
 	
 //	private static StackPane
 	
@@ -104,14 +92,6 @@ public class Util
 	
 	    return result;
 	}
-
-//	public static String stackTraceArrayToString(Exception e)
-//	{
-//		StringWriter sw = new StringWriter();
-//		PrintWriter pw = new PrintWriter(sw);
-//		e.printStackTrace(pw);
-//		return sw.toString();
-//	}
 
 	public static String stackTraceArrayToString(Throwable e)
 	{
@@ -170,10 +150,40 @@ public class Util
 	
 	public static class UI
 	{
+		public static <T> T runDialogOnApplicationThread(Callable<T> call)
+		{
+			final FutureTask<T> task = new FutureTask<>(new Callable<>()
+			{
+				@Override
+				public T call() throws Exception { return call.call(); }
+			});
+			Platform.runLater(task);
+			
+			try { return task.get(); }
+			catch (InterruptedException | ExecutionException e)
+			{
+				Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+				return null;
+			}
+		}
+		
 		public static Alert confirm(String title, String message, Stage owner)
 		{
 			Alert confirm = new Alert(AlertType.CONFIRMATION);
 			confirm.initOwner(owner);
+			confirm.setTitle("Confirm");
+			confirm.setHeaderText(title);
+			confirm.setContentText(message);
+			confirm.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+			confirm.initStyle(StageStyle.UNDECORATED);
+			confirm.setGraphic(null);
+			
+			return confirm;
+		}
+		
+		public static Alert confirm(String title, String message)
+		{
+			Alert confirm = new Alert(AlertType.CONFIRMATION);
 			confirm.setTitle("Confirm");
 			confirm.setHeaderText(title);
 			confirm.setContentText(message);

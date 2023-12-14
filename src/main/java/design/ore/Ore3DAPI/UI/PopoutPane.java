@@ -74,6 +74,9 @@ public class PopoutPane extends VBox
 		content.prefWidthProperty().bind(innerPane.widthProperty());
 		content.prefHeightProperty().bind(innerPane.heightProperty());
 		
+		closeOnTrue = new SimpleBooleanProperty(false);
+		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal) close(parent); });
+		
 		if(overrideIconButton != null)
 		{
 			closeButton = new IconButton((ImageView) overrideIconButton.getGraphic(), false);
@@ -82,7 +85,7 @@ public class PopoutPane extends VBox
 		else
 		{
 			closeButton = new IconButton(Util.UI.colorize(new ImageView(Util.getXIcon()), Util.Colors.getAccent()), false);
-			closeButton.setOnAction(e -> close(parent));
+			closeButton.setOnAction(e -> closeOnTrue.set(true));
 		}
 		
 		dockBar = new HBox(closeButton);
@@ -94,9 +97,6 @@ public class PopoutPane extends VBox
 		dockBar.setAlignment(Pos.CENTER_RIGHT);
 		dockBar.addEventHandler(MouseEvent.MOUSE_PRESSED, onMousePressedEventHandler);
 		dockBar.addEventHandler(MouseEvent.MOUSE_DRAGGED, onMouseDraggedEventHandler);
-		
-		closeOnTrue = new SimpleBooleanProperty(false);
-		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal) close(parent); });
 
 		this.setMinSize(50, 50);
 		this.setPrefSize(600, 400);

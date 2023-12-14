@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
@@ -26,7 +27,7 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.IntSerialization.Deserializer.class)
 public class IntSpec extends Spec<Integer>
 {
-	public IntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
 		this.id = id;
 		this.readOnly = readOnly;
@@ -34,10 +35,11 @@ public class IntSpec extends Spec<Integer>
 		intProperty = new SimpleIntegerProperty(initialValue);
 		this.property = intProperty.asObject();
 		this.countsAsMatch = countsAsMatch;
+		this.parent = parent;
 	}
-	public IntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
 	{
-		this(id, initialValue, readOnly, section, countsAsMatch);
+		this(parent, id, initialValue, readOnly, section, countsAsMatch);
 		this.calculateOnDirty = calculateOnDirty;
 	}
 	
@@ -54,7 +56,7 @@ public class IntSpec extends Spec<Integer>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly) inputField.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

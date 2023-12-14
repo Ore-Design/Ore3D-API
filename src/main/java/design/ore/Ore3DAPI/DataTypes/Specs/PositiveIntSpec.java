@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
@@ -27,7 +28,7 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.PositiveIntSerialization.Deserializer.class)
 public class PositiveIntSpec extends Spec<Integer>
 {
-	public PositiveIntSpec(String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	public PositiveIntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
 		this.id = id;
 		this.readOnly = readOnly;
@@ -35,6 +36,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		intProperty = new SimpleIntegerProperty(initialValue);
 		this.property = intProperty.asObject();
 		this.countsAsMatch = countsAsMatch;
+		this.parent = parent;
 	}
 	
 	@Getter private IntegerProperty intProperty = null;
@@ -51,7 +53,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly) inputField.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

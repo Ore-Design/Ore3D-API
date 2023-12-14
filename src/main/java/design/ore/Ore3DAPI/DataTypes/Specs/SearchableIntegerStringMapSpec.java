@@ -9,7 +9,8 @@ import org.controlsfx.control.SearchableComboBox;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
@@ -24,11 +25,11 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.SearchableIntStringMapSerialization.Deserializer.class)
 public class SearchableIntegerStringMapSpec extends Spec<Integer>
 {
-	public SearchableIntegerStringMapSpec(String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	public SearchableIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{
-		super(id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
 		
-		if(!Util.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
+		if(!Registry.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
 	}
 	
@@ -38,7 +39,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 	public void setValue(Integer val)
 	{
 		if(readOnly) return;
-		Map<Integer, String> matchingMap = Util.getRegisteredIntegerStringMaps().get(mapID);
+		Map<Integer, String> matchingMap = Registry.getRegisteredIntegerStringMaps().get(mapID);
 		
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		else
@@ -51,7 +52,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
-		Map<Integer, String> matchingMap = Util.getRegisteredIntegerStringMaps().get(mapID);
+		Map<Integer, String> matchingMap = Registry.getRegisteredIntegerStringMaps().get(mapID);
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		
 		Label idLabel = new Label(id);
@@ -80,7 +81,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 		dropdown.setMinHeight(0);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);
-		if(readOnly) dropdown.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) dropdown.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

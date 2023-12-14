@@ -19,6 +19,7 @@ import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.DataTypes.Build.Tag;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -62,6 +63,7 @@ public class ObservableListSerialization
 			}
 		}
 	}
+
 	public static class RoutingEntryList
 	{
 		public static class Serializer extends StdSerializer<ObservableList<RoutingEntry>>
@@ -99,6 +101,45 @@ public class ObservableListSerialization
 			}
 		}
 	}
+	
+	public static class MiscEntryList
+	{
+		public static class Serializer extends StdSerializer<ObservableList<MiscEntry>>
+		{
+			protected Serializer() { this(null); }
+			protected Serializer(Class<ObservableList<MiscEntry>> t) { super(t); }
+		
+			@Override
+			public void serialize(ObservableList<MiscEntry> value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeObject(new ArrayList<MiscEntry>(value));
+			}
+			
+			@Override
+			public void serializeWithType(ObservableList<MiscEntry> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				gen.writeFieldName("routingsobslist");
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<ObservableList<MiscEntry>>
+		{
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<ObservableList<MiscEntry>> t) { super(t); }
+	
+			@Override
+			public ObservableList<MiscEntry> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{	
+				ArrayList<MiscEntry> list = p.readValueAs(new TypeReference<ArrayList<MiscEntry>>() {});
+				return FXCollections.observableArrayList(list);
+			}
+		}
+	}
+	
 	public static class BuildList
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Build>>

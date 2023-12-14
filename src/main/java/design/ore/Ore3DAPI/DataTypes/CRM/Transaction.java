@@ -24,23 +24,24 @@ import lombok.Setter;
 
 public class Transaction extends ValueStorageRecord implements Conflictable
 {
-	public Transaction() { this("0.0.0", null, null, null, null, false, null); }
+	public Transaction() { this("0.0.0", null, null, null, null, false, null, false); }
 	
-	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy)
+	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, boolean expired)
 	{
-		this(compatibleVersion, id, displayName, customer, pricing, canGenerateWorkOrders, lockedBy, new BuildList());
+		this(compatibleVersion, id, displayName, customer, pricing, canGenerateWorkOrders, lockedBy, new BuildList(), expired);
 	}
 	
-	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList builds)
+	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList blds, boolean expired)
 	{
 		this.id = id;
 		this.customer = customer;
 		this.pricing = pricing;
 		this.canGenerateWorkOrders = canGenerateWorkOrders;
 		this.displayName = displayName;
-		this.builds = builds;
+		this.builds = new BuildList();
 		this.lockedBy = lockedBy;
 		this.compatibleVersion = compatibleVersion;
+		this.expired = expired;
 		
 		conflicts = FXCollections.observableArrayList();
 		tags = FXCollections.observableArrayList();
@@ -77,6 +78,8 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 			}
 		});
 		
+		this.builds.setAll(blds);
+		
 		resetConflictList(builds);
 	}
 	
@@ -95,6 +98,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	@Setter boolean canGenerateWorkOrders;
 	public boolean canGenerateWorkOrders() { return canGenerateWorkOrders; }
 	@Getter @Setter String lockedBy;
+	@Getter final boolean expired;
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)

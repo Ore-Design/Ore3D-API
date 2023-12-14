@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Registry;
 
 public class SpecSerialization
 {
@@ -68,7 +68,7 @@ public class SpecSerialization
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new StringSpec(id, value, readOnly, section, true);
+				return new StringSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -126,7 +126,7 @@ public class SpecSerialization
 				String value = specNode.get(VALUE).asText();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new LargeTextSpec(id, value, readOnly, section, true);
+				return new LargeTextSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -184,7 +184,7 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new PositiveIntSpec(id, value, readOnly, section, true);
+				return new PositiveIntSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -242,7 +242,7 @@ public class SpecSerialization
 				int value = specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new IntSpec(id, value, readOnly, section, true);
+				return new IntSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -304,7 +304,7 @@ public class SpecSerialization
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new IntegerStringMapSpec(id, mapID, value, readOnly, section, true);
+				return new IntegerStringMapSpec(null, id, mapID, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -366,7 +366,7 @@ public class SpecSerialization
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();
-				return new SearchableIntegerStringMapSpec(id, mapID, value, readOnly, section, true);
+				return new SearchableIntegerStringMapSpec(null, id, mapID, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -424,7 +424,7 @@ public class SpecSerialization
 				boolean value = specNode.get(VALUE).asBoolean();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new BooleanSpec(id, value, readOnly, section, true);
+				return new BooleanSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -451,7 +451,7 @@ public class SpecSerialization
 				gen.writeFieldName(ID);
 				gen.writeString(value.getId());
 				gen.writeFieldName(VALUE);
-				gen.writeNumber(value.getValue());
+				gen.writeNumber(value.getDoubleValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
 				gen.writeFieldName(SECTION);
@@ -482,7 +482,7 @@ public class SpecSerialization
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new DoubleSpec(id, value, readOnly, section, true);
+				return new DoubleSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -509,7 +509,7 @@ public class SpecSerialization
 				gen.writeFieldName(ID);
 				gen.writeString(value.getId());
 				gen.writeFieldName(VALUE);
-				gen.writeNumber(value.getValue());
+				gen.writeNumber(value.getDoubleValue());
 				gen.writeFieldName(READ_ONLY);
 				gen.writeBoolean(value.isReadOnly());
 				gen.writeFieldName(SECTION);
@@ -540,7 +540,7 @@ public class SpecSerialization
 				double value = specNode.get(VALUE).asDouble();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
-				return new LinkedDoubleSpec(id, value, readOnly, section, true);
+				return new LinkedDoubleSpec(null, id, value, readOnly, section, true);
 			}
 	
 			@Override
@@ -604,7 +604,7 @@ public class SpecSerialization
 				
 				Class clazz = null;
 				
-				for(ClassLoader cl : Util.getRegisteredClassLoaders())
+				for(ClassLoader cl : Registry.getRegisteredClassLoaders())
 				{
 					try { clazz = Class.forName(classString, true, cl); break; }
 					catch (ClassNotFoundException e) {}

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Pos;
@@ -20,8 +21,8 @@ import javafx.scene.layout.Priority;
 @JsonDeserialize(using = SpecSerialization.BooleanSerialization.Deserializer.class)
 public class BooleanSpec extends Spec<Boolean>
 {
-	public BooleanSpec(String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ super(id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
+	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ super(parent, id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -30,7 +31,7 @@ public class BooleanSpec extends Spec<Boolean>
 		idLabel.getStyleClass().add("spec-label");
 		
 		CheckBox check = new CheckBox();
-		if(readOnly) check.setDisable(true);
+		if(readOnly || parent.parentIsExpired()) check.setDisable(true);
 		
 		if(toBind != null && toBind.size() > 0)
 		{

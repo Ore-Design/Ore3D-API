@@ -11,7 +11,7 @@ import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Jackson.RoutingSerialization;
+import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -26,8 +26,8 @@ import lombok.Getter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonSerialize(using = RoutingSerialization.Serializer.class)
-@JsonDeserialize(using = RoutingSerialization.Deserializer.class)
+@JsonSerialize(using = ComponentSerialization.Routings.Serializer.class)
+@JsonDeserialize(using = ComponentSerialization.Routings.Deserializer.class)
 public class RoutingEntry extends ValueStorageRecord implements Conflictable
 {
 	@Getter protected final String id;
