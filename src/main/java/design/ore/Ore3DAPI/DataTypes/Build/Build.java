@@ -218,9 +218,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					{
 						if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
 						if(s.getCalculateOnDirty() != null) this.registerDirtyListenerEvent(s.getCalculateOnDirty() + "CalculateOnDirty", (obs, oldVal, newVal) -> s.setPropertyToCallable());
-						
-						// TODO: Do we need this?
-						// price.rebindPricing(this);
 					}
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
