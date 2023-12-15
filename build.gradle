@@ -11,7 +11,7 @@ java {
 
 javafx {
     version = '17'
-    modules = ["javafx.base", "javafx.controls", "javafx.graphics", "javafx.media", "javafx.fxml", "java.base", "java.logging", "java.net.http", "jdk.crypto.cryptoki", "java.naming"]
+    modules = ["javafx.base", "javafx.controls", "javafx.graphics", "javafx.media", "javafx.fxml"]
 }
 
 publishing {
