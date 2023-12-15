@@ -4,12 +4,15 @@ import design.ore.Ore3DAPI.Util;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -89,7 +92,7 @@ public class PopoutPane extends VBox
 		}
 		
 		dockBar = new HBox(closeButton);
-		dockBar.setBackground(Background.fill(Util.Colors.getBackground()));
+		dockBar.setBackground(new Background(new BackgroundFill(Util.Colors.getBackground(), CornerRadii.EMPTY, Insets.EMPTY)));
 		dockBar.prefWidthProperty().bind(this.widthProperty());
 		dockBar.setPrefHeight(20);
 		dockBar.setMinHeight(USE_PREF_SIZE);
