@@ -48,7 +48,7 @@ If you encounter any issues or have suggestions for improvement, please [open an
 
 ## License
 
-This repository and its contents' rights are reserved by Ore Designs Inc. Redistribution of this API serves little to no purpose as it has no functionality without the Ore3D desktop application. Usage of the API is available to all, but once again it servs little to no purpose without an Ore3D subscription.
+This repository and its contents' rights are reserved by Ore Designs Inc. Redistribution of this API serves little to no purpose as it has no functionality without the Ore3D desktop application. Usage of the API is available to all, but once again it serves no purpose without an Ore3D subscription.
 
 ## Support
 
