@@ -14,6 +14,7 @@ To get started with the Ore3D API, follow these steps:
 
 1. **Add Repository to your Project:**
    JitPack is used to host the public repository. Make sure that you have the repository source listed in your package manager.
+
    Gradle:
    ```bash
    repositories {
@@ -32,6 +33,7 @@ To get started with the Ore3D API, follow these steps:
    ```
 
    Then add the API to your project dependancies.
+
    Gradle:
    ```bash
    dependencies
