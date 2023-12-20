@@ -230,12 +230,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
 	public abstract String calculateDefaultDescription();
-	public abstract void runCalculations();
 	public abstract Set<String> allowedChildClasses();
-	protected abstract DoubleBinding getAdditionalPriceModifiers();	
-	protected abstract String buildTypeID();
+	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	
-	public Build duplicate()
+	public final Build duplicate()
 	{
 		Build duplicate = null;
 		try
@@ -264,7 +262,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	{
 		if(this == toMatch) return true;
 		
-		if(this.buildTypeID() != toMatch.buildTypeID()) return false;
+		if(!this.getClass().equals(toMatch.getClass())) return false;
 		
 		for(Spec<?> s : this.specs)
 		{
