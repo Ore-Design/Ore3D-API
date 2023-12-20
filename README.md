@@ -12,15 +12,48 @@ With an active Ore3D subscription, users gain the capability to craft their own 
 
 To get started with the Ore3D API, follow these steps:
 
-1. **Clone the Repository:**
+1. **Add Repository to your Project:**
+   JitPack is used to host the public repository. Make sure that you have the repository source listed in your package manager.
+
+   Gradle:
    ```bash
-   git clone https://github.com/Ore-Design/Ore3D-API.git
+   repositories {
+      mavenCentral()
+      maven { url 'https://jitpack.io' }
+   }
+   ```
+   Maven:
+   ```bash
+   <repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
    ```
 
-2. **API Documentation:**
+   Then add the API to your project dependancies.
+
+   Gradle:
+   ```bash
+   dependencies
+   {
+      implementation 'com.github.Ore-Design:Ore3D-API:2.0.0.1'
+   }
+   ```
+   Maven:
+   ```bash
+   <dependency>
+	    <groupId>com.github.Ore-Design</groupId>
+	    <artifactId>Ore3D-API</artifactId>
+	    <version>2.0.0.1</version>
+	</dependency>
+   ```
+
+3. **API Documentation:**
    Explore the detailed documentation in the `docs` directory to understand how to leverage the API effectively.
 
-3. **Subscription and Access:**
+4. **Subscription and Access:**
    Ensure you have an active Ore3D subscription to access and utilize the features provided by the API.
 
 ## Features
@@ -48,7 +81,7 @@ If you encounter any issues or have suggestions for improvement, please [open an
 
 ## License
 
-This repository and its contents' rights are reserved by Ore Designs Inc. Redistribution of this API serves little to no purpose as it has no functionality without the Ore3D desktop application. Usage of the API is available to all, but once again it servs little to no purpose without an Ore3D subscription.
+This repository and its contents' rights are reserved by Ore Designs Inc. Redistribution of this API serves little to no purpose as it has no functionality without the Ore3D desktop application. Usage of the API is available to all, but once again it serves no purpose without an Ore3D subscription.
 
 ## Support
 
