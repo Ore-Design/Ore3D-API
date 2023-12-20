@@ -38,7 +38,7 @@ To get started with the Ore3D API, follow these steps:
    ```bash
    dependencies
    {
-      implementation 'com.github.Ore-Design:Ore3D-API:2.0.0.1'
+      implementation 'com.github.Ore-Design:Ore3D-API:2.0.4.0'
    }
    ```
    Maven:
@@ -46,7 +46,7 @@ To get started with the Ore3D API, follow these steps:
    <dependency>
 	    <groupId>com.github.Ore-Design</groupId>
 	    <artifactId>Ore3D-API</artifactId>
-	    <version>2.0.0.1</version>
+	    <version>2.0.4.0</version>
 	</dependency>
    ```
 
