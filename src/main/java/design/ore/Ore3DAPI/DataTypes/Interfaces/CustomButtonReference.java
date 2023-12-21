@@ -4,27 +4,19 @@ import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
 import javafx.beans.binding.BooleanBinding;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
-import lombok.Getter;
 
 public abstract class CustomButtonReference
-{
-	@Getter final Transaction transaction;
-	@Getter final Pane popupOnAction;
-	
-	public CustomButtonReference(Transaction transaction, Pane popupOnAction)
+{	
+	public final Pane onAction(Transaction transaction)
 	{
-		this.transaction = transaction;
-		this.popupOnAction = popupOnAction;
-	}
-	
-	public final Pane onAction()
-	{
-		if(popupOnAction != null) return popupOnAction;
-		else onClick();
+		Pane popup = generatePopup(transaction);
+		if(popup != null) return popup;
+		else onClick(transaction);
 		return null;
 	}
 	
-	public abstract void onClick();
+	public abstract Pane generatePopup(Transaction transaction);
+	public abstract void onClick(Transaction transaction);
 	public abstract BooleanBinding createDisableBinding();
 	public abstract Image getButtonIcon();
 }
