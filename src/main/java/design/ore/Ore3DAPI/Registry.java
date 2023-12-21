@@ -13,6 +13,7 @@ import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
 import lombok.Getter;
 
 public class Registry
@@ -57,5 +58,11 @@ public class Registry
 	public static void registerCustomEditButton(CustomButtonReference button)
 	{
 		registeredCustomEditButtons.add(button);
+	}
+	
+	@Getter private static final List<CustomSaveCycleReference> registeredCustomSaveCycles = new ArrayList<>();
+	public static void registerCustomSaveCycle(CustomSaveCycleReference cycle)
+	{
+		registeredCustomSaveCycles.add(cycle);
 	}
 }
