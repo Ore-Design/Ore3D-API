@@ -2,6 +2,7 @@ package design.ore.Ore3DAPI.DataTypes.Interfaces;
 
 import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
 import javafx.beans.binding.BooleanBinding;
+import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
 
@@ -25,4 +26,5 @@ public abstract class CustomButtonReference
 	
 	public abstract void onClick();
 	public abstract BooleanBinding createDisableBinding();
+	public abstract Image getButtonIcon();
 }
