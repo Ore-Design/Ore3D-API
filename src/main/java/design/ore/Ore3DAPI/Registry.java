@@ -12,6 +12,7 @@ import ch.qos.logback.classic.Logger;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
 import lombok.Getter;
 
 public class Registry
@@ -50,5 +51,11 @@ public class Registry
 	{
 		if(registeredRoutingEntryStoredValues.containsKey(mapID)) Log.getLogger().warn("A routing entry stored value with the ID " + mapID + " has already been registered! Overriding...");
 		registeredRoutingEntryStoredValues.put(mapID, value);
+	}
+	
+	@Getter private static final List<CustomButtonReference> registeredCustomEditButtons = new ArrayList<>();
+	public static void registerCustomEditButton(CustomButtonReference button)
+	{
+		registeredCustomEditButtons.add(button);
 	}
 }
