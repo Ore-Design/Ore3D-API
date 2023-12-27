@@ -1,17 +1,11 @@
 plugins {
 	id 'java-library'
     id 'maven-publish'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 java {
 	withSourcesJar()
-	// withJavadocJar()
-}
-
-javafx {
-    version = '17'
-    modules = ["javafx.base", "javafx.controls", "javafx.graphics", "javafx.media", "javafx.fxml"]
+	withJavadocJar()
 }
 
 publishing {
@@ -27,7 +21,7 @@ targetCompatibility = 17
 
 def packagename = "Ore3DAPI"
 group = "design.ore"
-version = "2.0.4.6"
+version = "2.0.4.7"
 
 repositories {
     mavenCentral()

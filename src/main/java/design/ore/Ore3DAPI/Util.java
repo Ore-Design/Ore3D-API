@@ -152,18 +152,30 @@ public class Util
 	{
 		public static <T> T runDialogOnApplicationThread(Callable<T> call)
 		{
-			final FutureTask<T> task = new FutureTask<>(new Callable<>()
+			if(Platform.isFxApplicationThread())
 			{
-				@Override
-				public T call() throws Exception { return call.call(); }
-			});
-			Platform.runLater(task);
-			
-			try { return task.get(); }
-			catch (InterruptedException | ExecutionException e)
+				try { return call.call(); }
+				catch (Exception e)
+				{
+					Log.getLogger().warn("Error running callable: " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+					return null;
+				}
+			}
+			else
 			{
-				Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
-				return null;
+				final FutureTask<T> task = new FutureTask<>(new Callable<>()
+				{
+					@Override
+					public T call() throws Exception { return call.call(); }
+				});
+				Platform.runLater(task);
+				
+				try { return task.get(); }
+				catch (InterruptedException | ExecutionException e)
+				{
+					Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+					return null;
+				}
 			}
 		}
 		
