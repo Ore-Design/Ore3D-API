@@ -1,5 +1,7 @@
 # Ore3D API
 
+[![](https://jitpack.io/v/Ore-Design/Ore3D-API/month.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
+[![](https://jitpack.io/v/Ore-Design/Ore3D-API/week.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
 [![](https://jitpack.io/v/Ore-Design/Ore3D-API.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
 
 ## Overview
