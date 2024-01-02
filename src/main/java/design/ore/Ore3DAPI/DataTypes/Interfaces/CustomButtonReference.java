@@ -19,4 +19,5 @@ public abstract class CustomButtonReference
 	public abstract void onClick(Transaction transaction);
 	public abstract BooleanBinding createDisableBinding(Transaction transaction);
 	public abstract Image getButtonIcon();
+	public abstract String getButtonTooltip();
 }
