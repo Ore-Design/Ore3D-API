@@ -16,7 +16,7 @@ public class ToggleIconButton extends Button
 		if(bindHeight) this.prefHeightProperty().bind(this.widthProperty());
 		else this.prefWidthProperty().bind(this.heightProperty());
 		this.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-		this.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		this.setMinSize(10, 10);
 		
 		this.setGraphic(binding.get() ? iconToggledTrue : iconToggledFalse);
 		this.getStyleClass().add("icon-button");
