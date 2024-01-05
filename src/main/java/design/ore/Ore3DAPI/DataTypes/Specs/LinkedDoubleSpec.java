@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -9,11 +10,13 @@ import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import design.ore.Ore3DAPI.UI.ToggleIconButton;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -28,34 +31,43 @@ import lombok.Getter;
 @JsonDeserialize(using = SpecSerialization.LinkedDoubleSerialization.Deserializer.class)
 public class LinkedDoubleSpec extends Spec<Number>
 {
-	public LinkedDoubleSpec(Build parent, String id, Double initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{
-		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch);
-		linkActiveProperty = new SimpleBooleanProperty();
-	}
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
-	public LinkedDoubleSpec(Build parent, String id, Double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null, false); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, null, false); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null, false); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
 	{
-		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch);
-		linkActiveProperty = new SimpleBooleanProperty();
+		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty);
 		
-		linkedSpec = toLink;
-		toLink.linkedSpec = this;
-
-		this.linkActiveProperty.bindBidirectional(linkedSpec.getLinkActiveProperty());
-		linkActiveProperty.addListener((obs, oldVal, newVal) ->
+		if(toLink != null)
 		{
-			if(newVal) this.property.bindBidirectional(linkedSpec.property);
-			else this.property.unbindBidirectional(linkedSpec.property);
-		});
-		linkActiveProperty.setValue(linked);
-		
+			linkedSpec = toLink;
+			toLink.linkedSpec = this;
+			this.linkActiveProperty.bindBidirectional(linkedSpec.getLinkActiveProperty());
+			linkActiveProperty.addListener((obs, oldVal, newVal) ->
+			{
+				if(newVal) this.valueProperty.bindBidirectional(linkedSpec.valueProperty);
+				else this.valueProperty.unbindBidirectional(linkedSpec.valueProperty);
+			});
+			linkActiveProperty.setValue(linked);
+		}
 	}
 	
-	public double getDoubleValue() { return property.getValue().doubleValue(); }
+	public double getDoubleValue() { return valueProperty.getValue().doubleValue(); }
 	
 	private LinkedDoubleSpec linkedSpec;
-	@Getter private BooleanProperty linkActiveProperty;
+	@Getter private BooleanProperty linkActiveProperty = new SimpleBooleanProperty();
 	private String preEdit = "";
 
 	@Override
@@ -72,7 +84,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
+		inputField.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -117,7 +129,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 		else
 		{
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
-			inputField.textProperty().bindBidirectional(this.property, new NonNullDoubleStringConverter());
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override
@@ -135,9 +147,9 @@ public class LinkedDoubleSpec extends Spec<Number>
 			input = new HBox(idLabel, button, inputField);
 			idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 			idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-			button.prefWidthProperty().bind(input.widthProperty().multiply(0.2));
+			button.prefWidthProperty().bind(input.widthProperty().multiply(0.1));
 			button.setMaxWidth(Control.USE_PREF_SIZE);
-			inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
+			inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.5));
 			inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		}
 		else

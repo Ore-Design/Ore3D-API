@@ -1,17 +1,20 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableNumberValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -29,19 +32,23 @@ import lombok.Getter;
 public class PositiveIntSpec extends Spec<Integer>
 {
 	public PositiveIntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public PositiveIntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+
+	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
 	{
-		this.id = id;
-		this.readOnly = readOnly;
-		this.section = section;
-		intProperty = new SimpleIntegerProperty(initialValue);
-		this.property = intProperty.asObject();
-		this.countsAsMatch = countsAsMatch;
-		this.parent = parent;
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
+		intProperty.bind(valueProperty);
 	}
 	
-	@Getter private IntegerProperty intProperty = null;
+	@Getter private IntegerProperty intProperty = new SimpleIntegerProperty();
 	public ObservableNumberValue getNumberProperty() { return intProperty; }
-	public void bindBidirectional(StringProperty other, StringConverter<Number> converter) { if(!readOnly) other.bindBidirectional(intProperty, converter); }
+	public void bindBidirectional(StringProperty other, StringConverter<Number> converter) { other.bindBidirectional(intProperty, converter); }
 	
 	private String preEdit = "";
 
@@ -53,7 +60,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
+		inputField.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -98,7 +105,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		else
 		{
 			inputField.setTextFormatter(new PositiveIntegerTextFormatter());
-			inputField.textProperty().bindBidirectional(this.property, new IntegerStringConverter());
+			inputField.textProperty().bindBidirectional(this.valueProperty, new IntegerStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override

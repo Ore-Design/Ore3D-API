@@ -39,7 +39,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeString(value.getValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -75,7 +75,7 @@ public class SpecSerialization
 			public StringSpec deserialize(JsonParser p, DeserializationContext ctxt, StringSpec in) throws IOException, JacksonException
 			{
 				StringSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -97,7 +97,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeString(value.getValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -133,7 +133,7 @@ public class SpecSerialization
 			public LargeTextSpec deserialize(JsonParser p, DeserializationContext ctxt, LargeTextSpec in) throws IOException, JacksonException
 			{
 				LargeTextSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -155,7 +155,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -191,7 +191,7 @@ public class SpecSerialization
 			public PositiveIntSpec deserialize(JsonParser p, DeserializationContext ctxt, PositiveIntSpec in) throws IOException, JacksonException
 			{
 				PositiveIntSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -213,7 +213,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -249,7 +249,7 @@ public class SpecSerialization
 			public IntSpec deserialize(JsonParser p, DeserializationContext ctxt, IntSpec in) throws IOException, JacksonException
 			{
 				IntSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -274,7 +274,7 @@ public class SpecSerialization
 				gen.writeFieldName(MAPIDTAG);
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -311,7 +311,7 @@ public class SpecSerialization
 			public IntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt, IntegerStringMapSpec in) throws IOException, JacksonException
 			{
 				IntegerStringMapSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -336,7 +336,7 @@ public class SpecSerialization
 				gen.writeFieldName(MAPIDTAG);
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -373,7 +373,7 @@ public class SpecSerialization
 			public SearchableIntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt, SearchableIntegerStringMapSpec in) throws IOException, JacksonException
 			{
 				SearchableIntegerStringMapSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -395,7 +395,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeBoolean(value.getValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -431,7 +431,7 @@ public class SpecSerialization
 			public BooleanSpec deserialize(JsonParser p, DeserializationContext ctxt, BooleanSpec in) throws IOException, JacksonException
 			{
 				BooleanSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -453,7 +453,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getDoubleValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -489,7 +489,7 @@ public class SpecSerialization
 			public DoubleSpec deserialize(JsonParser p, DeserializationContext ctxt, DoubleSpec in) throws IOException, JacksonException
 			{
 				DoubleSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -511,7 +511,7 @@ public class SpecSerialization
 				gen.writeFieldName(VALUE);
 				gen.writeNumber(value.getDoubleValue());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -547,7 +547,7 @@ public class SpecSerialization
 			public LinkedDoubleSpec deserialize(JsonParser p, DeserializationContext ctxt, LinkedDoubleSpec in) throws IOException, JacksonException
 			{
 				LinkedDoubleSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}
@@ -573,7 +573,7 @@ public class SpecSerialization
 				gen.writeFieldName(ENUM_CLASS);
 				gen.writeString(value.getClazz().getName());
 				gen.writeFieldName(READ_ONLY);
-				gen.writeBoolean(value.isReadOnly());
+				gen.writeBoolean(value.getReadOnlyProperty().get());
 				gen.writeFieldName(SECTION);
 				gen.writeString(value.getSection());
 			}
@@ -619,7 +619,7 @@ public class SpecSerialization
 				s.setId(id);
 				s.setValue(value);
 				s.setClazz(clazz);
-				s.setReadOnly(readOnly);
+				s.getReadOnlyProperty().set(readOnly);
 				s.setSection(section);
 				
 				return s;
@@ -629,7 +629,7 @@ public class SpecSerialization
 			public EnumSpec deserialize(JsonParser p, DeserializationContext ctxt, EnumSpec in) throws IOException, JacksonException
 			{
 				EnumSpec spec = deserialize(p, ctxt);
-				in.property.setValue(spec.getValue());
+				in.valueProperty.setValue(spec.getValue());
 				return in;
 			}
 		}

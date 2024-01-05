@@ -1,13 +1,16 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
@@ -22,17 +25,23 @@ import lombok.Setter;
 @JsonDeserialize(using = SpecSerialization.EnumSerialization.Deserializer.class)
 public class EnumSpec<E extends Enum<E>> extends Spec<E>
 {
+	public EnumSpec() {}
+	
 	public EnumSpec(Build parent, String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public EnumSpec(Build parent, String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public EnumSpec(Build parent, String id, E initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty)
 	{
-		super(parent, id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch, calculateOnDirty);
 		this.clazz = initialValue.getDeclaringClass();
 	}
-	
-	public EnumSpec() { this.property = new SimpleObjectProperty<E>(); }
 
 	@Getter @Setter Class<E> clazz;
 	
-	public void setValue(Enum<?> value) { if(!readOnly) property.setValue((E) value); }
+	public void setValue(Enum<?> value) { valueProperty.setValue((E) value); }
 	
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -61,7 +70,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 				return null;
 			}
 		});
-		if(readOnly || parent.parentIsExpired()) dropdown.setDisable(true);
+		dropdown.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -92,7 +101,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 		}
 		else
 		{
-			dropdown.valueProperty().bindBidirectional(property);
+			dropdown.valueProperty().bindBidirectional(valueProperty);
 		}
 		
 		HBox input = new HBox(idLabel, dropdown);

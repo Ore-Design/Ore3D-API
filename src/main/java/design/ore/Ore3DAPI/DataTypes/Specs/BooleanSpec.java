@@ -1,14 +1,17 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
@@ -22,7 +25,13 @@ import javafx.scene.layout.Priority;
 public class BooleanSpec extends Spec<Boolean>
 {
 	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ super(parent, id, new SimpleBooleanProperty(initialValue).asObject(), readOnly, section, countsAsMatch); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public BooleanSpec(Build parent, String id, boolean initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty)
+	{ super(parent, id, new SimpleBooleanProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -31,7 +40,7 @@ public class BooleanSpec extends Spec<Boolean>
 		idLabel.getStyleClass().add("spec-label");
 		
 		CheckBox check = new CheckBox();
-		if(readOnly || parent.parentIsExpired()) check.setDisable(true);
+		check.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -61,7 +70,7 @@ public class BooleanSpec extends Spec<Boolean>
 		}
 		else
 		{
-			check.selectedProperty().bindBidirectional(property);
+			check.selectedProperty().bindBidirectional(valueProperty);
 		}
 		
 		HBox input = new HBox(idLabel, check);

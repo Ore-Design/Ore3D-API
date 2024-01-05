@@ -15,12 +15,12 @@ public class IconButton extends Button
 			if(this.getHeight() >= this.getWidth())
 			{
 				icon.setFitWidth(this.getWidth() * 0.65);
-				icon.setFitHeight(0);
+				icon.setFitHeight(this.getWidth() * 0.65);
 			}
 			else
 			{
-				icon.setFitWidth(0);
 				icon.setFitHeight(this.getHeight() * 0.65);
+				icon.setFitWidth(this.getHeight() * 0.65);
 			}
 		});
 		
@@ -29,12 +29,12 @@ public class IconButton extends Button
 			if(this.getHeight() >= this.getWidth())
 			{
 				icon.setFitWidth(this.getWidth() * 0.65);
-				icon.setFitHeight(0);
+				icon.setFitHeight(this.getWidth() * 0.65);
 			}
 			else
 			{
-				icon.setFitWidth(0);
 				icon.setFitHeight(this.getHeight() * 0.65);
+				icon.setFitWidth(this.getHeight() * 0.65);
 			}
 		});
 		

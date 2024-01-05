@@ -104,7 +104,7 @@ public class Util
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
 	{
 		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
-		{ return Pattern.compile("\\d*|\\d+\\.\\d{0," + decimalPlaces + "}").matcher(change.getControlNewText()).matches() ? change : null; });
+		{ return Pattern.compile("(\\+|-)?(\\d*|\\d+\\.\\d{0," + decimalPlaces + "})").matcher(change.getControlNewText()).matches() ? change : null; });
 	}
 	
 	public static TextFormatter<?> getIntegerFormatter()

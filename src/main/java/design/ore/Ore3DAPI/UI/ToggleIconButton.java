@@ -31,13 +31,13 @@ public class ToggleIconButton extends Button
 		{
 			if(this.getHeight() >= this.getWidth())
 			{
-				icon.setFitWidth(this.getWidth() * 0.65);
-				icon.setFitHeight(0);
+				icon.setFitWidth(this.getWidth() * 0.7);
+				icon.setFitHeight(icon.getFitWidth());
 			}
 			else
 			{
-				icon.setFitWidth(0);
-				icon.setFitHeight(this.getHeight() * 0.65);
+				icon.setFitHeight(this.getHeight() * 0.7);
+				icon.setFitWidth(icon.getFitHeight());
 			}
 		});
 		
@@ -45,13 +45,13 @@ public class ToggleIconButton extends Button
 		{
 			if(this.getHeight() >= this.getWidth())
 			{
-				icon.setFitWidth(this.getWidth() * 0.65);
-				icon.setFitHeight(0);
+				icon.setFitWidth(this.getWidth() * 0.7);
+				icon.setFitHeight(icon.getFitWidth());
 			}
 			else
 			{
-				icon.setFitWidth(0);
-				icon.setFitHeight(this.getHeight() * 0.65);
+				icon.setFitHeight(this.getHeight() * 0.7);
+				icon.setFitWidth(icon.getFitHeight());
 			}
 		});
 	}

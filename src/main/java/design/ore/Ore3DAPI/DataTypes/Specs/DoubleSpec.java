@@ -7,12 +7,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
-import design.ore.Ore3DAPI.Util.Log;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -26,14 +28,20 @@ import javafx.scene.layout.Pane;
 public class DoubleSpec extends Spec<Number>
 {
 	public DoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public DoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
 	public DoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public DoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
 	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
 	
 	private String preEdit = "";
 	
-	public double getDoubleValue() { return property.getValue().doubleValue(); }
+	public double getDoubleValue() { return valueProperty.getValue().doubleValue(); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -43,7 +51,7 @@ public class DoubleSpec extends Spec<Number>
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		if(readOnly || parent.parentIsExpired()) inputField.setDisable(true);
+		inputField.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -97,7 +105,7 @@ public class DoubleSpec extends Spec<Number>
 		else
 		{
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
-			inputField.textProperty().bindBidirectional(this.property, new NonNullDoubleStringConverter());
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override

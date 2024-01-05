@@ -22,8 +22,8 @@ public class BuildPrice
 		unitPriceProperty = new ReadOnlyDoubleWrapper();
 		unitPriceProperty.bind(parent.getUnitPrice());
 		
-		overriddenUnitPriceProperty = new SimpleDoubleProperty(-1.0);
-		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThanOrEqualTo(0.0);
+		overriddenUnitPriceProperty = new SimpleDoubleProperty(-Double.MAX_VALUE);
+		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThan(-Double.MAX_VALUE);
 		
 		rebindPricing(parent);
 	}
@@ -37,9 +37,9 @@ public class BuildPrice
 			.otherwise(parent.getTotalPrice());
 	}
 	
-	public void reset() { overriddenUnitPriceProperty.setValue(-1.0); }
+	public void reset() { overriddenUnitPriceProperty.setValue(-Double.MAX_VALUE); }
 	public void override(double price)
 	{
-		unitPriceProperty.setValue(price);
+		overriddenUnitPriceProperty.setValue(price);
 	}
 }

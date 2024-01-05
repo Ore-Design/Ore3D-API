@@ -14,7 +14,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
@@ -35,53 +38,51 @@ import lombok.Setter;
 	@Type(value = LinkedDoubleSpec.class, name = "ldspec"),
 	@Type(value = LargeTextSpec.class, name = "ltspec"),
 })
+
 public abstract class Spec<T>
 {
-	public Spec()
-	{
-		this.calculateOnDirty = null;
-	}
+	public Spec() { valueProperty = new SimpleObjectProperty<T>(); }
 	
-	public Spec(Build parent, String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch)
-	{
-		this(parent, id, value, readOnly, section, countsAsMatch, null);
-	}
-	
-	public Spec(Build parent, String id, Property<T> value, boolean readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
+	public Spec(Build parent, String id, Property<T> value, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
 	{
 		this.id = id;
-		this.property = value;
-		this.property.addListener((obs, oldVal, newVal) -> runListeners(obs, oldVal, newVal));
-		this.readOnly = readOnly;
+		this.valueProperty = value;
+		this.valueProperty.addListener((obs, oldVal, newVal) -> runListeners(obs, oldVal, newVal));
+		this.readOnlyProperty.bind(readOnly);
 		this.section = section;
 		this.countsAsMatch = countsAsMatch;
 		this.calculateOnDirty = calculateOnDirty;
 		this.parent = parent;
 	}
 
-	@Getter @Setter protected boolean readOnly;
+	@Getter protected final SimpleBooleanProperty readOnlyProperty = new SimpleBooleanProperty(false);
 	@Setter protected boolean countsAsMatch;
 	public boolean countsAsMatch() { return countsAsMatch; }
 	@Getter @Setter protected String section;
 	@Getter @Setter protected String id;
-	protected Property<T> property;
+	@Getter protected Property<T> valueProperty; // TODO: Refactor for read only
 	@JsonIgnore @Getter protected Callable<T> calculateOnDirty;
 	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
-	@JsonIgnore Build parent;
+	@JsonIgnore protected Build parent;
 
-	public void setValue(T val) { if(!readOnly) property.setValue(val); }
-	public T getValue() { return property.getValue(); }
+	public void setValue(T val) { valueProperty.setValue(val); }
+	public T getValue() { return valueProperty.getValue(); }
 	public void addListener(ChangeListener<? super T> listener) { listeners.add(listener); }
 	public void clearListeners() { listeners.clear(); }
-	private void runListeners(ObservableValue<? extends T> obs, T oldVal, T newVal) { for(ChangeListener<? super T> listener : listeners) { listener.changed(obs, oldVal, newVal); } }
-	public void bind(ObservableValue<? extends T> obs) { property.bind(obs); }
-	public void bindBidirectional(Property<T> other) { property.bindBidirectional(other); }
+	protected void runListeners(ObservableValue<? extends T> obs, T oldVal, T newVal) { for(ChangeListener<? super T> listener : listeners) { listener.changed(obs, oldVal, newVal); } }
+	public void bind(ObservableValue<? extends T> obs) { valueProperty.bind(obs); }
+	public void bindBidirectional(Property<T> other) { valueProperty.bindBidirectional(other); }
+	public boolean isReadOnly() { return readOnlyProperty.get(); }
 	
 	public void setPropertyToCallable()
 	{
 		if(calculateOnDirty != null)
 		{
-			try { property.setValue(calculateOnDirty.call()); }
+			try
+			{
+				T calledValue = calculateOnDirty.call();
+				if(calledValue != null) valueProperty.setValue(calledValue);
+			}
 			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!\n" + Util.stackTraceArrayToString(e)); }
 		}
 	}

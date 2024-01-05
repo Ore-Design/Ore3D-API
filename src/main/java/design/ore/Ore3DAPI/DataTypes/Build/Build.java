@@ -78,8 +78,9 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.DoubleSer.Deserializer.class)
 	@Getter protected DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
+	public boolean isCatalog() { return catalogPrice.get() >= 0; }
 	
-	@JsonIgnore @Getter protected ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
+	@JsonIgnore @Getter protected final ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
 	
 	protected SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
@@ -151,6 +152,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	protected ObservableList<Conflict> conflicts;
 	
 	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
+	@JsonIgnore public abstract boolean allowUnitPriceOverride();
 	
 	@JsonIgnore @Getter private IntegerBinding childDepth = Bindings.createIntegerBinding(() ->
 		parentBuildProperty.getValue() == null ? 0 : parentBuildProperty.get().getChildDepth().get() + 1, parentBuildProperty);
@@ -216,8 +218,9 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				{
 					for(Spec<?> s : l.getAddedSubList())
 					{
-						if(!s.isReadOnly()) { s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); }); }
-						if(s.getCalculateOnDirty() != null) this.registerDirtyListenerEvent(s.getCalculateOnDirty() + "CalculateOnDirty", (obs, oldVal, newVal) -> s.setPropertyToCallable());
+						s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); });
+						if(s.getCalculateOnDirty() != null) this.registerDirtyListenerEvent(s.getCalculateOnDirty() + "CalculateOnDirty",
+							(obs, oldVal, newVal) -> { if(!newVal) { s.setPropertyToCallable(); } });
 					}
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
@@ -323,6 +326,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		
 		for(BOMEntry e : calculateStandardBOMs())
 		{
+			if(e == null) continue;
+			
 			BOMEntry newBOM = e;
 			if(this.parentBuildProperty.get() != null)
 			{

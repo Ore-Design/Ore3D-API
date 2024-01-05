@@ -3,14 +3,17 @@ package design.ore.Ore3DAPI.DataTypes.Specs;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
@@ -25,8 +28,14 @@ import lombok.Getter;
 public class IntegerStringMapSpec extends Spec<Integer>
 {
 	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null); }
+	
+	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
 	{
-		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch);
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
 		
 		if(!Registry.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
@@ -37,13 +46,12 @@ public class IntegerStringMapSpec extends Spec<Integer>
 	@Override
 	public void setValue(Integer val)
 	{
-		if(readOnly) return;
 		Map<Integer, String> matchingMap = Registry.getRegisteredIntegerStringMaps().get(mapID);
 		
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		else
 		{
-			if(matchingMap.containsKey(val)) property.setValue(val);
+			if(matchingMap.containsKey(val)) valueProperty.setValue(val);
 			else throw new IllegalArgumentException("No matching value exists in " + mapID + " for value " + val + "!");
 		}
 	}
@@ -77,7 +85,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 				return 0;
 			}
 		});
-		if(readOnly || parent.parentIsExpired()) dropdown.setDisable(true);
+		dropdown.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -108,7 +116,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 		}
 		else
 		{
-			dropdown.valueProperty().bindBidirectional(property);
+			dropdown.valueProperty().bindBidirectional(valueProperty);
 		}
 		
 		HBox input = new HBox(idLabel, dropdown);
