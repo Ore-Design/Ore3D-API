@@ -98,7 +98,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	@Setter boolean canGenerateWorkOrders;
 	public boolean canGenerateWorkOrders() { return canGenerateWorkOrders; }
 	@Getter @Setter String lockedBy;
-	@Getter final boolean expired;
+	@Getter @Setter boolean expired;
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
