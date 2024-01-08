@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
 import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
@@ -24,7 +25,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
-import javafx.util.converter.IntegerStringConverter;
 import lombok.Getter;
 
 @JsonSerialize(using = SpecSerialization.PositiveIntSerialization.Serializer.class)
@@ -48,7 +48,7 @@ public class PositiveIntSpec extends Spec<Integer>
 	
 	@Getter private IntegerProperty intProperty = new SimpleIntegerProperty();
 	public ObservableNumberValue getNumberProperty() { return intProperty; }
-	public void bindBidirectional(StringProperty other, StringConverter<Number> converter) { other.bindBidirectional(intProperty, converter); }
+	public void bindBidirectional(StringProperty other, StringConverter<Integer> converter) { other.bindBidirectional(valueProperty, converter); }
 	
 	private String preEdit = "";
 
@@ -105,7 +105,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		else
 		{
 			inputField.setTextFormatter(new PositiveIntegerTextFormatter());
-			inputField.textProperty().bindBidirectional(this.valueProperty, new IntegerStringConverter());
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullIntegerStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override

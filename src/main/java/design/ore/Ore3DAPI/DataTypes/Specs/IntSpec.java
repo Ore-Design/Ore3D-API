@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
+import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.Property;
@@ -22,7 +23,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.util.converter.IntegerStringConverter;
 import lombok.Getter;
 
 @JsonSerialize(using = SpecSerialization.IntSerialization.Serializer.class)
@@ -96,7 +96,7 @@ public class IntSpec extends Spec<Integer>
 		else
 		{
 			inputField.setTextFormatter(new IntegerTextFormatter());
-			inputField.textProperty().bindBidirectional(this.valueProperty, new IntegerStringConverter());
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullIntegerStringConverter());
 			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
 			{
 			    @Override
