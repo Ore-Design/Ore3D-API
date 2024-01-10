@@ -36,7 +36,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<BOMEntry> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<BOMEntry>(value));
+				gen.writeStartArray();
+				for(BOMEntry e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override
@@ -74,7 +76,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<RoutingEntry> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<RoutingEntry>(value));
+				gen.writeStartArray();
+				for(RoutingEntry e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override
@@ -112,7 +116,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<MiscEntry> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<MiscEntry>(value));
+				gen.writeStartArray();
+				for(MiscEntry e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override
@@ -151,12 +157,8 @@ public class ObservableListSerialization
 			public void serialize(ObservableList<Build> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
 				gen.writeStartArray();
-				for(Build b : value)
-				{
-					gen.writeObject(b);
-				}
+				for(Build b : value) { gen.writeObject(b); }
 				gen.writeEndArray();
-//				gen.writeObject(new ArrayList<Build>(value));
 			}
 			
 			@Override
@@ -201,7 +203,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<Conflict> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<Conflict>(value));
+				gen.writeStartArray();
+				for(Conflict e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override
@@ -239,7 +243,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<Tag> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<Tag>(value));
+				gen.writeStartArray();
+				for(Tag e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override
@@ -277,7 +283,9 @@ public class ObservableListSerialization
 			@Override
 			public void serialize(ObservableList<Integer> value, JsonGenerator gen, SerializerProvider provider) throws IOException
 			{
-				gen.writeObject(new ArrayList<Integer>(value));
+				gen.writeStartArray();
+				for(Integer e : value) { gen.writeObject(e); }
+				gen.writeEndArray();
 			}
 			
 			@Override

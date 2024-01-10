@@ -317,7 +317,7 @@ public class ComponentSerialization
 							cost = entry.getValue().asDouble();
 							break;
 						default:
-							storedValues.put(entry.getKey(), Mapper.getMapper().readValue(entry.getKey(), StoredValue.class));
+							storedValues.put(entry.getKey(), Mapper.getMapper().convertValue(entry.getValue(), StoredValue.class));
 					}
 				}
 	

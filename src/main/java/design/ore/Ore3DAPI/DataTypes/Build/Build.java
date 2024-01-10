@@ -242,6 +242,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		try
 		{
 			String original = Util.Mapper.getMapper().writeValueAsString(this);
+			Log.getLogger().debug("Duplicated build JSOn: " + original);
 			duplicate = Util.Mapper.getMapper().readValue(original, Build.class);
 		}
 		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + Util.stackTraceArrayToString(e)); }
@@ -284,7 +285,12 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	protected void refresh()
 	{	
 		Transaction parentTran = parentTransactionProperty.get();
-		if(parentTran != null && parentTran.isExpired())
+		if(parentTran == null)
+		{
+//			Log.getLogger().debug("Parent transaction is not bound, skipping refresh!");
+			return;
+		}
+		else if(parentTran.isExpired())
 		{
 			Log.getLogger().debug("Transaction is expired, skipping refresh!");
 			return;
