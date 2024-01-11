@@ -6,9 +6,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
-import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.DoubleBinding;
@@ -34,14 +34,12 @@ public class MiscEntry extends ValueStorageRecord
 	
 	public MiscEntry(String name, double cost, double quantity, ObservableNumberValue parentQuantity)
 	{
-		this.nameProperty = new SimpleStringProperty(name);
-		this.priceProperty = new SimpleDoubleProperty(cost);
-		
+		nameProperty = new SimpleStringProperty(name);
+		priceProperty = new SimpleDoubleProperty(cost);
 		quantityProperty = new SimpleDoubleProperty(quantity);
 		
-		this.unitPriceProperty = quantityProperty.multiply(priceProperty);
-		
-		this.totalPriceProperty = unitPriceProperty.multiply(parentQuantity);
+		unitPriceProperty = quantityProperty.multiply(priceProperty);
+		totalPriceProperty = unitPriceProperty.multiply(parentQuantity);
 	}
 
 	public MiscEntry duplicate(ObservableNumberValue newParentQuantity)

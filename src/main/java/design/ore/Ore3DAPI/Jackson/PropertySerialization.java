@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -59,6 +60,50 @@ public class PropertySerialization
 	
 			@Override
 			public StringProperty deserialize(JsonParser p, DeserializationContext ctxt, StringProperty prop) throws IOException, JacksonException
+			{
+				String value = p.getCodec().readValue(p, String.class);
+				prop.setValue(value);
+				return prop;
+			}
+		}
+	}
+	public static class ReadOnlyStringSer
+	{
+		public static class Serializer extends StdSerializer<ReadOnlyStringWrapper>
+		{
+			protected Serializer() { this(null); }
+			protected Serializer(Class<ReadOnlyStringWrapper> t) { super(t); }
+		
+			@Override
+			public void serialize(ReadOnlyStringWrapper value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeString(value.getValue());
+			}
+			
+			@Override
+			public void serializeWithType(ReadOnlyStringWrapper value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<ReadOnlyStringWrapper>
+		{
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<ReadOnlyStringWrapper> t) { super(t); }
+	
+			@Override
+			public ReadOnlyStringWrapper deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{
+				String value = p.getCodec().readValue(p, String.class);
+				return new ReadOnlyStringWrapper(value);
+			}
+	
+			@Override
+			public ReadOnlyStringWrapper deserialize(JsonParser p, DeserializationContext ctxt, ReadOnlyStringWrapper prop) throws IOException, JacksonException
 			{
 				String value = p.getCodec().readValue(p, String.class);
 				prop.setValue(value);

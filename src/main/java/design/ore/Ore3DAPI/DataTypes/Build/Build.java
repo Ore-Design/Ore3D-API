@@ -40,11 +40,13 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.IntegerBinding;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -101,9 +103,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
 	
 	// Description Stuff
-	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
-	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
-	@JsonMerge @Getter protected SimpleStringProperty unoverridenDescriptionProperty = new SimpleStringProperty("");
+	@JsonSerialize(using = PropertySerialization.ReadOnlyStringSer.Serializer.class)
+	@JsonDeserialize(using = PropertySerialization.ReadOnlyStringSer.Deserializer.class)
+	@JsonMerge final protected ReadOnlyStringWrapper unoverridenDescriptionProperty = new ReadOnlyStringWrapper("");
+//	@JsonIgnore public ReadOnlyStringProperty getUnoverridenDescriptionProperty() { return unoverridenDescriptionProperty.getReadOnlyProperty(); }
 	
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
@@ -119,37 +122,36 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			.or(Bindings.createBooleanBinding(() -> parentBuildProperty.getValue() != null ? parentBuildProperty.getValue().getHasGeneratedWorkOrderBinding().get() : false, parentBuildProperty));
 
 	// We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
+	// 1/11/24 SIKE!, we changed to using @JsonMerge annotation to do the same thing.
 	@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
-	@Getter protected final ObservableList<Build> childBuilds = FXCollections.observableArrayList();
 	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
-	private void setChildBuilds(List<Build> children) { childBuilds.clear(); childBuilds.addAll(children); }
+	@Getter @JsonMerge
+	protected final ObservableList<Build> childBuilds = FXCollections.observableArrayList();
 
 	@JsonSerialize(using = ObservableSetSerialization.IntSet.Serializer.class)
 	@JsonDeserialize(using = ObservableSetSerialization.IntSet.Deserializer.class)
-	@Getter protected ObservableSet<Integer> tags;
+	@Getter @JsonMerge
+	protected ObservableSet<Integer> tags = FXCollections.observableSet();
 
 	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
-	@Getter
-	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
 	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
-	private void setBOMs(List<BOMEntry> boms) { bom.clear(); bom.addAll(boms); }
+	@Getter @JsonMerge
+	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
 	
 	@JsonDeserialize(using = ObservableListSerialization.RoutingEntryList.Deserializer.class)
-	@Getter
-	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
 	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
-	private void setRoutings(List<RoutingEntry> routings) { this.routings.clear(); this.routings.addAll(routings); }
+	@Getter @JsonMerge
+	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
 
 	@JsonDeserialize(using = ObservableListSerialization.MiscEntryList.Deserializer.class)
-	@Getter
-	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
 	@JsonSerialize(using = ObservableListSerialization.MiscEntryList.Serializer.class)
-	private void setMiscs(List<MiscEntry> miscs) { misc.clear(); misc.addAll(miscs); }
+	@Getter @JsonMerge
+	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
 
 	@JsonSerialize(using = ObservableListSerialization.ConflictList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.ConflictList.Deserializer.class)
-	@Getter
-	protected ObservableList<Conflict> conflicts;
+	@Getter @JsonMerge
+	protected ObservableList<Conflict> conflicts = FXCollections.observableArrayList();
 	
 	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
 	@JsonIgnore public abstract boolean allowUnitPriceOverride();
@@ -160,7 +162,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public Build()
 	{
 		this.price = new BuildPrice(this);
-//		parentTransactionProperty.addListener((obs, oldVal, newVal) -> Log.getLogger().debug("Parent transaction property for " + titleProperty.get() + " set to " + newVal));
 		
 		childBuilds.addListener((ListChangeListener.Change<? extends Build> l) ->
 		{
@@ -193,9 +194,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			}
 		});
 		
-		tags = FXCollections.observableSet();
-		
-		conflicts = FXCollections.observableArrayList();
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
 			for(Build cb : childBuilds)
@@ -232,7 +230,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
-	public abstract String calculateDefaultDescription();
+	public abstract StringExpression calculateDefaultDescription();
 	public abstract Set<String> allowedChildClasses();
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	
@@ -300,7 +298,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 		Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 		
-		this.unoverridenDescriptionProperty.setValue(this.calculateDefaultDescription());
+		unoverridenDescriptionProperty.bind(calculateDefaultDescription());
 		
 		// We only clear non-custom BOMs, hence the usage of bomToRemove
 		List<BOMEntry> bomToRemove = new ArrayList<>();

@@ -63,6 +63,14 @@ public class ObservableListSerialization
 				ArrayList<BOMEntry> list = p.readValueAs(new TypeReference<ArrayList<BOMEntry>>() {});
 				return FXCollections.observableArrayList(list);
 			}
+	
+			@Override
+			public ObservableList<BOMEntry> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<BOMEntry> merge) throws IOException, JacksonException
+			{	
+				ArrayList<BOMEntry> list = p.readValueAs(new TypeReference<ArrayList<BOMEntry>>() {});
+				merge.setAll(list);
+				return merge;
+			}
 		}
 	}
 
@@ -103,6 +111,14 @@ public class ObservableListSerialization
 				ArrayList<RoutingEntry> list = p.readValueAs(new TypeReference<ArrayList<RoutingEntry>>() {});
 				return FXCollections.observableArrayList(list);
 			}
+	
+			@Override
+			public ObservableList<RoutingEntry> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<RoutingEntry> merge) throws IOException, JacksonException
+			{	
+				ArrayList<RoutingEntry> list = p.readValueAs(new TypeReference<ArrayList<RoutingEntry>>() {});
+				merge.setAll(list);
+				return merge;
+			}
 		}
 	}
 	
@@ -142,6 +158,14 @@ public class ObservableListSerialization
 			{	
 				ArrayList<MiscEntry> list = p.readValueAs(new TypeReference<ArrayList<MiscEntry>>() {});
 				return FXCollections.observableArrayList(list);
+			}
+	
+			@Override
+			public ObservableList<MiscEntry> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<MiscEntry> merge) throws IOException, JacksonException
+			{	
+				ArrayList<MiscEntry> list = p.readValueAs(new TypeReference<ArrayList<MiscEntry>>() {});
+				merge.setAll(list);
+				return merge;
 			}
 		}
 	}
@@ -230,6 +254,14 @@ public class ObservableListSerialization
 				ArrayList<Conflict> list = p.readValueAs(new TypeReference<ArrayList<Conflict>>() {});
 				return FXCollections.observableArrayList(list);
 			}
+	
+			@Override
+			public ObservableList<Conflict> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<Conflict> merge) throws IOException, JacksonException
+			{	
+				ArrayList<Conflict> list = p.readValueAs(new TypeReference<ArrayList<Conflict>>() {});
+				merge.setAll(list);
+				return merge;
+			}
 		}
 	}
 	
@@ -270,6 +302,14 @@ public class ObservableListSerialization
 				ArrayList<Tag> list = p.readValueAs(new TypeReference<ArrayList<Tag>>() {});
 				return FXCollections.observableArrayList(list);
 			}
+	
+			@Override
+			public ObservableList<Tag> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<Tag> merge) throws IOException, JacksonException
+			{	
+				ArrayList<Tag> list = p.readValueAs(new TypeReference<ArrayList<Tag>>() {});
+				merge.setAll(list);
+				return merge;
+			}
 		}
 	}
 
@@ -309,6 +349,14 @@ public class ObservableListSerialization
 			{	
 				ArrayList<Integer> list = p.readValueAs(new TypeReference<ArrayList<Integer>>() {});
 				return FXCollections.observableArrayList(list);
+			}
+	
+			@Override
+			public ObservableList<Integer> deserialize(JsonParser p, DeserializationContext ctxt, ObservableList<Integer> merge) throws IOException, JacksonException
+			{	
+				ArrayList<Integer> list = p.readValueAs(new TypeReference<ArrayList<Integer>>() {});
+				merge.setAll(list);
+				return merge;
 			}
 		}
 	}
