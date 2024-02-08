@@ -26,7 +26,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMPricing;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
-import design.ore.Ore3DAPI.UI.PopoutPane;
+import design.ore.Ore3DAPI.UI.PopoutStage;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
@@ -45,6 +45,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -141,11 +142,11 @@ public class Util
 		return newEntry;
 	}
 	
-	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry)
+	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, boolean isCustom)
 	{
 		Optional<RoutingPricing> pricing = transaction.getPricing().getRoutings().stream().filter(bp -> bp.getId().equals(entry.getId())).findFirst();
-		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty());
-		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty());
+		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty(), isCustom);
+		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty(), isCustom);
 	}
 	
 	public static class UI
@@ -270,24 +271,42 @@ public class Util
 			box.heightProperty().addListener(l -> ((Region) box.lookup(".mark")).setPadding(new Insets((box.getHeight()/2) - 7)));
 		}
 		
-		private static final Map<String, Pane> popoutAreas = new HashMap<>();
-		public static void registerPopoutArea(String ID, Pane pane)
+		private static final Map<String, Stage> popoutAreas = new HashMap<>();
+		public static void registerPopoutArea(String ID, Stage stage)
 		{
 			if(popoutAreas.containsKey(ID)) throw new IllegalArgumentException("Popout area with ID " + ID + " has already been registered!");
-			else popoutAreas.put(ID, pane);
+			else popoutAreas.put(ID, stage);
 		}
 		public static void unregisterPopoutArea(String ID) { popoutAreas.remove(ID); }
-		public static BooleanProperty showPopup(Pane content, String popoutID)
+		public static BooleanProperty showPopup(Pane content, String popoutID, String title)
 		{
 			if(!popoutAreas.containsKey(popoutID))
 			{
 				Log.getLogger().warn("No popout area has been registered with ID " + popoutID + " yet!");
 				return null;
 			}
+			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
+				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(popoutID))))
+			{
+				Log.getLogger().warn("A stage already exists with title " + title + " in registered ID " + popoutID + "!");
+				return null;
+			}
 			
-			PopoutPane pop = new PopoutPane(content, popoutAreas.get(popoutID), null);
-			popoutAreas.get(popoutID).getChildren().add(pop);
-			return pop.getCloseOnTrue();
+			PopoutStage stage = new PopoutStage(popoutAreas.get(popoutID), content, title);
+			stage.show();
+			
+			return stage.getCloseOnTrue();
+		}
+		
+		public static void closePopouts(String popoutID)
+		{
+			List<Stage> toClose = new ArrayList<>();
+			for(Window w : Stage.getWindows())
+			{
+				if(w instanceof Stage && ((Stage) w).getOwner() != null && ((Stage) w).getOwner().equals(popoutAreas.get(popoutID))) toClose.add((Stage) w);
+			}
+			
+			for(Stage s : toClose) { s.close(); }
 		}
 	}
 }

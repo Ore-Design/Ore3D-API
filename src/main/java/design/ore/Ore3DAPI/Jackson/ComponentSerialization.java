@@ -31,6 +31,7 @@ public class ComponentSerialization
 	{
 		private static final String ID = "id";
 		private static final String NAME = "n";
+		private static final String CUSTOM_ENTRY = "cust";
 		private static final String COST_PER_QUANTITY = "cpq";
 		private static final String QUANTITY = "q";
 		private static final String OVERRIDDEN_QUANTITY = "ovrq";
@@ -47,6 +48,7 @@ public class ComponentSerialization
 				gen.writeStartObject();
 				gen.writeStringField(ID, value.getId());
 				gen.writeStringField(NAME, value.getName());
+				gen.writeBooleanField(CUSTOM_ENTRY, value.getCustomEntryProperty().get());
 				gen.writeNumberField(COST_PER_QUANTITY, value.getCostPerQuantity());
 				gen.writeNumberField(QUANTITY, value.getUnoverriddenQuantityProperty().get());
 				gen.writeNumberField(OVERRIDDEN_QUANTITY, value.getOverridenQuantityProperty().get());
@@ -87,6 +89,7 @@ public class ComponentSerialization
 				Double qty = null;
 				Double ovrQty = null;
 				Integer mrgn = null;
+				boolean custom = false;
 				
 				Map<String, StoredValue> storedValues = new HashMap<>();
 				
@@ -108,6 +111,9 @@ public class ComponentSerialization
 						case QUANTITY:
 							qty = entry.getValue().asDouble();
 							break;
+						case CUSTOM_ENTRY:
+							custom = entry.getValue().asBoolean();
+							break;
 						case OVERRIDDEN_QUANTITY:
 							ovrQty = entry.getValue().asDouble();
 							break;
@@ -119,7 +125,7 @@ public class ComponentSerialization
 					}
 				}
 	
-				RoutingEntry newEntry = new RoutingEntry(id, name, cpq, qty, mrgn, new SimpleDoubleProperty(0));
+				RoutingEntry newEntry = new RoutingEntry(id, name, cpq, qty, mrgn, new SimpleDoubleProperty(0), custom);
 				newEntry.putStoredValues(storedValues);
 				if(ovrQty != null) newEntry.getOverridenQuantityProperty().set(ovrQty);
 				return newEntry;

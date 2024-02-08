@@ -14,6 +14,8 @@ import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -37,6 +39,9 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 	@Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
 	@Getter protected final SimpleDoubleProperty overridenQuantityProperty;
 	@Getter protected BooleanBinding quantityOverriddenProperty;
+	
+	protected final ReadOnlyBooleanWrapper customEntry;
+	public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
 
 	protected final ReadOnlyDoubleWrapper quantityProperty;
 	public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
@@ -51,16 +56,18 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 	
 	@Getter protected ObservableList<Conflict> conflicts;
 	
-	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity)
+	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity, boolean customEntry)
 	{
 		this.id = id;
 		this.name = name;
 		this.costPerQuantity = costPerQuantity;
 		this.conflicts = FXCollections.observableArrayList();
+		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
-		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
+		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
+//		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 		
 		quantityProperty = new ReadOnlyDoubleWrapper();
 
@@ -86,23 +93,24 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 		this.unitPriceProperty = unitCostProperty.divide(marginDenominatorProperty);
 	}
 	
-	public RoutingEntry(String id, String name, double costPerQuantity, int margin, ObservableNumberValue parentQuantity)
+	public RoutingEntry(String id, String name, double costPerQuantity, int margin, ObservableNumberValue parentQuantity, boolean customEntry)
 	{
-		this(id, name, costPerQuantity, 0.0, margin, parentQuantity);
+		this(id, name, costPerQuantity, 0.0, margin, parentQuantity, customEntry);
 	}
 	
-	public RoutingEntry(String id, String name, double qty, double overriddenQty, int margin)
+	public RoutingEntry(String id, String name, double qty, double overriddenQty, int margin, boolean customEntry)
 	{
-		this(id, "", 0, qty, margin, new SimpleDoubleProperty(0));
+		this(id, "", 0, qty, margin, new SimpleDoubleProperty(0), customEntry);
 		this.overridenQuantityProperty.set(overriddenQty);
 	}
 
-	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity)
+	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity, Boolean isCustom)
 	{
 		try
 		{
 			String json = Mapper.getMapper().writeValueAsString(this);
 			RoutingEntry newEntry = Mapper.getMapper().readValue(json, RoutingEntry.class);
+			if(isCustom != null) newEntry.customEntry.set(isCustom);
 			if(newCostPerQuantity != null) newEntry.costPerQuantity = newCostPerQuantity;
 			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
 			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));

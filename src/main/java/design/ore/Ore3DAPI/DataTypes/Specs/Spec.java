@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -83,7 +84,7 @@ public abstract class Spec<T>
 				T calledValue = calculateOnDirty.call();
 				if(calledValue != null) valueProperty.setValue(calledValue);
 			}
-			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!\n" + Util.stackTraceArrayToString(e)); }
+			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!"); Log.getLogger().debug(Util.stackTraceArrayToString(e)); }
 		}
 	}
 	

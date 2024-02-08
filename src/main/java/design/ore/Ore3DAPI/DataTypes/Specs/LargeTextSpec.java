@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Colors;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.Property;
@@ -18,6 +19,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -53,7 +55,8 @@ public class LargeTextSpec extends Spec<String>
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
 		openPopoutButton.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		openPopoutButton.setMaxWidth(Control.USE_PREF_SIZE);
-		openPopoutButton.setOnAction(e -> Util.UI.showPopup(createPopoutUI(toBind), popoutID));
+		String title = parent.getParentTransactionProperty().isNull().get() ? id : id + " - " + parent.getParentTransactionProperty().get().getDisplayName();
+		openPopoutButton.setOnAction(e -> Util.UI.showPopup(createPopoutUI(toBind), popoutID, title));
 		
 		input.setPrefHeight(25);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
@@ -84,6 +87,7 @@ public class LargeTextSpec extends Spec<String>
 		layout.setFillWidth(true);
 		layout.setPadding(new Insets(10));
 		layout.setSpacing(10);
+		layout.setBackground(Background.fill(Colors.getBackground()));
 		
 		return layout;
 	}

@@ -198,12 +198,14 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		{
 			for(Build cb : childBuilds)
 			{
-				if(newVal) cb.refresh();
+				// Refresh must be called AFTER dirty listeners to avoid mismatch data
 				for(ChangeListener<Boolean> listener : cb.registeredDirtyUpdates.values()) listener.changed(obs, oldVal, newVal);
+				if(newVal) cb.refresh();
 			}
 			
-			if(newVal) refresh();
+			// Refresh must be called AFTER dirty listeners to avoid mismatch data
 			for(ChangeListener<Boolean> listener : registeredDirtyUpdates.values()) listener.changed(obs, oldVal, newVal);
+			if(newVal) refresh();
 			buildIsDirty.setValue(false);
 		});
 		
@@ -233,6 +235,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public abstract StringExpression calculateDefaultDescription();
 	public abstract Set<String> allowedChildClasses();
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
+	protected abstract void detectConflicts();
 	
 	public final Build duplicate()
 	{
@@ -316,17 +319,24 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				bomToRemove.add(e);
 			}
 		}
-		
+
+		// We only clear non-custom Routings, hence the usage of routingToRemove
+		List<RoutingEntry> routingToRemove = new ArrayList<>();
 		Map<String, Double> overriddenRoutings = new HashMap<>();
 		for(RoutingEntry e : routings)
 		{
-			Double quantityOverride = null;
-			if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
-			if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
+			if(!e.getCustomEntryProperty().get())
+			{
+				Double quantityOverride = null;
+				if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
+				if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
+
+				routingToRemove.add(e);
+			}
 		}
 		
 		bom.removeAll(bomToRemove);
-		routings.clear();
+		routings.removeAll(routingToRemove);
 		
 		for(BOMEntry e : calculateStandardBOMs())
 		{
@@ -367,6 +377,9 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		
 		price.rebindPricing(this);
+		
+		detectConflicts();
+//		Log.getLogger().debug(conflicts.size() + " conflicts added to build " + titleProperty.get() + "!");
 	}
 	
 	protected DoubleBinding getUnitPrice()
@@ -386,7 +399,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		for(RoutingEntry routingEntry : routings)
 		{
-			nonCatalogValues = nonCatalogValues.add(routingEntry.getUnitPriceProperty());
+			if(routingEntry.getCustomEntryProperty().get()) binding = binding.add(routingEntry.getUnitPriceProperty());
+			else { nonCatalogValues = nonCatalogValues.add(routingEntry.getUnitPriceProperty()); }
 		}
 		for(MiscEntry miscEntry : misc)
 		{

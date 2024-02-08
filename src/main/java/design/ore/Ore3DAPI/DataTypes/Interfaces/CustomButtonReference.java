@@ -16,6 +16,7 @@ public abstract class CustomButtonReference
 	}
 	
 	public abstract Pane generatePopup(Transaction transaction);
+	public abstract String getStageTitle(Transaction transaction);
 	public abstract void onClick(Transaction transaction);
 	public abstract BooleanBinding createDisableBinding(Transaction transaction);
 	public abstract Image getButtonIcon();

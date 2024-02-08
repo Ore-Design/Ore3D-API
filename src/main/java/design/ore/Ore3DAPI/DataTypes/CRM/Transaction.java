@@ -72,9 +72,14 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 						if(duplicateUIDFound) b.regenerateBuildUUID();
 						else break;
 					}
-					b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
+					b.registerDirtyListenerEvent("CONFLICT_DETECTION", (obs, oldVal, newVal) -> { if(!newVal) resetConflictList(builds); });
+//					b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
 				}
-				for(Build rb : c.getRemoved()) { rb.getParentTransactionProperty().set(null); }
+				for(Build rb : c.getRemoved())
+				{
+					rb.getParentTransactionProperty().set(null);
+					rb.unregisterDirtyListenerEvent("CONFLICT_DETECTION");
+				}
 			}
 		});
 		
@@ -86,7 +91,13 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	private void resetConflictList(List<? extends Build> blds)
 	{
 		conflicts.clear();
-		for(Build b : blds) conflicts.setAll(FXCollections.concat(conflicts, b.getConflicts()));
+		for(Build b : blds) concatConflictsRecursive(conflicts, b);
+	}
+	
+	private void concatConflictsRecursive(ObservableList<Conflict> conf, Build b)
+	{
+		conf.setAll(FXCollections.concat(conf, b.getConflicts()));
+		for(Build cb : b.getChildBuilds()) concatConflictsRecursive(conf, cb);
 	}
 	
 	@Getter @Setter String compatibleVersion;

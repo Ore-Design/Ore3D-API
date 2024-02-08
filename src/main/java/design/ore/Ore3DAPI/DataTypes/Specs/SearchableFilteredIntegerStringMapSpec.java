@@ -1,10 +1,10 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
 import org.controlsfx.control.SearchableComboBox;
 
@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -27,25 +28,29 @@ import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 import lombok.Getter;
 
-@JsonSerialize(using = SpecSerialization.SearchableIntStringMapSerialization.Serializer.class)
-@JsonDeserialize(using = SpecSerialization.SearchableIntStringMapSerialization.Deserializer.class)
-public class SearchableIntegerStringMapSpec extends Spec<Integer>
+@JsonSerialize(using = SpecSerialization.SearchableFilteredIntStringMapSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.SearchableFilteredIntStringMapSerialization.Deserializer.class)
+public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 {
-	public SearchableIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch)
-	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null); }
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
+	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null, filterPredicate); }
 	
-	public SearchableIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
-	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate); }
 	
-	public SearchableIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{
 		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
+		
+		this.filterPredicate = filterPredicate;
 		
 		if(!Registry.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
 	}
 	
 	@Getter String mapID;
+	
+	ObjectBinding<Predicate<Integer>> filterPredicate;
 	
 	@Override
 	public void setValue(Integer val)
@@ -88,7 +93,9 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 		};
 		
 		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
-		dropdown.getItems().setAll(matchingMap.keySet());
+		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
+		list.predicateProperty().bind(filterPredicate);
+		dropdown.setItems(list);
 		dropdown.setMinHeight(0);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);
