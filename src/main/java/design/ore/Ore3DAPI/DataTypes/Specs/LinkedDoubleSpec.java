@@ -12,9 +12,11 @@ import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import design.ore.Ore3DAPI.UI.ToggleIconButton;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
@@ -41,34 +43,42 @@ public class LinkedDoubleSpec extends Spec<Number>
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null, false); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, null, false); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, toLink, linked); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null, false); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, toLink, linked); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
 	{
 		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty);
 		
-		if(toLink != null)
+		linkedSpecProperty.addListener((obs, oldVal, newVal) ->
 		{
-			linkedSpec = toLink;
-			toLink.linkedSpec = this;
-			this.linkActiveProperty.bindBidirectional(linkedSpec.getLinkActiveProperty());
-			linkActiveProperty.addListener((obs, oldVal, newVal) ->
+			if(newVal != null)
 			{
-				if(newVal) this.valueProperty.bindBidirectional(linkedSpec.valueProperty);
-				else this.valueProperty.unbindBidirectional(linkedSpec.valueProperty);
-			});
-			linkActiveProperty.setValue(linked);
-		}
+				newVal.linkedSpecProperty.set(this);
+				this.linkActiveProperty.bindBidirectional(newVal.getLinkActiveProperty());
+				linkActiveProperty.addListener((obs1, oldVal1, newVal1) ->
+				{
+					if(newVal1) this.valueProperty.bindBidirectional(newVal.valueProperty);
+					else this.valueProperty.unbindBidirectional(newVal.valueProperty);
+				});
+				linkActiveProperty.setValue(linked);
+			}
+		});
+		
+		if(toLink != null) linkedSpecProperty.set(toLink);
+		linkActiveProperty.set(linked);
 	}
 	
 	public double getDoubleValue() { return valueProperty.getValue().doubleValue(); }
 	
-	private LinkedDoubleSpec linkedSpec;
+	private ObjectProperty<LinkedDoubleSpec> linkedSpecProperty = new SimpleObjectProperty<>();
+	
 	@Getter private BooleanProperty linkActiveProperty = new SimpleBooleanProperty();
 	private String preEdit = "";
+	
+	public void link(LinkedDoubleSpec s) { this.linkedSpecProperty.set(s); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
@@ -142,7 +152,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 		
 		
 		HBox input = null;
-		if(linkedSpec != null)
+		if(linkedSpecProperty.isNotNull().get())
 		{
 			input = new HBox(idLabel, button, inputField);
 			idLabel.prefWidthProperty().bind(input.widthProperty().multiply(0.4));

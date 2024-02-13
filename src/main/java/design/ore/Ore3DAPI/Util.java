@@ -28,6 +28,8 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.UI.PopoutStage;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
@@ -81,7 +83,7 @@ public class Util
 	@Getter private static final Image chainIcon = new Image("ui/icons/ChainIcon.png");
 	@Getter private static final Image xIcon = new Image("ui/icons/XIcon.png");
 	
-//	private static StackPane
+	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); } 
 	
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map)
 	{
@@ -133,8 +135,10 @@ public class Util
 	{
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
 		BOMEntry newEntry = null;
-		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getQuantityProperty().get(), parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get());
-		else newEntry = entry.duplicate(originalEntry.getQuantityProperty().get(), parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get());
+		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getQuantityProperty().get(),
+			parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
+		else newEntry = entry.duplicate(originalEntry.getQuantityProperty().get(), parent.getQuantity().getIntProperty(),
+			originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
 		
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
 		if(originalEntry.getMarginOverriddenProperty().get()) newEntry.getOverridenMarginProperty().set(originalEntry.getOverridenMarginProperty().get());
@@ -142,11 +146,12 @@ public class Util
 		return newEntry;
 	}
 	
-	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, boolean isCustom)
+	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, boolean isCustom, Double overriddenQuantity)
 	{
 		Optional<RoutingPricing> pricing = transaction.getPricing().getRoutings().stream().filter(bp -> bp.getId().equals(entry.getId())).findFirst();
-		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty(), isCustom);
-		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty(), isCustom);
+		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty(),
+			isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
+		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty(), isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
 	}
 	
 	public static class UI

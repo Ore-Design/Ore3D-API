@@ -3,27 +3,38 @@ package design.ore.Ore3DAPI.DataTypes.Build;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Getter;
 
 public class BuildPrice
 {
 	ReadOnlyDoubleWrapper unitPriceProperty;
 	public ReadOnlyDoubleProperty getUnitPrice() { return unitPriceProperty.getReadOnlyProperty(); }
-	SimpleDoubleProperty overriddenUnitPriceProperty;
+	ReadOnlyDoubleWrapper overriddenUnitPriceProperty;
+	public ReadOnlyDoubleProperty getOverriddenUnitPrice() { return overriddenUnitPriceProperty.getReadOnlyProperty(); }
 	@Getter BooleanBinding unitPriceOverriddenProperty;
-	@Getter DoubleBinding totalPrice;
+
+	ReadOnlyDoubleWrapper totalPriceProperty;
+	public ReadOnlyDoubleProperty getTotalPrice() { return totalPriceProperty.getReadOnlyProperty(); }
+	ReadOnlyDoubleWrapper overriddenTotalPriceProperty;
+	public ReadOnlyDoubleProperty getOverriddenTotalPrice() { return overriddenTotalPriceProperty.getReadOnlyProperty(); }
+	@Getter BooleanBinding totalPriceOverriddenProperty;
+	@Getter NumberBinding unoverriddenTotalPriceBinding;
 	
 	public BuildPrice(Build parent)
 	{
 		unitPriceProperty = new ReadOnlyDoubleWrapper();
-		unitPriceProperty.bind(parent.getUnitPrice());
+		overriddenUnitPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
 		
-		overriddenUnitPriceProperty = new SimpleDoubleProperty(-Double.MAX_VALUE);
+		totalPriceProperty = new ReadOnlyDoubleWrapper();
+		overriddenTotalPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
+		
 		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThan(-Double.MAX_VALUE);
+		totalPriceOverriddenProperty = overriddenTotalPriceProperty.greaterThan(-Double.MAX_VALUE);
+		
+		if(parent == null) return;
 		
 		rebindPricing(parent);
 	}
@@ -32,14 +43,20 @@ public class BuildPrice
 	{
 		unitPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
 			.then(overriddenUnitPriceProperty).otherwise(parent.getUnitPrice()));
-		totalPrice = (DoubleBinding) Bindings.when(unitPriceOverriddenProperty)
+		
+		unoverriddenTotalPriceBinding = Bindings.when(unitPriceOverriddenProperty)
 			.then(overriddenUnitPriceProperty.multiply(((PositiveIntSpec) parent.getQuantity()).getIntProperty()))
 			.otherwise(parent.getTotalPrice());
+		
+		totalPriceProperty.bind(
+			Bindings.when(totalPriceOverriddenProperty)
+			.then(overriddenTotalPriceProperty)
+			.otherwise(unoverriddenTotalPriceBinding));
 	}
 	
-	public void reset() { overriddenUnitPriceProperty.setValue(-Double.MAX_VALUE); }
-	public void override(double price)
-	{
-		overriddenUnitPriceProperty.setValue(price);
-	}
+	public void resetUnitPrice() { overriddenUnitPriceProperty.setValue(-Double.MAX_VALUE); }
+	public void overrideUnitPrice(double price) { overriddenUnitPriceProperty.setValue(price); }
+	
+	public void resetTotalPrice() { overriddenTotalPriceProperty.setValue(-Double.MAX_VALUE); }
+	public void overrideTotalPrice(double price) { overriddenTotalPriceProperty.setValue(price); }
 }

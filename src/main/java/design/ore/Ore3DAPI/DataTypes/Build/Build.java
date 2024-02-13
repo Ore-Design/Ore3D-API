@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,6 +31,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
+import design.ore.Ore3DAPI.Jackson.BuildDataSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableSetSerialization;
 import design.ore.Ore3DAPI.Jackson.PropertySerialization;
@@ -95,8 +95,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		else registeredDirtyUpdates.put(listenerID, listener);
 	}
 	public void unregisterDirtyListenerEvent(String listenerID) { registeredDirtyUpdates.remove(listenerID); }
-	
-	@JsonIgnore @Getter protected BuildPrice price;
+
+	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
+	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
+	@JsonMerge @Getter protected BuildPrice price;
 
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
@@ -233,7 +235,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
 	public abstract StringExpression calculateDefaultDescription();
-	public abstract Set<String> allowedChildClasses();
+	public abstract List<Build> allowedChildBuilds();
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	
@@ -286,100 +288,91 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	protected void refresh()
 	{	
 		Transaction parentTran = parentTransactionProperty.get();
-		if(parentTran == null)
+		if(parentTran != null && !parentTran.isExpired())
 		{
-//			Log.getLogger().debug("Parent transaction is not bound, skipping refresh!");
-			return;
-		}
-		else if(parentTran.isExpired())
-		{
-			Log.getLogger().debug("Transaction is expired, skipping refresh!");
-			return;
-		}
-		
-		conflicts.clear();
-
-		Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
-		
-		unoverridenDescriptionProperty.bind(calculateDefaultDescription());
-		
-		// We only clear non-custom BOMs, hence the usage of bomToRemove
-		List<BOMEntry> bomToRemove = new ArrayList<>();
-		for(BOMEntry e : bom)
-		{
-			if(!e.getCustomEntryProperty().get())
-			{
-				Double quantityOverride = null;
-				Integer marginOverride = null;
-				if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
-				if(e.getMarginOverriddenProperty().get()) marginOverride = e.getOverridenMarginProperty().get();
-				
-				if(quantityOverride != null || marginOverride != null) overriddenStandardBOMS.put(e.getId(), new Pair<Double, Integer>(quantityOverride, marginOverride));
-				
-				bomToRemove.add(e);
-			}
-		}
-
-		// We only clear non-custom Routings, hence the usage of routingToRemove
-		List<RoutingEntry> routingToRemove = new ArrayList<>();
-		Map<String, Double> overriddenRoutings = new HashMap<>();
-		for(RoutingEntry e : routings)
-		{
-			if(!e.getCustomEntryProperty().get())
-			{
-				Double quantityOverride = null;
-				if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
-				if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
-
-				routingToRemove.add(e);
-			}
-		}
-		
-		bom.removeAll(bomToRemove);
-		routings.removeAll(routingToRemove);
-		
-		for(BOMEntry e : calculateStandardBOMs())
-		{
-			if(e == null) continue;
+			conflicts.clear();
+	
+			Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 			
-			BOMEntry newBOM = e;
-			if(this.parentBuildProperty.get() != null)
+			unoverridenDescriptionProperty.bind(calculateDefaultDescription());
+			
+			// We only clear non-custom BOMs, hence the usage of bomToRemove
+			List<BOMEntry> bomToRemove = new ArrayList<>();
+			for(BOMEntry e : bom)
 			{
-				if(parentTran != null) newBOM = Util.duplicateBOMWithPricing(parentTran, this, e, e);
-				else Util.Log.getLogger().debug("No transaction parent is registered for the top-level parent of build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
+				if(!e.getCustomEntryProperty().get())
+				{
+					Double quantityOverride = null;
+					Integer marginOverride = null;
+					if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
+					if(e.getMarginOverriddenProperty().get()) marginOverride = e.getOverridenMarginProperty().get();
+					
+					if(quantityOverride != null || marginOverride != null) overriddenStandardBOMS.put(e.getId(), new Pair<Double, Integer>(quantityOverride, marginOverride));
+					
+					bomToRemove.add(e);
+				}
 			}
-			else if(parentTransactionProperty.get() != null) newBOM = Util.duplicateBOMWithPricing(parentTransactionProperty.get(), this, e, e);
-			else Util.Log.getLogger().debug("No transaction parent is registered for the build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
-				
-			if(overriddenStandardBOMS.containsKey(e.getId()))
+	
+			// We only clear non-custom Routings, hence the usage of routingToRemove
+			List<RoutingEntry> routingToRemove = new ArrayList<>();
+			Map<String, Double> overriddenRoutings = new HashMap<>();
+			for(RoutingEntry e : routings)
 			{
-				Pair<Double, Integer> overrides = overriddenStandardBOMS.get(e.getId());
-				Double qtyOverride = overrides.getKey();
-				Integer marginOverride = overrides.getValue();
-				if(qtyOverride != null) newBOM.getOverridenQuantityProperty().set(qtyOverride);
-				if(marginOverride != null) newBOM.getOverridenMarginProperty().set(marginOverride);
+				if(!e.getCustomEntryProperty().get())
+				{
+					Double quantityOverride = null;
+					if(e.getQuantityOverriddenProperty().get()) quantityOverride = e.getOverridenQuantityProperty().get();
+					if(quantityOverride != null) overriddenRoutings.put(e.getId(), quantityOverride);
+	
+					routingToRemove.add(e);
+				}
 			}
 			
-			for(Entry<String, StoredValue> entry : Registry.getRegisteredBOMEntryStoredValues().entrySet()) { newBOM.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
-			bom.add(newBOM);
-		}
-		
-		for(RoutingEntry r : calculateRoutings())
-		{
-			if(overriddenRoutings.containsKey(r.getId()))
+			bom.removeAll(bomToRemove);
+			routings.removeAll(routingToRemove);
+			
+			for(BOMEntry e : calculateStandardBOMs())
 			{
-				Double overrides = overriddenRoutings.get(r.getId());
-				if(overrides != null) r.getOverridenQuantityProperty().set(overrides);
+				if(e == null) continue;
+				
+				BOMEntry newBOM = e;
+				if(this.parentBuildProperty.get() != null)
+				{
+					if(parentTran != null) newBOM = Util.duplicateBOMWithPricing(parentTran, this, e, e);
+					else Util.Log.getLogger().debug("No transaction parent is registered for the top-level parent of build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
+				}
+				else if(parentTransactionProperty.get() != null) newBOM = Util.duplicateBOMWithPricing(parentTransactionProperty.get(), this, e, e);
+				else Util.Log.getLogger().debug("No transaction parent is registered for the build " + this.getTitleProperty().get() + ", so pricing for generated BOMs cant be matched to transaction!");
+					
+				if(overriddenStandardBOMS.containsKey(e.getId()))
+				{
+					Pair<Double, Integer> overrides = overriddenStandardBOMS.get(e.getId());
+					Double qtyOverride = overrides.getKey();
+					Integer marginOverride = overrides.getValue();
+					if(qtyOverride != null) newBOM.getOverridenQuantityProperty().set(qtyOverride);
+					if(marginOverride != null) newBOM.getOverridenMarginProperty().set(marginOverride);
+				}
+				
+				for(Entry<String, StoredValue> entry : Registry.getRegisteredBOMEntryStoredValues().entrySet()) { newBOM.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
+				bom.add(newBOM);
 			}
-
-			for(Entry<String, StoredValue> entry : Registry.getRegisteredRoutingEntryStoredValues().entrySet()) { r.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
-			routings.add(r);
+			
+			for(RoutingEntry r : calculateRoutings())
+			{
+				if(overriddenRoutings.containsKey(r.getId()))
+				{
+					Double overrides = overriddenRoutings.get(r.getId());
+					if(overrides != null) r.getOverridenQuantityProperty().set(overrides);
+				}
+	
+				for(Entry<String, StoredValue> entry : Registry.getRegisteredRoutingEntryStoredValues().entrySet()) { r.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
+				routings.add(r);
+			}
+			
+			detectConflicts();
 		}
 		
 		price.rebindPricing(this);
-		
-		detectConflicts();
-//		Log.getLogger().debug(conflicts.size() + " conflicts added to build " + titleProperty.get() + "!");
 	}
 	
 	protected DoubleBinding getUnitPrice()

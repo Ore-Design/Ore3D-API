@@ -12,6 +12,7 @@ import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -71,8 +72,9 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 		
 		quantityProperty = new ReadOnlyDoubleWrapper();
 
-		if(quantityOverriddenProperty.get()) this.quantityProperty.bind(overridenQuantityProperty);
-		else this.quantityProperty.bind(unoverriddenQuantityProperty);
+		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
+//		if(quantityOverriddenProperty.get()) this.quantityProperty.bind(overridenQuantityProperty);
+//		else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		
 		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
 		{
@@ -104,7 +106,7 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 		this.overridenQuantityProperty.set(overriddenQty);
 	}
 
-	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity, Boolean isCustom)
+	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity, Boolean isCustom, Double overriddenQuantity)
 	{
 		try
 		{
@@ -114,6 +116,7 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 			if(newCostPerQuantity != null) newEntry.costPerQuantity = newCostPerQuantity;
 			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
 			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));
+			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);;
 			return newEntry;
 		}
 		catch (Exception e) { Log.getLogger().error("Error duplicationg routing entry:\n" + Util.stackTraceArrayToString(e)); }
