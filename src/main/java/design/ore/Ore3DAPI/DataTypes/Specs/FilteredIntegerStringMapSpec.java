@@ -6,8 +6,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 
-import org.controlsfx.control.SearchableComboBox;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -21,6 +19,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -28,17 +27,17 @@ import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
 import lombok.Getter;
 
-@JsonSerialize(using = SpecSerialization.SearchableFilteredIntStringMapSerialization.Serializer.class)
-@JsonDeserialize(using = SpecSerialization.SearchableFilteredIntStringMapSerialization.Deserializer.class)
-public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
+@JsonSerialize(using = SpecSerialization.FilteredIntStringMapSerialization.Serializer.class)
+@JsonDeserialize(using = SpecSerialization.FilteredIntStringMapSerialization.Deserializer.class)
+public class FilteredIntegerStringMapSpec extends Spec<Integer>
 {
-	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
+	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null, filterPredicate); }
 	
-	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate); }
 	
-	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{
 		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
 		
@@ -95,7 +94,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 		};
 		
-		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
+		ComboBox<Integer> dropdown = new ComboBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
 		list.predicateProperty().bind(filterPredicate);
 		dropdown.setItems(list);

@@ -73,14 +73,11 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 		quantityProperty = new ReadOnlyDoubleWrapper();
 
 		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
-//		if(quantityOverriddenProperty.get()) this.quantityProperty.bind(overridenQuantityProperty);
-//		else this.quantityProperty.bind(unoverriddenQuantityProperty);
 		
-		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
-		{
-			if(newValue) this.quantityProperty.bind(overridenQuantityProperty);
-			else this.quantityProperty.bind(unoverriddenQuantityProperty);
-		});
+//		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
+//		{
+//			quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
+//		});
 		
 		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
 		

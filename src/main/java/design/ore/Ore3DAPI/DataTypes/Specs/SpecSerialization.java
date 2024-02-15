@@ -317,6 +317,69 @@ public class SpecSerialization
 		}
 	}
 	
+	public static class FilteredIntStringMapSerialization
+	{
+		private static final String MAPIDTAG = "mapID";
+		public static class Serializer extends StdSerializer<FilteredIntegerStringMapSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			protected Serializer() { this(null); }
+			protected Serializer(Class<FilteredIntegerStringMapSpec> t) { super(t); }
+		
+			@Override
+			public void serialize(FilteredIntegerStringMapSpec value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeFieldName(ID);
+				gen.writeString(value.getId());
+				gen.writeFieldName(VALUE);
+				if(value.getValue() != null) gen.writeNumber(value.getValue());
+				else gen.writeNull();
+				gen.writeFieldName(MAPIDTAG);
+				gen.writeString(value.getMapID());
+				gen.writeFieldName(READ_ONLY);
+				gen.writeBoolean(value.getReadOnlyProperty().get());
+				gen.writeFieldName(SECTION);
+				gen.writeString(value.getSection());
+			}
+			
+			@Override
+			public void serializeWithType(FilteredIntegerStringMapSpec value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<FilteredIntegerStringMapSpec>
+		{
+			private static final long serialVersionUID = 1L;
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<FilteredIntegerStringMapSpec> t) { super(t); }
+	
+			@Override
+			public FilteredIntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{
+				JsonNode specNode = p.getCodec().readTree(p);
+				String id = specNode.get(ID).asText();
+				Integer value = specNode.get(VALUE).isNull() ? null : specNode.get(VALUE).asInt();
+				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
+				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
+				String mapID = specNode.get(MAPIDTAG).asText();
+				return new FilteredIntegerStringMapSpec(null, id, mapID, value, readOnly, section, true, null);
+			}
+	
+			@Override
+			public FilteredIntegerStringMapSpec deserialize(JsonParser p, DeserializationContext ctxt, FilteredIntegerStringMapSpec in) throws IOException, JacksonException
+			{
+				FilteredIntegerStringMapSpec spec = deserialize(p, ctxt);
+				in.valueProperty.setValue(spec.getValue());
+				return in;
+			}
+		}
+	}
+	
 	public static class SearchableFilteredIntStringMapSerialization
 	{
 		private static final String MAPIDTAG = "mapID";
@@ -332,7 +395,8 @@ public class SpecSerialization
 				gen.writeFieldName(ID);
 				gen.writeString(value.getId());
 				gen.writeFieldName(VALUE);
-				gen.writeNumber(value.getValue());
+				if(value.getValue() != null) gen.writeNumber(value.getValue());
+				else gen.writeNull();
 				gen.writeFieldName(MAPIDTAG);
 				gen.writeString(value.getMapID());
 				gen.writeFieldName(READ_ONLY);
@@ -362,7 +426,7 @@ public class SpecSerialization
 			{
 				JsonNode specNode = p.getCodec().readTree(p);
 				String id = specNode.get(ID).asText();
-				int value = specNode.get(VALUE).asInt();
+				Integer value = specNode.get(VALUE).isNull() ? null : specNode.get(VALUE).asInt();
 				boolean readOnly = specNode.get(READ_ONLY).asBoolean();
 				String section = specNode.get(SECTION).isNull() ? null : specNode.get(SECTION).asText();
 				String mapID = specNode.get(MAPIDTAG).asText();

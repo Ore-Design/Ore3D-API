@@ -32,11 +32,12 @@ public interface CRMEndpoint extends ExtensionPoint
 	/*
 	 * Creates a copy of the <code>Transaction</code> passed in.
 	 * 
-	 * @param   transaction   the <code>Transaction</code> to be duplicated.
-	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
-	 * @see                   Transaction
+	 * @param   transaction    the <code>Transaction</code> to be duplicated.
+	 * @param   saveOriginal   true if the original transaction should be saved, otherwise false.
+	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
+	 * @see                    Transaction
 	 */
-	UpdatePacket duplicateTransaction(Transaction transaction);
+	UpdatePacket duplicateTransaction(Transaction transaction, boolean ignoreOriginal);
 	
 	/*
 	 * Generates work orders for each build UID contained in the <code>Transaction</code>.

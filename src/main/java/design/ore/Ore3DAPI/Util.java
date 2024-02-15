@@ -135,9 +135,9 @@ public class Util
 	{
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
 		BOMEntry newEntry = null;
-		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getQuantityProperty().get(),
+		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
 			parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
-		else newEntry = entry.duplicate(originalEntry.getQuantityProperty().get(), parent.getQuantity().getIntProperty(),
+		else newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity().getIntProperty(),
 			originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
 		
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
@@ -152,6 +152,20 @@ public class Util
 		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty(),
 			isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
 		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty(), isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
+	}
+	
+	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, RoutingEntry originalEntry)
+	{
+		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
+		RoutingEntry newEntry = null;
+		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
+			parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get(), null);
+		else newEntry = entry.duplicate(null, originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity().getIntProperty(),
+			originalEntry.getCustomEntryProperty().get(), null);
+		
+		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
+		
+		return newEntry;
 	}
 	
 	public static class UI

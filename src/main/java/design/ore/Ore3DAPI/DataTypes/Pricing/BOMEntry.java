@@ -9,6 +9,7 @@ import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -83,40 +84,15 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this.ignoreParentQuantityProperty = new SimpleBooleanProperty(ignoreParentQuantity);
 		
 		quantityProperty = new ReadOnlyDoubleWrapper();
-
-		if(quantityOverriddenProperty.get()) this.quantityProperty.bind(overridenQuantityProperty);
-		else this.quantityProperty.bind(unoverriddenQuantityProperty);
-		
-		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
-		{
-			if(newValue) this.quantityProperty.bind(overridenQuantityProperty);
-			else this.quantityProperty.bind(unoverriddenQuantityProperty);
-		});
+		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
 		
 		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
 		
 		this.totalCostProperty = new ReadOnlyDoubleWrapper();
-		
-		if(ignoreParentQuantityProperty.get()) this.totalCostProperty.bind(unitCostProperty);
-		else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
-		
-		ignoreParentQuantityProperty.addListener((observable, oldValue, newValue) ->
-		{
-			if(newValue) this.totalCostProperty.bind(unitCostProperty);
-			else this.totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
-		});
-		
+		totalCostProperty.bind(Bindings.when(ignoreParentQuantityProperty).then(unitCostProperty).otherwise(unitCostProperty.multiply(parentQuantity)));
 		
 		this.marginProperty = new ReadOnlyIntegerWrapper();
-		
-		if(marginOverriddenProperty.get()) this.marginProperty.bind(overridenMarginProperty.add(0));
-		else this.marginProperty.bind(unoverriddenMarginProperty.add(0));
-		
-		marginOverriddenProperty.addListener((observable, oldValue, newValue) ->
-		{
-			if(newValue) this.marginProperty.bind(overridenMarginProperty.add(0));
-			else this.marginProperty.bind(unoverriddenMarginProperty.add(0));
-		});
+		marginProperty.bind(Bindings.when(marginOverriddenProperty).then(overridenMarginProperty).otherwise(unoverriddenMarginProperty));
 		
 		this.marginDenominatorProperty = new ReadOnlyDoubleWrapper(1.0).subtract(marginProperty.getReadOnlyProperty().divide(100.0));
 		this.totalPriceProperty = totalCostProperty.getReadOnlyProperty().divide(marginDenominatorProperty);

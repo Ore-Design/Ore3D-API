@@ -106,14 +106,7 @@ public class DoubleSpec extends Spec<Number>
 		{
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
 			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
-			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
-			{
-			    @Override
-			    public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
-			    {
-			        if (!newPropertyValue) { if(inputField.getText().equals("")) inputField.setText("0.0"); }
-			    }
-			});
+			inputField.focusedProperty().addListener((obs, oldVal, newVal) -> { if (!newVal) { if(inputField.getText().equals("")) inputField.setText("0.0"); } });
 		}
 		
 		HBox input = new HBox(idLabel, inputField);

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
@@ -125,7 +126,7 @@ public class ComponentSerialization
 					}
 				}
 	
-				RoutingEntry newEntry = new RoutingEntry(id, name, cpq, qty, mrgn, new SimpleDoubleProperty(0), custom);
+				RoutingEntry newEntry = new RoutingEntry(id, name, cpq, qty, mrgn, Util.zeroDoubleBinding(), custom);
 				newEntry.putStoredValues(storedValues);
 				if(ovrQty != null) newEntry.getOverridenQuantityProperty().set(ovrQty);
 				return newEntry;

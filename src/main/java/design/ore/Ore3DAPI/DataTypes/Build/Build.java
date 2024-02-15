@@ -397,7 +397,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		for(MiscEntry miscEntry : misc)
 		{
-			nonCatalogValues = nonCatalogValues.add(miscEntry.getUnitPriceProperty());
+			binding = binding.add(miscEntry.getUnitPriceProperty());
 		}
 		for(Build childBuild : childBuilds)
 		{
