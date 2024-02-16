@@ -52,6 +52,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 	}
 	
 	@Getter String mapID;
+	public String getStringValue() { return Registry.getRegisteredIntegerStringMaps().get(mapID).get(getValue()); }
 	
 	ObjectBinding<Predicate<Integer>> filterPredicate;
 	

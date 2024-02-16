@@ -19,7 +19,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
@@ -51,6 +51,7 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 	}
 	
 	@Getter String mapID;
+	public String getStringValue() { return Registry.getRegisteredIntegerStringMaps().get(mapID).get(getValue()); }
 	
 	ObjectBinding<Predicate<Integer>> filterPredicate;
 	
@@ -94,7 +95,7 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 		};
 		
-		ComboBox<Integer> dropdown = new ComboBox<>();
+		ChoiceBox<Integer> dropdown = new ChoiceBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
 		list.predicateProperty().bind(filterPredicate);
 		dropdown.setItems(list);

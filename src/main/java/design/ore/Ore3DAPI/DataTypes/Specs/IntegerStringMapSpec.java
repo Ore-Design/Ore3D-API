@@ -42,6 +42,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 	}
 	
 	@Getter String mapID;
+	public String getStringValue() { return Registry.getRegisteredIntegerStringMaps().get(mapID).get(getValue()); }
 	
 	@Override
 	public void setValue(Integer val)
