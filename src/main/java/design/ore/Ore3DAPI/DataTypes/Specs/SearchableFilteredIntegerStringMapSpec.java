@@ -15,7 +15,6 @@ import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
@@ -23,6 +22,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
@@ -35,12 +35,22 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null, filterPredicate); }
 	
-	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
-	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate); }
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch,
+		Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate, null); }
 	
-	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch,
+		Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, filterPredicate, null); }
+	
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch,
+		Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate, String uniqueBehaviorNotifier)
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate, uniqueBehaviorNotifier); }
+	
+	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section,
+		boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		
 		if(filterPredicate == null) this.filterPredicate = Bindings.createObjectBinding(() -> null);
 		else this.filterPredicate = filterPredicate;
@@ -64,7 +74,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		else
 		{
-			if(matchingMap.containsKey(val)) valueProperty.setValue(val);
+			if(matchingMap.containsKey(val) || val == null) valueProperty.setValue(val);
 			else throw new IllegalArgumentException("No matching value exists in " + mapID + " for value " + val + "!");
 		}
 	}
@@ -77,6 +87,13 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		StringConverter<Integer> converter = new StringConverter<Integer>()
 		{
@@ -129,7 +146,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			
 			dropdown.valueProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<Integer>)p).setValue(dropdown.getValue()); });
+				toBind.forEach(p -> { ((Spec<Integer>)p).setValue(dropdown.getValue()); });
 			});
 		}
 		else

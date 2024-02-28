@@ -11,13 +11,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
@@ -31,16 +31,22 @@ public class IntegerStringMapSpec extends Spec<Integer>
 	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null); }
 	
 	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
-	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
 	
 	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null); }
+	
+	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
+	
+	public IntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		
 		if(!Registry.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
 	}
-	
+
 	@Getter String mapID;
 	public String getStringValue() { return Registry.getRegisteredIntegerStringMaps().get(mapID).get(getValue()); }
 	
@@ -52,7 +58,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		else
 		{
-			if(matchingMap.containsKey(val)) valueProperty.setValue(val);
+			if(matchingMap.containsKey(val) || val == null) valueProperty.setValue(val);
 			else throw new IllegalArgumentException("No matching value exists in " + mapID + " for value " + val + "!");
 		}
 	}
@@ -65,6 +71,13 @@ public class IntegerStringMapSpec extends Spec<Integer>
 		
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		ChoiceBox<Integer> dropdown = new ChoiceBox<>();
 		dropdown.getItems().setAll(matchingMap.keySet());
@@ -112,7 +125,7 @@ public class IntegerStringMapSpec extends Spec<Integer>
 			
 			dropdown.valueProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<Integer>)p).setValue(dropdown.getValue()); });
+				toBind.forEach(p -> { ((Spec<Integer>)p).setValue(dropdown.getValue()); });
 			});
 		}
 		else

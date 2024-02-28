@@ -8,13 +8,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
@@ -31,11 +31,14 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
 	public EnumSpec(Build parent, String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
 	
-	public EnumSpec(Build parent, String id, E initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty)
+	public EnumSpec(Build parent, String id, E initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
+	
+	public EnumSpec(Build parent, String id, E initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<E> calculateOnDirty, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch, calculateOnDirty);
+		super(parent, id, new SimpleObjectProperty<E>(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		this.clazz = initialValue.getDeclaringClass();
 	}
 
@@ -48,6 +51,13 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		ChoiceBox<E> dropdown = new ChoiceBox<>();
 		dropdown.getItems().setAll(clazz.getEnumConstants());
@@ -96,7 +106,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 			
 			dropdown.valueProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<E>)p).setValue(dropdown.getValue()); });
+				toBind.forEach(p -> { ((Spec<E>)p).setValue(dropdown.getValue()); });
 			});
 		}
 		else

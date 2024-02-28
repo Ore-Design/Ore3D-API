@@ -11,7 +11,6 @@ import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
 import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
@@ -21,6 +20,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import lombok.Getter;
@@ -32,11 +32,14 @@ public class IntSpec extends Spec<Integer>
 	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
-	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
-	public IntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
-	{ super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty); }
+	public IntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
+	
+	public IntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
 	@Getter private IntegerProperty intProperty = null;
 	public ObservableNumberValue getNumberProperty() { return intProperty; }
@@ -48,6 +51,13 @@ public class IntSpec extends Spec<Integer>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
@@ -89,7 +99,7 @@ public class IntSpec extends Spec<Integer>
 				{
 					String text = inputField.getText();
 					int val = text.equals("") ? 0 : Integer.parseInt(inputField.getText());
-					toBind.forEach(p -> { ((Property<Integer>)p).setValue(val); });
+					toBind.forEach(p -> { ((Spec<Integer>)p).setValue(val); });
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

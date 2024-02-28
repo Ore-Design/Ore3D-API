@@ -8,13 +8,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
@@ -25,11 +25,14 @@ public class StringSpec extends Spec<String>
 	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
-	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
-	public StringSpec(Build parent, String id, String initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	public StringSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
+	
+	public StringSpec(Build parent, String id, String initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
 	public SimpleStringProperty getProperty() { return (SimpleStringProperty) valueProperty; }
 
@@ -38,6 +41,13 @@ public class StringSpec extends Spec<String>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		TextField inputField = new TextField(valueProperty.getValue());
 		inputField.getStyleClass().add("spec-text-field");
@@ -64,7 +74,7 @@ public class StringSpec extends Spec<String>
 			inputField.setText(firstVal);
 			inputField.textProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { try { ((Property<String>)p).setValue(inputField.getText()); } catch(Exception e) {} });
+				toBind.forEach(p -> { try { ((Spec<String>)p).setValue(inputField.getText()); } catch(Exception e) {} });
 			});
 		}
 		else inputField.textProperty().bindBidirectional(valueProperty);

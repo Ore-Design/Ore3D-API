@@ -1,5 +1,7 @@
 package design.ore.Ore3DAPI.DataTypes.Specs;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -20,6 +22,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
@@ -37,7 +40,13 @@ public class DoubleSpec extends Spec<Number>
 	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
 	
 	public DoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
-	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null); }
+	
+	public DoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	
+	public DoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
 	private String preEdit = "";
 	
@@ -48,6 +57,13 @@ public class DoubleSpec extends Spec<Number>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
@@ -105,8 +121,67 @@ public class DoubleSpec extends Spec<Number>
 		else
 		{
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
-			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
-			inputField.focusedProperty().addListener((obs, oldVal, newVal) -> { if (!newVal) { if(inputField.getText().equals("")) inputField.setText("0.0"); } });
+			final ChangeListener<Boolean> avoidEmpty = (obs, oldVal, newVal) -> { if (!newVal) { if(inputField.getText().equals("")) inputField.setText("0.0"); } };
+			final ChangeListener<Boolean> calculateOnEnd = (obs, oldVal, newVal) ->
+			{
+				if (!newVal)
+				{
+					if(inputField.getText().equals(""))
+					{
+						inputField.setText("0.0");
+						valueProperty.setValue(0);
+					}
+					else valueProperty.setValue(Double.parseDouble(inputField.getText()));
+				}
+			};
+			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) ->
+			{
+				if (newVal != null) { inputField.textProperty().setValue(newVal + ""); }
+			};
+			
+			if(holdCalculateTillCompleteProperty.getValue() != null)
+			{
+				if(holdCalculateTillCompleteProperty.getValue())
+				{
+					inputField.focusedProperty().removeListener(avoidEmpty);
+					inputField.textProperty().unbindBidirectional(this.valueProperty);
+					inputField.textProperty().setValue(getDoubleValue() + "");
+					inputField.focusedProperty().addListener(calculateOnEnd);
+					valueProperty.addListener(updateFieldOnValueChange);
+				}
+				else
+				{
+					inputField.focusedProperty().removeListener(calculateOnEnd);
+					valueProperty.removeListener(updateFieldOnValueChange);
+//					removeListener(updateFieldOnValueChange);
+					
+					inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
+					inputField.focusedProperty().addListener(avoidEmpty);
+				}
+			}
+			
+			holdCalculateTillCompleteProperty.addListener((observable, oldValue, newValue) ->
+			{
+				if(newValue != null)
+				{
+					if(newValue)
+					{
+						inputField.focusedProperty().removeListener(avoidEmpty);
+						inputField.textProperty().unbindBidirectional(this.valueProperty);
+						inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP).toString());
+						inputField.focusedProperty().addListener(calculateOnEnd);
+						addListener(updateFieldOnValueChange);
+					}
+					else
+					{
+						inputField.focusedProperty().removeListener(calculateOnEnd);
+						removeListener(updateFieldOnValueChange);
+						
+						inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
+						inputField.focusedProperty().addListener(avoidEmpty);
+					}
+				}
+			});
 		}
 		
 		HBox input = new HBox(idLabel, inputField);

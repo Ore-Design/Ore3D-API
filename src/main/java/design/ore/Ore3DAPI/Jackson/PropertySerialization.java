@@ -191,6 +191,14 @@ public class PropertySerialization
 				Double value = p.getCodec().readValue(p, Double.class);
 				return new SimpleDoubleProperty(value);
 			}
+	
+			@Override
+			public DoubleProperty deserialize(JsonParser p, DeserializationContext ctxt, DoubleProperty prop) throws IOException, JacksonException
+			{
+				Double value = p.getCodec().readValue(p, Double.class);
+				prop.setValue(value);
+				return prop;
+			}
 		}
 	}
 }

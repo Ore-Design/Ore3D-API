@@ -16,6 +16,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -26,18 +27,34 @@ public class BooleanSpec extends Spec<Boolean>
 {
 	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+
+	public BooleanSpec(Build parent, String id, boolean initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
 	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty)
 	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
 	
 	public BooleanSpec(Build parent, String id, boolean initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty)
-	{ super(parent, id, new SimpleBooleanProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null); }
+	
+	public BooleanSpec(Build parent, String id, boolean initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
+	
+	public BooleanSpec(Build parent, String id, boolean initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Boolean> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ super(parent, id, new SimpleBooleanProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		CheckBox check = new CheckBox();
 		check.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));

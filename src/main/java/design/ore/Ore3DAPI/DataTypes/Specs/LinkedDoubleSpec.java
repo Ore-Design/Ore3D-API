@@ -13,7 +13,6 @@ import design.ore.Ore3DAPI.UI.ToggleIconButton;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -24,6 +23,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -40,17 +40,23 @@ public class LinkedDoubleSpec extends Spec<Number>
 	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty)
-	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null, false); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null, false, null); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, toLink, linked); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, toLink, linked, null); }
 	
 	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, toLink, linked); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, toLink, linked, null); }
 	
-	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked)
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, LinkedDoubleSpec toLink, boolean linked, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, null, toLink, linked, uniqueBehaviorNotifier); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, toLink, linked, uniqueBehaviorNotifier); }
+	
+	public LinkedDoubleSpec(Build parent, String id, double initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Number> calculateOnDirty, LinkedDoubleSpec toLink, boolean linked, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty);
+		super(parent, id, new SimpleDoubleProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		
 		linkedSpecProperty.addListener((obs, oldVal, newVal) ->
 		{
@@ -85,6 +91,13 @@ public class LinkedDoubleSpec extends Spec<Number>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		ToggleIconButton button = new ToggleIconButton(
 			Util.UI.colorize(new ImageView(Util.getChainIcon()), Util.Colors.getAccent()),
@@ -132,7 +145,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 				{
 					String text = inputField.getText();
 					Number val = text.equals("") ? 0.0 : Double.parseDouble(text);
-					toBind.forEach(p -> { ((Property<Number>)p).setValue(val); });
+					toBind.forEach(p -> { ((Spec<Number>)p).setValue(val); });
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

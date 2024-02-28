@@ -10,7 +10,6 @@ import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Colors;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Insets;
@@ -19,6 +18,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -31,17 +31,27 @@ public class LargeTextSpec extends Spec<String>
 	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
-	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 	
-	public LargeTextSpec(Build parent, String id, String initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
-	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty); }
+	public LargeTextSpec(Build parent, String id, String initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty)
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
+	
+	public LargeTextSpec(Build parent, String id, String initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<String> calculateOnDirty, String uniqueBehaviorNotifier)
+	{ super(parent, id, new SimpleStringProperty(initialValue), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier); }
 
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		Button openPopoutButton = new Button("Edit");
 		openPopoutButton.setId("build-select-button");
@@ -78,7 +88,7 @@ public class LargeTextSpec extends Spec<String>
 			editArea.setText("-");
 			editArea.textProperty().addListener((obs, oldVal, newVal) ->
 			{
-				toBind.forEach(p -> { try { ((Property<String>)p).setValue(editArea.getText()); } catch(Exception e) {} });
+				toBind.forEach(p -> { try { ((Spec<String>)p).setValue(editArea.getText()); } catch(Exception e) {} });
 			});
 		}
 		else editArea.textProperty().bindBidirectional(valueProperty);

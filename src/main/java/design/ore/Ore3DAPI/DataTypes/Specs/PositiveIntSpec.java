@@ -11,7 +11,6 @@ import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
 import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -22,6 +21,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
@@ -34,15 +34,21 @@ public class PositiveIntSpec extends Spec<Integer>
 	public PositiveIntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch)
 	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
 	
+	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, null); }
+	
 	public PositiveIntSpec(Build parent, String id, int initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
-	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty); }
+	{ this(parent, id, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, null); }
 
 	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch)
-	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null); }
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null, null); }
+
+	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, String uniqueBehaviorNotifier)
+	{ this(parent, id, initialValue, readOnly, section, countsAsMatch, null, uniqueBehaviorNotifier); }
 	
-	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty)
+	public PositiveIntSpec(Build parent, String id, int initialValue, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<Integer> calculateOnDirty, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty);
+		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		intProperty.bind(valueProperty);
 	}
 	
@@ -57,6 +63,13 @@ public class PositiveIntSpec extends Spec<Integer>
 	{
 		Label idLabel = new Label(id);
 		idLabel.getStyleClass().add("spec-label");
+		
+		if(uniqueBehaviorNotifierProperty.isNotNull().get() && uniqueBehaviorNotifierProperty.isNotEmpty().get())
+		{
+			idLabel.getStyleClass().add("italic-spec-label");
+			idLabel.setText(idLabel.getText() + "*");
+			idLabel.setTooltip(new Tooltip(uniqueBehaviorNotifierProperty.get()));
+		}
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
@@ -98,7 +111,7 @@ public class PositiveIntSpec extends Spec<Integer>
 				{
 					String text = inputField.getText();
 					int val = text.equals("") ? 1 : Integer.parseInt(inputField.getText());
-					toBind.forEach(p -> { ((Property<Integer>)p).setValue(val); });
+					toBind.forEach(p -> { ((Spec<Integer>)p).setValue(val); });
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

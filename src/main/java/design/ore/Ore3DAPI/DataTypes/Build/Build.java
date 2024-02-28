@@ -79,8 +79,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.DoubleSer.Deserializer.class)
-	@Getter protected DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
-	public boolean isCatalog() { return catalogPrice.get() >= 0; }
+	@JsonMerge @Getter protected DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
+	@JsonIgnore @Getter protected BooleanBinding isCatalog = catalogPrice.greaterThanOrEqualTo(0);
 	
 	@JsonIgnore @Getter protected final ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
@@ -221,8 +221,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					for(Spec<?> s : l.getAddedSubList())
 					{
 						s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); });
-						if(s.getCalculateOnDirty() != null) this.registerDirtyListenerEvent(s.getCalculateOnDirty() + "CalculateOnDirty",
-							(obs, oldVal, newVal) -> { if(!newVal) { s.setPropertyToCallable(); } });
 					}
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
@@ -230,12 +228,18 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		});
 		
 		specs.addAll(quantity, workOrder);
+		
+		registerDirtyListenerEvent("CalculateOnDirty", (obs, oldVal, newVal) ->
+		{
+			if(!newVal) { for(Spec<?> sp : specs) { sp.setPropertyToCallable(); } }
+		});
 	}
+	
+	@JsonIgnore @Getter protected final ObservableList<Build> allowedChildBuilds = FXCollections.observableArrayList();
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
 	public abstract StringExpression calculateDefaultDescription();
-	public abstract List<Build> allowedChildBuilds();
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	
@@ -404,7 +408,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			binding = binding.add(childBuild.getPrice().getTotalPrice());
 		}
 		
-		return (DoubleBinding) Bindings.when(catalogPrice.greaterThanOrEqualTo(0)).then(binding.add(catalogPrice)).otherwise(binding.add(nonCatalogValues));
+		return (DoubleBinding) Bindings.when(isCatalog).then(binding.add(catalogPrice)).otherwise(binding.add(nonCatalogValues));
 	}
 	
 	protected DoubleBinding getTotalPrice()

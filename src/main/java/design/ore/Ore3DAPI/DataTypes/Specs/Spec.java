@@ -17,6 +17,7 @@ import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
@@ -44,7 +45,7 @@ public abstract class Spec<T>
 {
 	public Spec() { valueProperty = new SimpleObjectProperty<T>(); }
 	
-	public Spec(Build parent, String id, Property<T> value, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty)
+	public Spec(Build parent, String id, Property<T> value, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty, String uniqueBehaviorNotifier)
 	{
 		this.id = id;
 		this.valueProperty = value;
@@ -54,6 +55,7 @@ public abstract class Spec<T>
 		this.countsAsMatch = countsAsMatch;
 		this.calculateOnDirty = calculateOnDirty;
 		this.parent = parent;
+		this.uniqueBehaviorNotifierProperty.setValue(uniqueBehaviorNotifier);
 	}
 
 	@Getter protected final SimpleBooleanProperty readOnlyProperty = new SimpleBooleanProperty(false);
@@ -61,14 +63,17 @@ public abstract class Spec<T>
 	public boolean countsAsMatch() { return countsAsMatch; }
 	@Getter @Setter protected String section;
 	@Getter @Setter protected String id;
-	@Getter protected Property<T> valueProperty; // TODO: Refactor for read only
-	@JsonIgnore @Getter protected Callable<T> calculateOnDirty;
+	@Getter protected final Property<T> valueProperty; // TODO: Refactor for read only
+	@JsonIgnore @Getter @Setter protected Callable<T> calculateOnDirty;
 	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
 	@JsonIgnore protected Build parent;
+	@JsonIgnore @Getter protected final SimpleStringProperty uniqueBehaviorNotifierProperty = new SimpleStringProperty();
+	@JsonIgnore @Getter protected final SimpleBooleanProperty holdCalculateTillCompleteProperty = new SimpleBooleanProperty(false);
 
 	public void setValue(T val) { valueProperty.setValue(val); }
 	public T getValue() { return valueProperty.getValue(); }
 	public void addListener(ChangeListener<? super T> listener) { listeners.add(listener); }
+	public void removeListener(ChangeListener<? super T> listener) { listeners.remove(listener); }
 	public void clearListeners() { listeners.clear(); }
 	protected void runListeners(ObservableValue<? extends T> obs, T oldVal, T newVal) { for(ChangeListener<? super T> listener : listeners) { listener.changed(obs, oldVal, newVal); } }
 	public void bind(ObservableValue<? extends T> obs) { valueProperty.bind(obs); }
