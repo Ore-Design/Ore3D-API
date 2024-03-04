@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
+import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import lombok.Getter;
 
 public class Registry
@@ -60,9 +62,20 @@ public class Registry
 		registeredCustomEditButtons.add(button);
 	}
 	
-	@Getter private static final List<CustomSaveCycleReference> registeredCustomSaveCycles = new ArrayList<>();
-	public static void registerCustomSaveCycle(CustomSaveCycleReference cycle)
+	@Getter private static final Map<String, CustomSaveCycleReference> registeredCustomSaveCycles = new HashMap<>();
+	public static void registerCustomSaveCycle(String saveCycleID, CustomSaveCycleReference cycle)
 	{
-		registeredCustomSaveCycles.add(cycle);
+		if(registeredCustomSaveCycles.containsKey(saveCycleID)) Log.getLogger().warn("A save cycle already exists with ID " + saveCycleID + "! It will be overridden!");
+		registeredCustomSaveCycles.put(saveCycleID, cycle);
 	}
+	
+	@Getter private static final Map<String, Runnable> registeredCommands = new HashMap<>();
+	public static void registerCommand(String command, Runnable action)
+	{
+		registeredCommands.put(command.toLowerCase(), action);
+	}
+	
+	@Getter private static final List<CatalogItem> registeredCatalogItems = new ArrayList<>();
+	public static void registerCatalogItem(CatalogItem item) { registeredCatalogItems.add(item); }
+	public static void registerCatalogItems(Collection<CatalogItem> items) { registeredCatalogItems.addAll(items); }
 }

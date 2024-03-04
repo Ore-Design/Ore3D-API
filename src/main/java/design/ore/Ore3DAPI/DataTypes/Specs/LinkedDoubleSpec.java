@@ -104,6 +104,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 			Util.UI.colorize(new ImageView(Util.getBrokenChainIcon()), Util.Colors.getAccent()),
 			true, linkActiveProperty);
 		button.setOnAction(e -> linkActiveProperty.setValue(!linkActiveProperty.get()));
+		button.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		TextField inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");

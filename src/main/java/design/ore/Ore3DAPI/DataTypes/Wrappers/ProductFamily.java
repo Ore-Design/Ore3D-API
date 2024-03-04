@@ -4,6 +4,7 @@ import java.util.List;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.scene.image.Image;
+import javafx.util.Pair;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,5 +13,5 @@ public class ProductFamily
 {
 	@Getter String name;
 	@Getter Image thumbnail;
-	@Getter List<? extends Build> builds;
+	@Getter List<Pair<String, Build>> builds;
 }

@@ -31,6 +31,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
+import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import design.ore.Ore3DAPI.Jackson.BuildDataSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableSetSerialization;
@@ -85,8 +86,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonIgnore @Getter protected final ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
 	
-	protected SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
-	public void setDirty() { buildIsDirty.setValue(true); }
+	private final SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
+	public void setDirty() { if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true); }
 	
 	private Map<String, ChangeListener<Boolean>> registeredDirtyUpdates = new HashMap<>();
 	public void registerDirtyListenerEvent(String listenerID, ChangeListener<Boolean> listener)
@@ -108,7 +109,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonSerialize(using = PropertySerialization.ReadOnlyStringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.ReadOnlyStringSer.Deserializer.class)
 	@JsonMerge final protected ReadOnlyStringWrapper unoverridenDescriptionProperty = new ReadOnlyStringWrapper("");
-//	@JsonIgnore public ReadOnlyStringProperty getUnoverridenDescriptionProperty() { return unoverridenDescriptionProperty.getReadOnlyProperty(); }
 	
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
@@ -190,7 +190,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 						cb.parentBuildProperty.setValue(null);
 						cb.parentTransactionProperty.unbind();
 						cb.unregisterDirtyListenerEvent("ChildUpdateListener");
-						this.setDirty();
+						setDirty();
 					}
 				}
 			}
@@ -220,7 +220,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				{
 					for(Spec<?> s : l.getAddedSubList())
 					{
-						s.addListener((obsv, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) buildIsDirty.setValue(true); });
+						s.addListener((obsv, oldVal, newVal) -> { if((oldVal == null || !oldVal.equals(newVal)) && !s.getReadOnlyProperty().get()) setDirty(); });
 					}
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
@@ -249,7 +249,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		try
 		{
 			String original = Util.Mapper.getMapper().writeValueAsString(this);
-			Log.getLogger().debug("Duplicated build JSOn: " + original);
+			Log.getLogger().debug("Duplicated build JSON: " + original);
 			duplicate = Util.Mapper.getMapper().readValue(original, Build.class);
 		}
 		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + Util.stackTraceArrayToString(e)); }
@@ -295,6 +295,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		if(parentTran != null && !parentTran.isExpired())
 		{
 			conflicts.clear();
+			
+			runCatalogDetection();
 	
 			Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 			
@@ -430,4 +432,23 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 	@Override
 	public void clearConflicts() { conflicts.clear(); }
+	
+	private void runCatalogDetection()
+	{
+//		Log.getLogger().debug("Running catalog detection for " + titleProperty.get() +  "...");
+		for(Build cb : getChildBuilds()) { cb.runCatalogDetection(); }
+		
+		boolean foundCatalog = false;
+		for(CatalogItem ci : Registry.getRegisteredCatalogItems())
+		{
+			if(ci.getBuild().matches(this))
+			{
+				catalogPrice.set(ci.getPrice());
+				foundCatalog = true;
+				break;
+			}
+		}
+		
+		if(!foundCatalog) catalogPrice.set(-1);
+	}
 }

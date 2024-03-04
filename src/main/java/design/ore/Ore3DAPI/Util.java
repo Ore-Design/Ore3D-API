@@ -1,7 +1,5 @@
 package design.ore.Ore3DAPI;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -14,6 +12,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
+
+import org.controlsfx.control.Notifications;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,6 +32,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.CheckBox;
@@ -48,6 +49,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -98,10 +100,14 @@ public class Util
 
 	public static String stackTraceArrayToString(Throwable e)
 	{
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		e.printStackTrace(pw);
-		return sw.toString();
+		return stackTraceArrayToString(e.getStackTrace());
+	}
+
+	public static String stackTraceArrayToString(StackTraceElement[] e)
+	{
+		StringBuilder str = new StringBuilder();
+		for(StackTraceElement el : e) { str.append(el.toString() + "\n"); }
+		return str.toString();
 	}
 	
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
@@ -197,6 +203,36 @@ public class Util
 					return null;
 				}
 			}
+		}
+		
+		public static void notify(String title, String message)
+		{
+			Optional<Window> owner = Stage.getWindows().stream().filter(s -> s.isFocused() && s instanceof Stage).findFirst();
+			if(owner.isEmpty())
+			{
+				Log.getLogger().warn("Cant show notification, as there is no currently focused window!");
+				return;
+			}
+			
+			if(Platform.isFxApplicationThread())
+			{
+				try { showNotification((Stage) owner.get(), title, message); }
+				catch (Exception e) { Log.getLogger().warn("Error running notification: " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e)); }
+			}
+			else
+			{
+				final FutureTask<Void> task = new FutureTask<>(new Callable<>()
+				{
+					@Override
+					public Void call() throws Exception { showNotification((Stage) owner.get(), title, message); return null; }
+				});
+				Platform.runLater(task);
+			}
+		}
+		
+		private static void showNotification(Stage owner, String title, String message)
+		{
+			Notifications.create().title(title).text(message).hideAfter(Duration.seconds(5)).owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
 		}
 		
 		public static Alert confirm(String title, String message, Stage owner)
@@ -327,5 +363,12 @@ public class Util
 			
 			for(Stage s : toClose) { s.close(); }
 		}
+	}
+	
+	@Getter private static String persistentPluginDataDir;
+	public static void setPersistentPluginDataDir(String dir)
+	{
+		if(persistentPluginDataDir == null) persistentPluginDataDir = dir;
+		else Log.getLogger().warn("Cannot set Appdata Dir as it is already set!");
 	}
 }

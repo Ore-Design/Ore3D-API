@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Wrappers;
+package design.ore.Ore3DAPI.DataTypes;
 
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import lombok.AllArgsConstructor;
@@ -6,9 +6,10 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class CatalogItem
+public class BuildTreeViewItem
 {
 	Build build;
-	double price;
 	String displayName;
+	
+	public boolean isSelectable() { return build != null; }
 }
