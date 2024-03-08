@@ -57,6 +57,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.util.Pair;
 import lombok.Getter;
@@ -135,6 +136,13 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@Getter @JsonMerge
 	protected ObservableSet<Integer> tags = FXCollections.observableSet();
 
+	@JsonSerialize(using = ObservableSetSerialization.StringSet.Serializer.class)
+	@JsonDeserialize(using = ObservableSetSerialization.StringSet.Deserializer.class)
+	@JsonMerge protected final ObservableSet<String> queryableValues = FXCollections.observableSet();
+	@JsonIgnore @Getter private final ObservableSet<String> readOnlyQueryableValues = FXCollections.unmodifiableObservableSet(queryableValues);
+	public boolean addQueryableValue(String val) { return queryableValues.add(val); }
+	public boolean removeQueryableValue(String val) { return queryableValues.remove(val); }
+	
 	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
 	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
 	@Getter @JsonMerge
@@ -208,6 +216,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			// Refresh must be called AFTER dirty listeners to avoid mismatch data
 			for(ChangeListener<Boolean> listener : registeredDirtyUpdates.values()) listener.changed(obs, oldVal, newVal);
 			if(newVal) refresh();
+			
 			buildIsDirty.setValue(false);
 		});
 		
@@ -229,13 +238,13 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		
 		specs.addAll(quantity, workOrder);
 		
-		registerDirtyListenerEvent("CalculateOnDirty", (obs, oldVal, newVal) ->
-		{
-			if(!newVal) { for(Spec<?> sp : specs) { sp.setPropertyToCallable(); } }
-		});
+//		registerDirtyListenerEvent("CalculateOnDirty", (obs, oldVal, newVal) ->
+//		{
+//			if(!newVal) { for(Spec<?> sp : specs) { sp.setPropertyToCallable(); } }
+//		});
 	}
 	
-	@JsonIgnore @Getter protected final ObservableList<Build> allowedChildBuilds = FXCollections.observableArrayList();
+	@JsonIgnore @Getter protected final ObservableMap<String, Build> allowedChildBuilds = FXCollections.observableHashMap();
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
@@ -282,7 +291,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId() == s.getId()).findFirst();
 				if(optionalMatch.isEmpty()) return false;
 				Spec<?> matching = optionalMatch.get();
-				if(!matching.getValue().equals(s.getValue())) return false;
+				if(s.getValue() == null || !matching.getValue().equals(s.getValue())) return false;
 			}
 		}
 		
@@ -295,6 +304,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		if(parentTran != null && !parentTran.isExpired())
 		{
 			conflicts.clear();
+			
+			for(Spec<?> sp : specs) { sp.setPropertyToCallable(); }
 			
 			runCatalogDetection();
 	

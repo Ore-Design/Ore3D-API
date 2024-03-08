@@ -1,5 +1,8 @@
 package design.ore.Ore3DAPI.JavaFX;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import javafx.util.StringConverter;
 
 public class NonNullDoubleStringConverter extends StringConverter<Number>
@@ -21,6 +24,6 @@ public class NonNullDoubleStringConverter extends StringConverter<Number>
     {
         if (value == null) return "";
         
-        return value.toString();
+        return new BigDecimal(value.doubleValue()).setScale(4, RoundingMode.HALF_UP).doubleValue() + "";
     }
 }

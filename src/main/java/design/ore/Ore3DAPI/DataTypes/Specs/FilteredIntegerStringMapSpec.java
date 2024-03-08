@@ -34,10 +34,18 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 {
 	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section, boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null, filterPredicate); }
-	
+
 	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section,
 		boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
 	{ this(parent, id, mapID, initialValue, Bindings.createBooleanBinding(() -> readOnly), section, countsAsMatch, calculateOnDirty, filterPredicate, null); }
+	
+	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section,
+			boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate)
+		{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, calculateOnDirty, filterPredicate, null); }
+	
+	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section,
+			boolean countsAsMatch, ObjectBinding<Predicate<Integer>> filterPredicate)
+		{ this(parent, id, mapID, initialValue, readOnly, section, countsAsMatch, null, filterPredicate, null); }
 	
 	public FilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, boolean readOnly, String section,
 		boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate, String uniqueBehaviorNotifier)

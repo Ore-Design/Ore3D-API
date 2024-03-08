@@ -101,4 +101,44 @@ public class ObservableSetSerialization
 			}
 		}
 	}
+	
+	public static class StringSet
+	{
+		public static class Serializer extends StdSerializer<ObservableSet<String>>
+		{
+			protected Serializer() { this(null); }
+			protected Serializer(Class<ObservableSet<String>> t) { super(t); }
+		
+			@Override
+			public void serialize(ObservableSet<String> value, JsonGenerator gen, SerializerProvider provider) throws IOException
+			{
+				gen.writeObject(new ArrayList<String>(value));
+			}
+			
+			@Override
+			public void serializeWithType(ObservableSet<String> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+			{
+				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+				typeSer.writeTypePrefix(gen, typeId);
+				gen.writeFieldName("tagobslist");
+				serialize(value, gen, provider);
+				typeSer.writeTypeSuffix(gen, typeId);
+			}
+		}
+		
+		public static class Deserializer extends StdDeserializer<ObservableSet<String>>
+		{
+			public Deserializer() { this(null); }
+			protected Deserializer(Class<ObservableSet<String>> t) { super(t); }
+	
+			@Override
+			public ObservableSet<String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException
+			{	
+				ArrayList<String> list = p.readValueAs(new TypeReference<ArrayList<String>>() {});
+				ObservableSet<String> set = FXCollections.observableSet();
+				for(String i : list) { set.add(i); }
+				return set;
+			}
+		}
+	}
 }

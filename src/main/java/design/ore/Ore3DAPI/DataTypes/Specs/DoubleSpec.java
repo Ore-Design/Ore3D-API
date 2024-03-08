@@ -120,7 +120,6 @@ public class DoubleSpec extends Spec<Number>
 		}
 		else
 		{
-			inputField.setTextFormatter(Util.getDecimalFormatter(4));
 			final ChangeListener<Boolean> avoidEmpty = (obs, oldVal, newVal) -> { if (!newVal) { if(inputField.getText().equals("")) inputField.setText("0.0"); } };
 			final ChangeListener<Boolean> calculateOnEnd = (obs, oldVal, newVal) ->
 			{
@@ -134,54 +133,11 @@ public class DoubleSpec extends Spec<Number>
 					else valueProperty.setValue(Double.parseDouble(inputField.getText()));
 				}
 			};
-			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) ->
-			{
-				if (newVal != null) { inputField.textProperty().setValue(newVal + ""); }
-			};
+			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { Log.getLogger().debug("Setting " + id +  " field due to value change!"); if (newVal != null) { inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + ""); } };
 			
-			if(holdCalculateTillCompleteProperty.getValue() != null)
-			{
-				if(holdCalculateTillCompleteProperty.getValue())
-				{
-					inputField.focusedProperty().removeListener(avoidEmpty);
-					inputField.textProperty().unbindBidirectional(this.valueProperty);
-					inputField.textProperty().setValue(getDoubleValue() + "");
-					inputField.focusedProperty().addListener(calculateOnEnd);
-					valueProperty.addListener(updateFieldOnValueChange);
-				}
-				else
-				{
-					inputField.focusedProperty().removeListener(calculateOnEnd);
-					valueProperty.removeListener(updateFieldOnValueChange);
-//					removeListener(updateFieldOnValueChange);
-					
-					inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
-					inputField.focusedProperty().addListener(avoidEmpty);
-				}
-			}
-			
-			holdCalculateTillCompleteProperty.addListener((observable, oldValue, newValue) ->
-			{
-				if(newValue != null)
-				{
-					if(newValue)
-					{
-						inputField.focusedProperty().removeListener(avoidEmpty);
-						inputField.textProperty().unbindBidirectional(this.valueProperty);
-						inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP).toString());
-						inputField.focusedProperty().addListener(calculateOnEnd);
-						addListener(updateFieldOnValueChange);
-					}
-					else
-					{
-						inputField.focusedProperty().removeListener(calculateOnEnd);
-						removeListener(updateFieldOnValueChange);
-						
-						inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
-						inputField.focusedProperty().addListener(avoidEmpty);
-					}
-				}
-			});
+			inputField.setTextFormatter(Util.getDecimalFormatter(4));
+			if(holdCalculateTillCompleteProperty.getValue() != null) { setHoldCalculateTillCompleteBindings(holdCalculateTillCompleteProperty.getValue(), inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); }
+			holdCalculateTillCompleteProperty.addListener((observable, oldValue, newValue) -> { if(newValue != null) { setHoldCalculateTillCompleteBindings(newValue, inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); } });
 		}
 		
 		HBox input = new HBox(idLabel, inputField);
@@ -196,5 +152,28 @@ public class DoubleSpec extends Spec<Number>
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;
+	}
+	
+	private void setHoldCalculateTillCompleteBindings(boolean hold, TextField inputField, final ChangeListener<Boolean> avoidEmpty, final ChangeListener<Boolean> calculateOnEnd, final ChangeListener<Number> updateFieldOnValueChange)
+	{
+		if(hold)
+		{
+			inputField.focusedProperty().removeListener(avoidEmpty);
+			
+			inputField.textProperty().unbindBidirectional(this.valueProperty);
+			inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + "");
+			
+			inputField.focusedProperty().addListener(calculateOnEnd);
+			valueProperty.addListener(updateFieldOnValueChange);
+		}
+		else
+		{
+			inputField.focusedProperty().removeListener(calculateOnEnd);
+			valueProperty.removeListener(updateFieldOnValueChange);
+			
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullDoubleStringConverter());
+			
+			inputField.focusedProperty().addListener(avoidEmpty);
+		}
 	}
 }
