@@ -14,10 +14,8 @@ import javafx.collections.ObservableList;
 public class BuildList implements ObservableList<Build>
 {
 	ObservableList<Build> list;
-	public BuildList()
-	{
-		list = FXCollections.observableArrayList();
-	}
+	public BuildList() { list = FXCollections.observableArrayList(); }
+	public BuildList(List<Build> builds) { list = FXCollections.observableArrayList(builds); }
 	
 	@Override
 	public int size() { return list.size(); }

@@ -176,7 +176,7 @@ public class Util
 	
 	public static class UI
 	{
-		public static <T> T runDialogOnApplicationThread(Callable<T> call)
+		public static <T> T runOnApplicationThread(Callable<T> call)
 		{
 			if(Platform.isFxApplicationThread())
 			{
@@ -205,7 +205,7 @@ public class Util
 			}
 		}
 		
-		public static void notify(String title, String message)
+		public static void notify(String title, String message, double seconds)
 		{
 			Optional<Window> owner = Stage.getWindows().stream().filter(s -> s.isFocused() && s instanceof Stage).findFirst();
 			if(owner.isEmpty())
@@ -216,7 +216,7 @@ public class Util
 			
 			if(Platform.isFxApplicationThread())
 			{
-				try { showNotification((Stage) owner.get(), title, message); }
+				try { showNotification((Stage) owner.get(), title, message, seconds); }
 				catch (Exception e) { Log.getLogger().warn("Error running notification: " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e)); }
 			}
 			else
@@ -224,15 +224,15 @@ public class Util
 				final FutureTask<Void> task = new FutureTask<>(new Callable<>()
 				{
 					@Override
-					public Void call() throws Exception { showNotification((Stage) owner.get(), title, message); return null; }
+					public Void call() throws Exception { showNotification((Stage) owner.get(), title, message, seconds); return null; }
 				});
 				Platform.runLater(task);
 			}
 		}
 		
-		private static void showNotification(Stage owner, String title, String message)
+		private static void showNotification(Stage owner, String title, String message, double seconds)
 		{
-			Notifications.create().title(title).text(message).hideAfter(Duration.seconds(5)).owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
+			Notifications.create().title(title).text(message).hideAfter(Duration.seconds(seconds)).owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
 		}
 		
 		public static Alert confirm(String title, String message, Stage owner)

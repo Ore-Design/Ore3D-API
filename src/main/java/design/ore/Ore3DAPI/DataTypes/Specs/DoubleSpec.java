@@ -133,7 +133,7 @@ public class DoubleSpec extends Spec<Number>
 					else valueProperty.setValue(Double.parseDouble(inputField.getText()));
 				}
 			};
-			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { Log.getLogger().debug("Setting " + id +  " field due to value change!"); if (newVal != null) { inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + ""); } };
+			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { if (newVal != null) { inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + ""); } };
 			
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
 			if(holdCalculateTillCompleteProperty.getValue() != null) { setHoldCalculateTillCompleteBindings(holdCalculateTillCompleteProperty.getValue(), inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); }

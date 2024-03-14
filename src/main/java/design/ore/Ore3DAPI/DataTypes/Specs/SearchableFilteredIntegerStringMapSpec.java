@@ -50,7 +50,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 	public SearchableFilteredIntegerStringMapSpec(Build parent, String id, String mapID, Integer initialValue, ObservableBooleanValue readOnly, String section,
 		boolean countsAsMatch, Callable<Integer> calculateOnDirty, ObjectBinding<Predicate<Integer>> filterPredicate, String uniqueBehaviorNotifier)
 	{
-		super(parent, id, new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
+		super(parent, id, initialValue == null ? new SimpleIntegerProperty().asObject() : new SimpleIntegerProperty(initialValue).asObject(), readOnly, section, countsAsMatch, calculateOnDirty, uniqueBehaviorNotifier);
 		
 		if(filterPredicate == null) this.filterPredicate = Bindings.createObjectBinding(() -> null);
 		else this.filterPredicate = filterPredicate;
