@@ -5,8 +5,8 @@ import java.util.List;
 import org.pf4j.ExtensionPoint;
 
 import design.ore.Ore3DAPI.DataTypes.CRM.Customer;
-import design.ore.Ore3DAPI.DataTypes.CRM.Employee;
 import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
+import design.ore.Ore3DAPI.DataTypes.CRM.Employee.Employee;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.UpdatePacket;
 
 public interface CRMEndpoint extends ExtensionPoint

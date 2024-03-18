@@ -42,6 +42,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		this.lockedBy = lockedBy;
 		this.compatibleVersion = compatibleVersion;
 		this.expired = expired;
+		this.
 		
 		conflicts = FXCollections.observableArrayList();
 		tags = FXCollections.observableArrayList();
@@ -106,6 +107,8 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	@Getter @Setter PricingData pricing;
 	@Getter @Setter BuildList builds;
 	@Getter @Setter Customer customer;
+	@Setter boolean canBeDuplicated;
+	public boolean canBeDuplicated() { return canBeDuplicated; }
 	@Setter boolean canGenerateWorkOrders;
 	public boolean canGenerateWorkOrders() { return canGenerateWorkOrders; }
 	@Getter @Setter String lockedBy;

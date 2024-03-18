@@ -291,7 +291,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId() == s.getId()).findFirst();
 				if(optionalMatch.isEmpty()) return false;
 				Spec<?> matching = optionalMatch.get();
-				if(s.getValue() == null || !matching.getValue().equals(s.getValue())) return false;
+				if(s.getValue() == null || matching.getValue() == null || !matching.getValue().equals(s.getValue())) return false;
 			}
 		}
 		
