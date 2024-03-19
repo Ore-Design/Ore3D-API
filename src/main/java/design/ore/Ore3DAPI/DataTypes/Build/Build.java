@@ -113,7 +113,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
-	@JsonMerge @Getter protected SimpleStringProperty overridenDescriptionProperty = new SimpleStringProperty("");
+	@JsonMerge @Getter protected final SimpleStringProperty overridenDescriptionProperty = new SimpleStringProperty("");
 	
 	@JsonIgnore @Getter protected BooleanBinding descriptionIsOverridenBinding = overridenDescriptionProperty.isNotEqualTo("").and(overridenDescriptionProperty.isNotEqualTo(unoverridenDescriptionProperty));
 	@JsonIgnore @Getter protected StringBinding descriptionBinding = Bindings.when(descriptionIsOverridenBinding).then(overridenDescriptionProperty).otherwise(unoverridenDescriptionProperty);

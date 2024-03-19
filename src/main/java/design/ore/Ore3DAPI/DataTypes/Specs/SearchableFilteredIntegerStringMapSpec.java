@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -115,9 +116,9 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		
 		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
-		list.predicateProperty().bind(filterPredicate);
+		filterPredicate.addListener((obs, oldVal, newVal) -> Platform.runLater(() -> list.setPredicate(newVal)));
 		dropdown.setItems(list);
-		dropdown.setMinHeight(0);
+		dropdown.setMinHeight(10);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);
 		dropdown.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));

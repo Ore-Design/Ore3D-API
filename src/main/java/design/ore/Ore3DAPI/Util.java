@@ -30,6 +30,7 @@ import design.ore.Ore3DAPI.UI.PopoutStage;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -85,7 +86,8 @@ public class Util
 	@Getter private static final Image chainIcon = new Image("ui/icons/ChainIcon.png");
 	@Getter private static final Image xIcon = new Image("ui/icons/XIcon.png");
 	
-	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); } 
+	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); }
+	public static StringExpression stringExpression(String str) { return Bindings.createStringBinding(() -> str); } 
 	
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map)
 	{
