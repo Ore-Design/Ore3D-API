@@ -93,8 +93,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	private Map<String, ChangeListener<Boolean>> registeredDirtyUpdates = new HashMap<>();
 	public void registerDirtyListenerEvent(String listenerID, ChangeListener<Boolean> listener)
 	{
-		if(registeredDirtyUpdates.containsKey(listenerID)) Util.Log.getLogger().warn("Attempted to add listener " + listenerID + " to build, but its already registered!");
-		else registeredDirtyUpdates.put(listenerID, listener);
+		if(registeredDirtyUpdates.containsKey(listenerID)) Util.Log.getLogger().warn("Listener " + listenerID + " is already registered! Overwritting...");
+		registeredDirtyUpdates.put(listenerID, listener);
 	}
 	public void unregisterDirtyListenerEvent(String listenerID) { registeredDirtyUpdates.remove(listenerID); }
 
@@ -251,6 +251,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	public abstract StringExpression calculateDefaultDescription();
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
+	public abstract BooleanBinding allowWorkOrders();
 	
 	public final Build duplicate()
 	{
@@ -446,20 +447,21 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	private void runCatalogDetection()
 	{
-//		Log.getLogger().debug("Running catalog detection for " + titleProperty.get() +  "...");
 		for(Build cb : getChildBuilds()) { cb.runCatalogDetection(); }
 		
-		boolean foundCatalog = false;
+		Double catPrice = null;
 		for(CatalogItem ci : Registry.getRegisteredCatalogItems())
 		{
 			if(ci.getBuild().matches(this))
 			{
-				catalogPrice.set(ci.getPrice());
-				foundCatalog = true;
+				catPrice = ci.getPrice();
 				break;
 			}
 		}
 		
-		if(!foundCatalog) catalogPrice.set(-1);
+		boolean parentIsCatalog = parentBuildProperty.isNotNull().get() && parentBuildProperty.get().isCatalog.get();
+		
+		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get())) catalogPrice.set(catPrice);
+		else catalogPrice.set(-1);
 	}
 }

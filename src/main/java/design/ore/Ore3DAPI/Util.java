@@ -29,6 +29,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.UI.PopoutStage;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
@@ -88,6 +89,7 @@ public class Util
 	
 	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); }
 	public static StringExpression stringExpression(String str) { return Bindings.createStringBinding(() -> str); } 
+	public static BooleanBinding booleanBinding(boolean bool) { return Bindings.createBooleanBinding(() -> bool); }
 	
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map)
 	{
@@ -335,7 +337,7 @@ public class Util
 			else popoutAreas.put(ID, stage);
 		}
 		public static void unregisterPopoutArea(String ID) { popoutAreas.remove(ID); }
-		public static BooleanProperty showPopup(Pane content, String popoutID, String title)
+		public static BooleanProperty showPopup(Pane content, String popoutID, String title, boolean useStylesheet)
 		{
 			if(!popoutAreas.containsKey(popoutID))
 			{
@@ -349,7 +351,7 @@ public class Util
 				return null;
 			}
 			
-			PopoutStage stage = new PopoutStage(popoutAreas.get(popoutID), content, title);
+			PopoutStage stage = new PopoutStage(popoutAreas.get(popoutID), content, title, useStylesheet);
 			stage.show();
 			
 			return stage.getCloseOnTrue();

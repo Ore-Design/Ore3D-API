@@ -60,8 +60,6 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 		if(filterPredicate == null) this.filterPredicate = Bindings.createObjectBinding(() -> null);
 		else this.filterPredicate = filterPredicate;
 		
-		this.filterPredicate.addListener((obs, oldVal, newVal) -> { if(newVal != null) this.valueProperty.setValue(null); }); 
-		
 		if(!Registry.getRegisteredIntegerStringMaps().containsKey(mapID)) throw new IllegalArgumentException("No registered map exits with ID " + mapID + "!");
 		else this.mapID = mapID;
 	}
@@ -120,7 +118,12 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 		
 		ChoiceBox<Integer> dropdown = new ChoiceBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
-		filterPredicate.addListener((obs, oldVal, newVal) -> Platform.runLater(() -> list.setPredicate(newVal)));
+		list.setPredicate(filterPredicate.get());
+		filterPredicate.addListener((obs, oldVal, newVal) ->
+		{
+			valueProperty.setValue(null);
+			Platform.runLater(() -> list.setPredicate(newVal));
+		});
 		dropdown.setItems(list);
 		dropdown.setMinHeight(0);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display

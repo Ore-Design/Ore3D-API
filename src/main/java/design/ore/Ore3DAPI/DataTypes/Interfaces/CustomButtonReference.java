@@ -21,4 +21,5 @@ public abstract class CustomButtonReference
 	public abstract BooleanBinding createDisableBinding(Transaction transaction);
 	public abstract Image getButtonIcon();
 	public abstract String getButtonTooltip();
+	public abstract boolean useDefaultStyle();
 }

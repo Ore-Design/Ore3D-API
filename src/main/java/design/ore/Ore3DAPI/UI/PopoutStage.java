@@ -14,7 +14,7 @@ public class PopoutStage extends Stage
 	
 	@Getter protected final BooleanProperty closeOnTrue;
 	
-	public PopoutStage(Stage parentStage, Pane content, String title)
+	public PopoutStage(Stage parentStage, Pane content, String title, boolean useStylesheet)
 	{
 		this.initOwner(parentStage);
 		this.setMinWidth(600);
@@ -22,7 +22,7 @@ public class PopoutStage extends Stage
 		this.setTitle(title);
 		
 		scene = new Scene(content);
-		scene.getStylesheets().add("stylesheets/dark.css");
+		if(useStylesheet) scene.getStylesheets().add("stylesheets/dark.css");
 		scene.setFill(Colors.getBackground());
 		this.setScene(scene);
 		

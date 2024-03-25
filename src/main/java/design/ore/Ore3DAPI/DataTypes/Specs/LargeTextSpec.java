@@ -66,7 +66,7 @@ public class LargeTextSpec extends Spec<String>
 		openPopoutButton.prefWidthProperty().bind(input.widthProperty().multiply(0.4));
 		openPopoutButton.setMaxWidth(Control.USE_PREF_SIZE);
 		String title = parent.getParentTransactionProperty().isNull().get() ? id : id + " - " + parent.getParentTransactionProperty().get().getDisplayName();
-		openPopoutButton.setOnAction(e -> Util.UI.showPopup(createPopoutUI(toBind), popoutID, title));
+		openPopoutButton.setOnAction(e -> Util.UI.showPopup(createPopoutUI(toBind), popoutID, title, true));
 		
 		input.setPrefHeight(25);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
