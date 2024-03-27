@@ -32,6 +32,7 @@ public class PopoutStage extends Stage
 		content.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		
 		closeOnTrue = new SimpleBooleanProperty(false);
-		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal) this.close(); });
+		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal && this.isShowing()) this.close(); });
+		setOnCloseRequest(e -> { if(!closeOnTrue.get()) closeOnTrue.setValue(true); });
 	}
 }

@@ -21,5 +21,4 @@ public interface Dataset extends ExtensionPoint
 	Map<String, ? extends RoutingEntry> retrieveRoutings();
 	List<NamedType> retrieveBuildSubtypes();
 	void reload();
-//	List<CatalogItem> retrieveCatalog();
 }

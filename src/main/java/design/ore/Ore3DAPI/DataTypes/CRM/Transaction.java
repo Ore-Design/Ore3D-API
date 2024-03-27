@@ -16,6 +16,7 @@ import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -24,6 +25,8 @@ import lombok.Setter;
 
 public class Transaction extends ValueStorageRecord implements Conflictable
 {
+	private final Transaction INSTANCE;
+	
 	public Transaction() { this("0.0.0", null, null, null, null, false, null, false); }
 	
 	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, boolean expired)
@@ -33,6 +36,8 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	
 	public Transaction(String compatibleVersion, String id, String displayName, Customer customer, PricingData pricing, boolean canGenerateWorkOrders, String lockedBy, BuildList blds, boolean expired)
 	{
+		INSTANCE = this;
+		
 		this.id = id;
 		this.customer = customer;
 		this.pricing = pricing;
@@ -42,44 +47,48 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		this.lockedBy = lockedBy;
 		this.compatibleVersion = compatibleVersion;
 		this.expired = expired;
-		this.
 		
 		conflicts = FXCollections.observableArrayList();
 		tags = FXCollections.observableArrayList();
 		
 		for(Build newBuild : builds) newBuild.getConflicts().addListener((ListChangeListener.Change<? extends Conflict> c) -> resetConflictList(builds));
 		
-		this.builds.addListener((ListChangeListener.Change<? extends Build> c) ->
+		ChangeListener<Boolean> conflictsListListener = (obs, oldVal, newVal) -> { if(!newVal) resetConflictList(builds); };
+		
+		this.builds.addListener(new ListChangeListener<>()
 		{
-			resetConflictList(c.getList());
-			while(c.next())
+			@Override
+			public void onChanged(Change<? extends Build> c)
 			{
-				for(Build b : c.getAddedSubList())
+				while(c.next())
 				{
-					b.getParentTransactionProperty().set(this);
-					while(true)
+					resetConflictList(c.getList());
+					for(Build b : c.getAddedSubList())
 					{
-						boolean duplicateUIDFound = false;
-						for(Build bld : c.getList())
+						b.getParentTransactionProperty().set(INSTANCE);
+						while(true)
 						{
-							if(bld.equals(b)) continue;
-							
-							if(bld.getBuildUUID() == b.getBuildUUID())
+							boolean duplicateUIDFound = false;
+							for(Build bld : c.getList())
 							{
-								duplicateUIDFound = true;
-								break;
+								if(bld.equals(b)) continue;
+								
+								if(bld.getBuildUUID() == b.getBuildUUID())
+								{
+									duplicateUIDFound = true;
+									break;
+								}
 							}
+							if(duplicateUIDFound) b.regenerateBuildUUID();
+							else break;
 						}
-						if(duplicateUIDFound) b.regenerateBuildUUID();
-						else break;
+						b.getIsDirtyProperty().addListener(conflictsListListener);
 					}
-					b.registerDirtyListenerEvent("CONFLICT_DETECTION", (obs, oldVal, newVal) -> { if(!newVal) resetConflictList(builds); });
-//					b.getConflicts().addListener((ListChangeListener.Change<?> ch) -> resetConflictList(builds));
-				}
-				for(Build rb : c.getRemoved())
-				{
-					rb.getParentTransactionProperty().set(null);
-					rb.unregisterDirtyListenerEvent("CONFLICT_DETECTION");
+					for(Build rb : c.getRemoved())
+					{
+						rb.getParentTransactionProperty().set(null);
+						rb.getIsDirtyProperty().removeListener(conflictsListListener);
+					}
 				}
 			}
 		});
@@ -105,7 +114,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	@Getter @Setter String id;
 	@Getter @Setter String displayName;
 	@Getter @Setter PricingData pricing;
-	@Getter @Setter BuildList builds;
+	@Getter final BuildList builds;
 	@Getter @Setter Customer customer;
 	@Setter boolean canBeDuplicated;
 	public boolean canBeDuplicated() { return canBeDuplicated; }
@@ -137,4 +146,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 
 	@Override
 	public void clearConflicts() { throw new UnsupportedOperationException("Clear conflicts from individual children, not the transaction as a whole!"); }
+	
+	@Override
+	public String toString() { return "[ Transaction: " + displayName + " (" + id + ") - Created Version: " + compatibleVersion + " ]"; }
 }

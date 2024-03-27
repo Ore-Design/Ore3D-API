@@ -137,6 +137,8 @@ public class ComponentSerialization
 	public class BOMs
 	{
 		private static final String ID = "id";
+		private static final String SHORT_NAME = "sn";
+		private static final String LONG_NAME = "ln";
 		private static final String UOM = "uom";
 		private static final String CUSTOM_ENTRY = "cust";
 		private static final String COST_PER_QUANTITY = "cpq";
@@ -157,6 +159,8 @@ public class ComponentSerialization
 				// RoutingEntry(String id, String name, double qty, double overriddenQty, int margin)
 				gen.writeStartObject();
 				gen.writeStringField(ID, value.getId());
+				gen.writeStringField(SHORT_NAME, value.getShortName());
+				gen.writeStringField(LONG_NAME, value.getLongName());
 				gen.writeStringField(UOM, value.getUnitOfMeasure());
 				gen.writeBooleanField(CUSTOM_ENTRY, value.getCustomEntryProperty().get());
 				gen.writeBooleanField(IGNORE_PARENT, value.getIgnoreParentQuantityProperty().get());
@@ -196,6 +200,8 @@ public class ComponentSerialization
 				JsonNode entryNode = p.getCodec().readTree(p);
 				
 				String id = null;
+				String shortName = null;
+				String longName = null;
 				String uom = null;
 				Double cpq = null;
 				Double qty = null;
@@ -215,6 +221,12 @@ public class ComponentSerialization
 					{
 						case ID:
 							id = entry.getValue().asText();
+							break;
+						case SHORT_NAME:
+							shortName = entry.getValue().asText();
+							break;
+						case LONG_NAME:
+							longName = entry.getValue().asText();
 							break;
 						case UOM:
 							uom = entry.getValue().asText();
@@ -245,7 +257,7 @@ public class ComponentSerialization
 					}
 				}
 	
-				BOMEntry newEntry = new BOMEntry(id, "", "", uom, cpq, custom, qty, mrgn, ignoreParent, new SimpleDoubleProperty(0));
+				BOMEntry newEntry = new BOMEntry(id, shortName, longName, uom, cpq, custom, qty, mrgn, ignoreParent, new SimpleDoubleProperty(0));
 				newEntry.putStoredValues(storedValues);
 				if(ovrMrgn != null) newEntry.getOverridenMarginProperty().set(ovrMrgn);
 				if(ovrQty != null) newEntry.getOverridenQuantityProperty().set(ovrQty);

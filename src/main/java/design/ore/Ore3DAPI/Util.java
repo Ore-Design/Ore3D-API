@@ -347,7 +347,7 @@ public class Util
 			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
 				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(popoutID))))
 			{
-				Log.getLogger().warn("A stage already exists with title " + title + " in registered ID " + popoutID + "!");
+				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + popoutID + "!");
 				return null;
 			}
 			

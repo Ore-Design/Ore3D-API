@@ -17,6 +17,7 @@ import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import lombok.Getter;
+import lombok.Setter;
 
 public class Registry
 {
@@ -78,4 +79,7 @@ public class Registry
 	@Getter private static final List<CatalogItem> registeredCatalogItems = new ArrayList<>();
 	public static void registerCatalogItem(CatalogItem item) { registeredCatalogItems.add(item); }
 	public static void registerCatalogItems(Collection<CatalogItem> items) { registeredCatalogItems.addAll(items); }
+
+	@Getter @Setter private static boolean customChildrenPreventCatalogParents = false;
+	@Getter @Setter private static boolean childrenOnlyCatalogIfParentIsCatalog = false;
 }

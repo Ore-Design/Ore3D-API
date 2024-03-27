@@ -28,6 +28,8 @@ public class BuildPrice
 	
 	public BuildPrice(Build parent)
 	{
+		if(parent == null) return;
+		
 		unitPriceProperty = new ReadOnlyDoubleWrapper();
 		overriddenUnitPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
 		
@@ -38,9 +40,6 @@ public class BuildPrice
 		totalPriceOverriddenProperty = overriddenTotalPriceProperty.greaterThan(-Double.MAX_VALUE)
 			.and(Bindings.createDoubleBinding(() -> new BigDecimal(unoverriddenTotalPriceProperty.get()).setScale(2, RoundingMode.HALF_UP)
 			.doubleValue(), unoverriddenTotalPriceProperty).isEqualTo(overriddenTotalPriceProperty).not());
-		
-		
-		if(parent == null) return;
 		
 		rebindPricing(parent);
 	}

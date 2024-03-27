@@ -31,6 +31,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
+import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import design.ore.Ore3DAPI.Jackson.BuildDataSerialization;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
@@ -44,11 +45,12 @@ import javafx.beans.binding.StringBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -87,16 +89,13 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonIgnore @Getter protected final ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
 	
-	private final SimpleBooleanProperty buildIsDirty = new SimpleBooleanProperty(false);
-	public void setDirty() { if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true); }
-	
-	private Map<String, ChangeListener<Boolean>> registeredDirtyUpdates = new HashMap<>();
-	public void registerDirtyListenerEvent(String listenerID, ChangeListener<Boolean> listener)
+	private final ReadOnlyBooleanWrapper buildIsDirty = new ReadOnlyBooleanWrapper(false);
+	public final ReadOnlyBooleanProperty getIsDirtyProperty() { return buildIsDirty.getReadOnlyProperty(); }
+	public final void setDirty()
 	{
-		if(registeredDirtyUpdates.containsKey(listenerID)) Util.Log.getLogger().warn("Listener " + listenerID + " is already registered! Overwritting...");
-		registeredDirtyUpdates.put(listenerID, listener);
+		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
+//		else Log.getLogger().debug("Build " + titleProperty.get() + " has no transaction parent, so request to dirty-fy was rejected!");
 	}
-	public void unregisterDirtyListenerEvent(String listenerID) { registeredDirtyUpdates.remove(listenerID); }
 
 	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
 	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
@@ -126,10 +125,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 
 	// We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
 	// 1/11/24 SIKE!, we changed to using @JsonMerge annotation to do the same thing.
-	@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
-	@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
 	@Getter @JsonMerge
-	protected final ObservableList<Build> childBuilds = FXCollections.observableArrayList();
+	protected final BuildList childBuilds = new BuildList();
 
 	@JsonSerialize(using = ObservableSetSerialization.IntSet.Serializer.class)
 	@JsonDeserialize(using = ObservableSetSerialization.IntSet.Deserializer.class)
@@ -173,33 +170,25 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	{
 		this.price = new BuildPrice(this);
 		
-		childBuilds.addListener((ListChangeListener.Change<? extends Build> l) ->
+		childBuilds.addListener((ListChangeListener.Change<? extends Build> c) ->
 		{
-			while(l.next())
+			while(c.next())
 			{
-				if(l.wasPermutated())
-				{}
-				else if(l.wasAdded())
+				for(Build cb : c.getAddedSubList())
 				{
-					for(Build cb : l.getAddedSubList())
-					{
-						if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
-						
-						cb.parentBuildProperty.setValue(this);
-						cb.parentTransactionProperty.bind(parentTransactionProperty);
-						cb.registerDirtyListenerEvent("ChildUpdateListener", childUpdateListener);
-						this.setDirty();
-					}
+					if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
+					
+					cb.parentBuildProperty.setValue(this);
+					cb.parentTransactionProperty.bind(parentTransactionProperty);
+					cb.buildIsDirty.addListener(childUpdateListener);
+					this.setDirty();
 				}
-				else if(l.wasRemoved())
+				for(Build cb : c.getRemoved())
 				{
-					for(Build cb : l.getRemoved())
-					{
-						cb.parentBuildProperty.setValue(null);
-						cb.parentTransactionProperty.unbind();
-						cb.unregisterDirtyListenerEvent("ChildUpdateListener");
-						setDirty();
-					}
+					cb.parentBuildProperty.setValue(null);
+					cb.parentTransactionProperty.unbind();
+					cb.buildIsDirty.removeListener(childUpdateListener);
+					setDirty();
 				}
 			}
 		});
@@ -209,12 +198,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 			for(Build cb : childBuilds)
 			{
 				// Refresh must be called AFTER dirty listeners to avoid mismatch data
-				for(ChangeListener<Boolean> listener : cb.registeredDirtyUpdates.values()) listener.changed(obs, oldVal, newVal);
 				if(newVal) cb.refresh();
 			}
 			
 			// Refresh must be called AFTER dirty listeners to avoid mismatch data
-			for(ChangeListener<Boolean> listener : registeredDirtyUpdates.values()) listener.changed(obs, oldVal, newVal);
 			if(newVal) refresh();
 			
 			buildIsDirty.setValue(false);
@@ -225,23 +212,15 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		{
 			while(l.next())
 			{
-				if(l.wasAdded())
+				for(Spec<?> s : l.getAddedSubList())
 				{
-					for(Spec<?> s : l.getAddedSubList())
-					{
-						s.addListener((obsv, oldVal, newVal) -> { if((oldVal == null || !oldVal.equals(newVal)) && !s.getReadOnlyProperty().get()) setDirty(); });
-					}
+					s.addListener((obsv, oldVal, newVal) -> { if((oldVal == null || !oldVal.equals(newVal)) && !s.getReadOnlyProperty().get()) setDirty(); });
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
 			}
 		});
 		
 		specs.addAll(quantity, workOrder);
-		
-//		registerDirtyListenerEvent("CalculateOnDirty", (obs, oldVal, newVal) ->
-//		{
-//			if(!newVal) { for(Spec<?> sp : specs) { sp.setPropertyToCallable(); } }
-//		});
 	}
 	
 	@JsonIgnore @Getter protected final ObservableMap<String, Build> allowedChildBuilds = FXCollections.observableHashMap();
@@ -265,6 +244,8 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + e.getMessage() + "\n" + Util.stackTraceArrayToString(e)); }
 		
 		duplicate.regenerateBuildUUID();
+		duplicate.workOrder.setValue("");
+		
 		return duplicate;
 	}
 	
@@ -460,8 +441,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		}
 		
 		boolean parentIsCatalog = parentBuildProperty.isNotNull().get() && parentBuildProperty.get().isCatalog.get();
+		boolean childrenHaveNonCatalog = getChildBuilds().stream().anyMatch(cb -> !cb.isCatalog.get());
 		
-		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get())) catalogPrice.set(catPrice);
+		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
+			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents())) catalogPrice.set(catPrice);
 		else catalogPrice.set(-1);
 	}
 }

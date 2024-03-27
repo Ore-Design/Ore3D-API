@@ -5,17 +5,30 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+@JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
+@JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
 public class BuildList implements ObservableList<Build>
 {
 	ObservableList<Build> list;
-	public BuildList() { list = FXCollections.observableArrayList(); }
-	public BuildList(List<Build> builds) { list = FXCollections.observableArrayList(builds); }
+	
+	public BuildList()
+	{
+		list = FXCollections.observableArrayList();
+	}
+	public BuildList(List<Build> builds)
+	{
+		list = FXCollections.observableArrayList(builds);
+	}
 	
 	@Override
 	public int size() { return list.size(); }

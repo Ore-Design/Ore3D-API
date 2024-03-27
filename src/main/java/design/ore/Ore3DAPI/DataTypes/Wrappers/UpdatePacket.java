@@ -46,25 +46,18 @@ public class UpdatePacket
 		{
 			while(c.next())
 			{
-				if(c.wasAdded())
+				for(Tuple<String, String, Task<?>> added : c.getAddedSubList())
 				{
-					for(Tuple<String, String, Task<?>> added : c.getAddedSubList())
-					{
-						Task<?> addedTask = added.getThird();
-						if(progressBinding == null) progressBinding = Bindings.createDoubleBinding(() ->
-							addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty());
-						else progressBinding = progressBinding.add(Bindings.createDoubleBinding(() ->
-							addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty()));
-					}
+					Task<?> addedTask = added.getThird();
+					if(progressBinding == null) progressBinding = Bindings.createDoubleBinding(() ->
+						addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty());
+					else progressBinding = progressBinding.add(Bindings.createDoubleBinding(() ->
+						addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty()));
 				}
-				
-				if(c.wasRemoved())
+				for(Tuple<String, String, Task<?>> removed : c.getRemoved())
 				{
-					for(Tuple<String, String, Task<?>> removed : c.getRemoved())
-					{
-						Task<?> removedTask = removed.getThird();
-						if(progressBinding != null) progressBinding = progressBinding.subtract(removedTask.progressProperty());
-					}
+					Task<?> removedTask = removed.getThird();
+					if(progressBinding != null) progressBinding = progressBinding.subtract(removedTask.progressProperty());
 				}
 				
 				totalProgressBinding = progressBinding.divide(maxProgressProperty);
