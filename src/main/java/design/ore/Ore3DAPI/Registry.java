@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,6 +16,8 @@ import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
+import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import lombok.Getter;
 import lombok.Setter;
@@ -82,4 +85,52 @@ public class Registry
 
 	@Getter @Setter private static boolean customChildrenPreventCatalogParents = false;
 	@Getter @Setter private static boolean childrenOnlyCatalogIfParentIsCatalog = false;
+	
+	private static Callable<Map<String, BOMEntry>> bomEntryAccessor;
+	public static final void initializeBOMEntriesAccess(Callable<Map<String, BOMEntry>> accessor)
+	{
+		if(bomEntryAccessor == null) bomEntryAccessor = accessor;
+		else Log.getLogger().warn("Attempted to initialize BOM Entry Accessor, but it has already been initialized!");
+	}
+	public static Map<String, BOMEntry> getBOMEntries()
+	{
+		if(bomEntryAccessor == null)
+		{
+			Log.getLogger().warn("Unable to access BOM Entries, as they have not yet been initialized!");
+			return new HashMap<>();
+		}
+		else
+		{
+			try { return bomEntryAccessor.call(); }
+			catch(Exception e)
+			{
+				Log.getLogger().warn("Failed to retrieve BOM Entries because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+				return new HashMap<>();
+			}
+		}
+	}
+	
+	private static Callable<Map<String, RoutingEntry>> routingEntryAccessor;
+	public static final void initializeRoutingEntriesAccess(Callable<Map<String, RoutingEntry>> accessor)
+	{
+		if(routingEntryAccessor == null) routingEntryAccessor = accessor;
+		else Log.getLogger().warn("Attempted to initialize Routing Entry Accessor, but it has already been initialized!");
+	}
+	public static Map<String, RoutingEntry> getRoutingEntries()
+	{
+		if(routingEntryAccessor == null)
+		{
+			Log.getLogger().warn("Unable to access Routing Entries, as they have not yet been initialized!");
+			return new HashMap<>();
+		}
+		else
+		{
+			try { return routingEntryAccessor.call(); }
+			catch(Exception e)
+			{
+				Log.getLogger().warn("Failed to retrieve Routing Entries because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+				return new HashMap<>();
+			}
+		}
+	}
 }

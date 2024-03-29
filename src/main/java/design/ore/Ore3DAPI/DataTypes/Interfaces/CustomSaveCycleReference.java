@@ -28,5 +28,5 @@ public abstract class CustomSaveCycleReference
 	public void addListener(Consumer<CustomSaveCycleReference> call) { listeners.add(call); }
 	public void removeListener(Consumer<CustomSaveCycleReference> call) { listeners.remove(call); }
 	
-	public abstract UpdatePacket generateUpdatePacket(Transaction transaction);
+	public abstract UpdatePacket generateUpdatePacket(String navigationID, Transaction transaction);
 }

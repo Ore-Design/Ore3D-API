@@ -1,5 +1,6 @@
 package design.ore.Ore3DAPI.DataTypes.CRM;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +9,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import design.ore.Ore3DAPI.DataTypes.Build.Tag;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
+import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
+import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import javafx.beans.value.ChangeListener;
@@ -55,7 +60,7 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		
 		ChangeListener<Boolean> conflictsListListener = (obs, oldVal, newVal) -> { if(!newVal) resetConflictList(builds); };
 		
-		this.builds.addListener(new ListChangeListener<>()
+		builds.addListener(new ListChangeListener<>()
 		{
 			@Override
 			public void onChanged(Change<? extends Build> c)
@@ -83,6 +88,8 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 							else break;
 						}
 						b.getIsDirtyProperty().addListener(conflictsListListener);
+						
+						cleanseAndRebindBuildData(b);
 					}
 					for(Build rb : c.getRemoved())
 					{
@@ -93,9 +100,42 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 			}
 		});
 		
-		this.builds.setAll(blds);
+		builds.setAll(blds);
 		
 		resetConflictList(builds);
+	}
+	
+	private void cleanseAndRebindBuildData(Build b)
+	{
+		if(isExpired()) return;
+		
+		for(Build cb : b.getChildBuilds()) { cleanseAndRebindBuildData(cb); }
+		
+		if(!b.getParentTransactionProperty().isBound() && !b.getParentTransactionProperty().get().equals(this)) b.getParentTransactionProperty().set(this);
+		
+		List<BOMEntry> bomToAdd = new ArrayList<BOMEntry>();
+		for(BOMEntry bom : b.getBom())
+		{
+			BOMEntry match = Registry.getBOMEntries().get(bom.getId());
+			if(match != null) bomToAdd.add(Util.duplicateBOMWithPricing(this, b, match, bom));
+			else { Util.Log.getLogger().warn("Data has changed since this record was last loaded! BOM entry " + bom.getId() + " no longer exists in loaded databases!"); }
+		}
+		
+		b.getBom().clear();
+		b.getBom().addAll(bomToAdd);
+
+		List<RoutingEntry> routingToAdd = new ArrayList<RoutingEntry>();
+		for(RoutingEntry r : b.getRoutings())
+		{
+			RoutingEntry match = Registry.getRoutingEntries().get(r.getId());
+			if(match != null) routingToAdd.add(Util.duplicateRoutingWithPricing(this, b, match, r));
+			else { Util.Log.getLogger().warn("Data has changed since this record was last loaded! Routing entry " + r.getId() + " no longer exists in loaded databases!"); }
+		}
+		
+		b.getRoutings().clear();
+		b.getRoutings().addAll(routingToAdd);
+		
+		b.setDirty();
 	}
 	
 	private void resetConflictList(List<? extends Build> blds)

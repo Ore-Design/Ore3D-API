@@ -23,31 +23,34 @@ public interface CRMEndpoint extends ExtensionPoint
 	/*
 	 * Updates the <code>Transaction</code> associated with the id, to be handled by the CRM.
 	 * 
+	 * @param   navigationID   the ID of the UI element calling this function.
 	 * @param   transaction   the <code>Transaction</code> to be updated.
 	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                   Transaction
 	 */
-	UpdatePacket updateTransaction(Transaction transaction);
+	UpdatePacket updateTransaction(String navigationID, Transaction transaction);
 	
 	/*
 	 * Creates a copy of the <code>Transaction</code> passed in.
 	 * 
+	 * @param   navigationID   the ID of the UI element calling this function.
 	 * @param   transaction    the <code>Transaction</code> to be duplicated.
 	 * @param   saveOriginal   true if the original transaction should be saved, otherwise false.
 	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                    Transaction
 	 */
-	UpdatePacket duplicateTransaction(Transaction transaction, boolean ignoreOriginal);
+	UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean ignoreOriginal);
 	
 	/*
 	 * Generates work orders for each build UID contained in the <code>Transaction</code>.
 	 * 
+	 * @param   navigationID   the ID of the UI element calling this function.
 	 * @param   transaction   the <code>Transaction</code> to be referenced.
 	 * @param   buildUIDs     a list of build UIDs. Each UID will have its own work order generated. Builds not included in the list will be included as components of the work order, with no work order generated.
 	 * @return                <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                   Transaction
 	 */
-	UpdatePacket generateWorkOrders(Transaction transaction, List<Integer> buildUIDs);
+	UpdatePacket generateWorkOrders(String navigationID, Transaction transaction, List<Integer> buildUIDs);
 	
 	/*
 	 * Adds a new <code>Transaction</code> to the CRM.

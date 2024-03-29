@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -178,6 +179,26 @@ public class Util
 		return newEntry;
 	}
 	
+	public static class TransactionLoading
+	{
+		private static final Map<String, Consumer<Transaction>> registeredTransactionLoaders = new HashMap<>();
+		public static void registerOrderLoader(String id, Consumer<Transaction> loader)
+		{
+			if(registeredTransactionLoaders.containsKey(id)) Log.getLogger().warn("There is already a registered transaction loader with ID " + id + "! Overriding...");
+			registeredTransactionLoaders.put(id, loader);
+		}
+		public static void loadTransaction(String id, Transaction transactionToLoad)
+		{
+			Consumer<Transaction> loader = registeredTransactionLoaders.get(id);
+			if(loader != null)
+			{
+				try { loader.accept(transactionToLoad); }
+				catch(Exception e) { Log.getLogger().warn("Unable to load transaction with loader ID " + id + " because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));}
+			}
+			else Log.getLogger().warn("Unable to load transaction, as there is no transaction loader registered with the ID " + id + "!");
+		}
+	}
+	
 	public static class UI
 	{
 		public static <T> T runOnApplicationThread(Callable<T> call)
@@ -337,21 +358,21 @@ public class Util
 			else popoutAreas.put(ID, stage);
 		}
 		public static void unregisterPopoutArea(String ID) { popoutAreas.remove(ID); }
-		public static BooleanProperty showPopup(Pane content, String popoutID, String title, boolean useStylesheet)
+		public static BooleanProperty showPopup(Pane content, String navigationID, String title, boolean useStylesheet)
 		{
-			if(!popoutAreas.containsKey(popoutID))
+			if(!popoutAreas.containsKey(navigationID))
 			{
-				Log.getLogger().warn("No popout area has been registered with ID " + popoutID + " yet!");
+				Log.getLogger().warn("No popout area has been registered with ID " + navigationID + " yet!");
 				return null;
 			}
 			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
-				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(popoutID))))
+				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(navigationID))))
 			{
-				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + popoutID + "!");
+				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
 				return null;
 			}
 			
-			PopoutStage stage = new PopoutStage(popoutAreas.get(popoutID), content, title, useStylesheet);
+			PopoutStage stage = new PopoutStage(popoutAreas.get(navigationID), content, title, useStylesheet);
 			stage.show();
 			
 			return stage.getCloseOnTrue();

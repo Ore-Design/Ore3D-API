@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Tuple;
-import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -88,7 +87,7 @@ public class UpdatePacket
 			return null;
 		}
 	}
-	@Getter private final List<Pair<String, Transaction>> generateOnCompleteButtons = new ArrayList<>();
+	@Getter private final List<Pair<String, Runnable>> generateOnCompleteButtons = new ArrayList<>();
 	
 	public void addTask(String title, String subtitle, Task<?> updateTask) { updateTasks.add(new Tuple<>(title, subtitle, updateTask)); }
 	
