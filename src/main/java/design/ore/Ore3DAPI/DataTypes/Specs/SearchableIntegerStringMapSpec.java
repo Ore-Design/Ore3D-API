@@ -18,6 +18,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -101,6 +102,24 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);
 		dropdown.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
+		dropdown.setCellFactory(listView -> new ListCell<Integer>()
+		{
+			@Override
+			protected void updateItem(Integer item, boolean empty)
+			{
+				super.updateItem(item, empty);
+				if(empty)
+				{
+					setDisable(true);
+					setText("");
+				}
+				else
+				{
+					setText(converter.toString(item));
+					setDisable(false);
+				}
+			}
+		});
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -142,7 +161,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 		dropdown.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		dropdown.setMaxWidth(Control.USE_PREF_SIZE);
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

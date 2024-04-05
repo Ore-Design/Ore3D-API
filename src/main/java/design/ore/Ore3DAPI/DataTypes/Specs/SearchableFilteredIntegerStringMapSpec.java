@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Build.Build;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -21,8 +22,10 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -120,11 +123,30 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			valueProperty.setValue(null);
 			Platform.runLater(() -> list.setPredicate(newVal));
 		});
-		dropdown.setItems(list);
+		dropdown.setItems(FXCollections.observableArrayList(matchingMap.keySet()));
 		dropdown.setMinHeight(10);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);
 		dropdown.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
+		dropdown.setCellFactory(listView -> new ListCell<Integer>()
+		{
+			
+			@Override
+			protected void updateItem(Integer item, boolean empty)
+			{
+				super.updateItem(item, empty);
+				if(empty)
+				{
+					setDisable(true);
+					setText("");
+				}
+				else
+				{
+					setText(converter.toString(item));
+					setDisable(false);
+				}
+			}
+		});
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -166,7 +188,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		dropdown.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		dropdown.setMaxWidth(Control.USE_PREF_SIZE);
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

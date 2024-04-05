@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -48,6 +49,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -127,6 +130,17 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	// 1/11/24 SIKE!, we changed to using @JsonMerge annotation to do the same thing.
 	@Getter @JsonMerge
 	protected final BuildList childBuilds = new BuildList();
+	
+	@JsonIgnore protected final ReadOnlyIntegerWrapper indexInParentWrapper = new ReadOnlyIntegerWrapper();
+	@JsonIgnore public ReadOnlyIntegerProperty getIndexInParentProperty() { return indexInParentWrapper.getReadOnlyProperty(); }
+	
+	@JsonIgnore protected final ReadOnlyBooleanWrapper atEndOfParentWrapper = new ReadOnlyBooleanWrapper();
+	@JsonIgnore public ReadOnlyBooleanProperty getAtEndOfParentProperty() { return atEndOfParentWrapper.getReadOnlyProperty(); }
+	
+//	@Getter @JsonIgnore
+//	protected final IntegerBinding indexInParent = Bindings.createIntegerBinding(() -> (getParentBuildProperty().isNotNull().get() ?
+//		getParentBuildProperty().get().getChildBuilds().indexOf(this) :
+//		getParentTransactionProperty().isNotNull().get() ? getParentTransactionProperty().get().getBuilds().indexOf(this) : -1), getParentBuildProperty(), getParentTransactionProperty());
 
 	@JsonSerialize(using = ObservableSetSerialization.IntSet.Serializer.class)
 	@JsonDeserialize(using = ObservableSetSerialization.IntSet.Deserializer.class)
@@ -181,13 +195,19 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					cb.parentBuildProperty.setValue(this);
 					cb.parentTransactionProperty.bind(parentTransactionProperty);
 					cb.buildIsDirty.addListener(childUpdateListener);
-					this.setDirty();
+					
+					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireChildAddedEvent(cb); // Event should be fire AFTER parent values are set
+					
+					setDirty();
 				}
 				for(Build cb : c.getRemoved())
 				{
+					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireChildRemovedEvent(cb); // Event should be fire BEFORE parent values are removed
+					
 					cb.parentBuildProperty.setValue(null);
 					cb.parentTransactionProperty.unbind();
 					cb.buildIsDirty.removeListener(childUpdateListener);
+					
 					setDirty();
 				}
 			}
@@ -221,6 +241,45 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		});
 		
 		specs.addAll(quantity, workOrder);
+		
+		getParentTransactionProperty().addListener((obs, oldVal, newVal) ->
+		{
+			if(newVal != null)
+			{
+				newVal.addOnChildAddedListener(indexCheckConsumer);
+				newVal.addOnChildRemovedListener(indexCheckConsumer);
+				newVal.getBuilds().addListener(indexCheckListener);
+			}
+			if(oldVal != null)
+			{
+				oldVal.removeOnChildAddedListener(indexCheckConsumer);
+				oldVal.removeOnChildRemovedListener(indexCheckConsumer);
+				oldVal.getBuilds().removeListener(indexCheckListener);
+			}
+			checkIndex();
+		});
+	}
+	
+	ListChangeListener<Build> indexCheckListener = (ListChangeListener.Change<? extends Build> change) -> checkIndex();
+	Consumer<Build> indexCheckConsumer = b -> checkIndex();
+	
+	protected final void checkIndex()
+	{
+		if(getParentBuildProperty().get() != null)
+		{
+			indexInParentWrapper.set(getParentBuildProperty().get().getChildBuilds().indexOf(this));
+			atEndOfParentWrapper.set(indexInParentWrapper.get() == getParentBuildProperty().get().getChildBuilds().size() - 1);
+		}
+		else if(getParentTransactionProperty().get() != null)
+		{
+			indexInParentWrapper.set(getParentTransactionProperty().get().getBuilds().indexOf(this));
+			atEndOfParentWrapper.set(indexInParentWrapper.get() == getParentTransactionProperty().get().getBuilds().size() - 1);
+		}
+		else 
+		{
+			indexInParentWrapper.set(-1);
+			atEndOfParentWrapper.set(true);
+		}
 	}
 	
 	@JsonIgnore @Getter protected final ObservableMap<String, Build> allowedChildBuilds = FXCollections.observableHashMap();

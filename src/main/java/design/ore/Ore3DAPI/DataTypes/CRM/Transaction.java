@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -31,6 +32,15 @@ import lombok.Setter;
 public class Transaction extends ValueStorageRecord implements Conflictable
 {
 	private final Transaction INSTANCE;
+	
+	protected final List<Consumer<Build>> childRemovedListeners = new ArrayList<>();
+	protected final List<Consumer<Build>> childAddedListeners = new ArrayList<>();
+	public boolean addOnChildRemovedListener(Consumer<Build> cnsmr) { return childRemovedListeners.add(cnsmr); }
+	public boolean removeOnChildRemovedListener(Consumer<Build> cnsmr) { return childRemovedListeners.remove(cnsmr); }
+	public boolean addOnChildAddedListener(Consumer<Build> cnsmr) { return childAddedListeners.add(cnsmr); }
+	public boolean removeOnChildAddedListener(Consumer<Build> cnsmr) { return childAddedListeners.remove(cnsmr); }
+	public void fireChildRemovedEvent(final Build child) { for(Consumer<Build> cnsmr : childRemovedListeners) cnsmr.accept(child); }
+	public void fireChildAddedEvent(final Build child) { for(Consumer<Build> cnsmr : childAddedListeners) cnsmr.accept(child); }
 	
 	public Transaction() { this("0.0.0", null, null, null, null, false, null, false); }
 	

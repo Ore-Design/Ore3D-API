@@ -257,7 +257,8 @@ public class Util
 		
 		private static void showNotification(Stage owner, String title, String message, double seconds)
 		{
-			Notifications.create().title(title).text(message).hideAfter(Duration.seconds(seconds)).owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
+			Notifications.create().threshold(3, null).title(title).text(message).hideAfter(Duration.seconds(seconds))
+				.owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
 		}
 		
 		public static Alert confirm(String title, String message, Stage owner)

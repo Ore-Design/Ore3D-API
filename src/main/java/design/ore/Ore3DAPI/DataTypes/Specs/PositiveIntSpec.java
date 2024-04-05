@@ -137,7 +137,7 @@ public class PositiveIntSpec extends Spec<Integer>
 		inputField.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

@@ -186,7 +186,7 @@ public class LinkedDoubleSpec extends Spec<Number>
 		}
 		
 		input.setAlignment(Pos.CENTER_LEFT);
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

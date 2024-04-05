@@ -54,8 +54,7 @@ public class LargeTextSpec extends Spec<String>
 		}
 		
 		Button openPopoutButton = new Button("Edit");
-		openPopoutButton.setId("build-select-button");
-		openPopoutButton.setPadding(new Insets(0));
+		openPopoutButton.getStyleClass().add("spec-button");
 		openPopoutButton.disableProperty().bind(readOnlyProperty.or(Bindings.createBooleanBinding(() -> parent.parentIsExpired())));
 		
 		HBox input = new HBox(idLabel, openPopoutButton);
@@ -68,7 +67,7 @@ public class LargeTextSpec extends Spec<String>
 		String title = parent.getParentTransactionProperty().isNull().get() ? id : id + " - " + parent.getParentTransactionProperty().get().getDisplayName();
 		openPopoutButton.setOnAction(e -> Util.UI.showPopup(createPopoutUI(toBind), popoutID, title, true));
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

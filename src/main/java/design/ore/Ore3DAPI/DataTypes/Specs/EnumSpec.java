@@ -122,7 +122,7 @@ public class EnumSpec<E extends Enum<E>> extends Spec<E>
 		dropdown.prefWidthProperty().bind(input.widthProperty().multiply(0.6));
 		dropdown.setMaxWidth(Control.USE_PREF_SIZE);
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;

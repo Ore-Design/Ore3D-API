@@ -99,7 +99,7 @@ public class BooleanSpec extends Spec<Boolean>
 		Util.UI.checkboxMatchSize(check);
 		HBox.setHgrow(check, Priority.ALWAYS);
 		
-		input.setPrefHeight(25);
+		input.setPrefHeight(20);
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;
