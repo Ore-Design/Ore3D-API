@@ -21,12 +21,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
-import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMPricing;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
+import design.ore.Ore3DAPI.DataTypes.Protected.Transaction;
 import design.ore.Ore3DAPI.UI.PopoutStage;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -114,6 +114,8 @@ public class Util
 		for(StackTraceElement el : e) { str.append(el.toString() + "\n"); }
 		return str.toString();
 	}
+	
+	public static String formatThrowable(String userDefinedMessage, Throwable e) { return userDefinedMessage + " - " + e.getMessage() + "\n" + stackTraceArrayToString(e); }
 	
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
 	{

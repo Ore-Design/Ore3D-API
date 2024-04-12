@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Build;
+package design.ore.Ore3DAPI.DataTypes.Protected;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,12 +23,11 @@ import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
-import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
+import design.ore.Ore3DAPI.DataTypes.Protected.Transaction.BuildChangeType;
 import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
@@ -70,7 +69,7 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
-public abstract class Build extends ValueStorageRecord implements Conflictable
+public abstract class Build extends ValueStorageRecord
 {
 	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
 	{
@@ -168,11 +167,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	@JsonSerialize(using = ObservableListSerialization.MiscEntryList.Serializer.class)
 	@Getter @JsonMerge
 	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
-
-	@JsonSerialize(using = ObservableListSerialization.ConflictList.Serializer.class)
-	@JsonDeserialize(using = ObservableListSerialization.ConflictList.Deserializer.class)
-	@Getter @JsonMerge
-	protected ObservableList<Conflict> conflicts = FXCollections.observableArrayList();
 	
 	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
 	@JsonIgnore public abstract boolean allowUnitPriceOverride();
@@ -196,13 +190,13 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 					cb.parentTransactionProperty.bind(parentTransactionProperty);
 					cb.buildIsDirty.addListener(childUpdateListener);
 					
-					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireChildAddedEvent(cb); // Event should be fire AFTER parent values are set
-					
 					setDirty();
+					
+					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
 				}
 				for(Build cb : c.getRemoved())
 				{
-					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireChildRemovedEvent(cb); // Event should be fire BEFORE parent values are removed
+					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.REMOVED, cb); // Event should be fire BEFORE parent values are removed
 					
 					cb.parentBuildProperty.setValue(null);
 					cb.parentTransactionProperty.unbind();
@@ -215,12 +209,6 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
-			for(Build cb : childBuilds)
-			{
-				// Refresh must be called AFTER dirty listeners to avoid mismatch data
-				if(newVal) cb.refresh();
-			}
-			
 			// Refresh must be called AFTER dirty listeners to avoid mismatch data
 			if(newVal) refresh();
 			
@@ -242,26 +230,26 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		
 		specs.addAll(quantity, workOrder);
 		
-		getParentTransactionProperty().addListener((obs, oldVal, newVal) ->
+		parentTransactionProperty.addListener((obs, oldVal, newVal) ->
 		{
 			if(newVal != null)
 			{
-				newVal.addOnChildAddedListener(indexCheckConsumer);
-				newVal.addOnChildRemovedListener(indexCheckConsumer);
+				newVal.addOnBuildListChangedListener(indexCheckConsumer);
 				newVal.getBuilds().addListener(indexCheckListener);
 			}
 			if(oldVal != null)
 			{
-				oldVal.removeOnChildAddedListener(indexCheckConsumer);
-				oldVal.removeOnChildRemovedListener(indexCheckConsumer);
+				oldVal.removeOnBuildListChangedListener(indexCheckConsumer);
 				oldVal.getBuilds().removeListener(indexCheckListener);
 			}
 			checkIndex();
 		});
+		
+		parentBuildProperty.addListener((obs, oldVal, newVal) -> checkIndex());
 	}
 	
 	ListChangeListener<Build> indexCheckListener = (ListChangeListener.Change<? extends Build> change) -> checkIndex();
-	Consumer<Build> indexCheckConsumer = b -> checkIndex();
+	BiConsumer<BuildChangeType, Build> indexCheckConsumer = (ct, b) -> checkIndex();
 	
 	protected final void checkIndex()
 	{
@@ -308,13 +296,13 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		return duplicate;
 	}
 	
-	@JsonIgnore public Map<Integer, Build> getChildBuildsMap()
+	@JsonIgnore public Map<Integer, Build> getAllChildBuildsByUID()
 	{
 		Map<Integer, Build> allBuilds = new HashMap<>();
 		for(Build cb : childBuilds)
 		{
 			allBuilds.put(cb.getBuildUUID(), cb);
-			allBuilds.putAll(cb.getChildBuildsMap());
+			allBuilds.putAll(cb.getAllChildBuildsByUID());
 		}
 		return allBuilds;
 	}
@@ -341,10 +329,12 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 	
 	protected void refresh()
 	{	
+		for(Build cb : childBuilds) { cb.refresh(); }
+		
 		Transaction parentTran = parentTransactionProperty.get();
 		if(parentTran != null && !parentTran.isExpired())
-		{
-			conflicts.clear();
+		{	
+			parentTran.removeConflictsForBuild(getBuildUUID());
 			
 			for(Spec<?> sp : specs) { sp.setPropertyToCallable(); }
 			
@@ -426,7 +416,7 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 				for(Entry<String, StoredValue> entry : Registry.getRegisteredRoutingEntryStoredValues().entrySet()) { r.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
 				routings.add(r);
 			}
-			
+
 			detectConflicts();
 		}
 		
@@ -479,11 +469,10 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
 	}
 
-	@Override
-	public void addConflict(Conflict conflict) { conflicts.add(conflict); }
-
-	@Override
-	public void clearConflicts() { conflicts.clear(); }
+	public void addConflict(Conflict conflict)
+	{
+		if(parentTransactionProperty.get() != null) parentTransactionProperty.get().addConflict(this, conflict);
+	}
 	
 	private void runCatalogDetection()
 	{
@@ -505,5 +494,11 @@ public abstract class Build extends ValueStorageRecord implements Conflictable
 		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
 			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents())) catalogPrice.set(catPrice);
 		else catalogPrice.set(-1);
+	}
+	
+	@Override
+	public String toString()
+	{
+		return titleProperty.get() + " - " + buildUUID + " (Index In Parent: " + indexInParentWrapper.get() + ")";
 	}
 }

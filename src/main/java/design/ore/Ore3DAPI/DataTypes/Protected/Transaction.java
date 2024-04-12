@@ -1,10 +1,12 @@
-package design.ore.Ore3DAPI.DataTypes.CRM;
+package design.ore.Ore3DAPI.DataTypes.Protected;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -13,34 +15,37 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
-import design.ore.Ore3DAPI.DataTypes.Build.Tag;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
+import design.ore.Ore3DAPI.DataTypes.CRM.Customer;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.property.ReadOnlyMapProperty;
+import javafx.beans.property.ReadOnlyMapWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Transaction extends ValueStorageRecord implements Conflictable
+public class Transaction extends ValueStorageRecord
 {
+	public enum BuildChangeType
+	{
+		ADDED, REMOVED;
+		
+		public boolean wasAdded() { return this == ADDED; }
+		public boolean wasRemoved() { return this == REMOVED; }
+	}
+	
 	private final Transaction INSTANCE;
 	
-	protected final List<Consumer<Build>> childRemovedListeners = new ArrayList<>();
-	protected final List<Consumer<Build>> childAddedListeners = new ArrayList<>();
-	public boolean addOnChildRemovedListener(Consumer<Build> cnsmr) { return childRemovedListeners.add(cnsmr); }
-	public boolean removeOnChildRemovedListener(Consumer<Build> cnsmr) { return childRemovedListeners.remove(cnsmr); }
-	public boolean addOnChildAddedListener(Consumer<Build> cnsmr) { return childAddedListeners.add(cnsmr); }
-	public boolean removeOnChildAddedListener(Consumer<Build> cnsmr) { return childAddedListeners.remove(cnsmr); }
-	public void fireChildRemovedEvent(final Build child) { for(Consumer<Build> cnsmr : childRemovedListeners) cnsmr.accept(child); }
-	public void fireChildAddedEvent(final Build child) { for(Consumer<Build> cnsmr : childAddedListeners) cnsmr.accept(child); }
+	protected final List<BiConsumer<BuildChangeType, Build>> buildListChangedListeners = new ArrayList<>();
+	public final boolean addOnBuildListChangedListener(BiConsumer<BuildChangeType, Build> cnsmr) { return buildListChangedListeners.add(cnsmr); }
+	public final boolean removeOnBuildListChangedListener(BiConsumer<BuildChangeType, Build> cnsmr) { return buildListChangedListeners.remove(cnsmr); }
+	protected final void fireBuildListChangedEvent(final BuildChangeType changeType, final Build child) { for(BiConsumer<BuildChangeType, Build> cnsmr : buildListChangedListeners) cnsmr.accept(changeType, child); }
 	
 	public Transaction() { this("0.0.0", null, null, null, null, false, null, false); }
 	
@@ -63,12 +68,16 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		this.compatibleVersion = compatibleVersion;
 		this.expired = expired;
 		
-		conflicts = FXCollections.observableArrayList();
 		tags = FXCollections.observableArrayList();
 		
-		for(Build newBuild : builds) newBuild.getConflicts().addListener((ListChangeListener.Change<? extends Conflict> c) -> resetConflictList(builds));
-		
-		ChangeListener<Boolean> conflictsListListener = (obs, oldVal, newVal) -> { if(!newVal) resetConflictList(builds); };
+		addOnBuildListChangedListener((ct, b) ->
+		{
+			conflicts.clear();
+			
+			onBuildListChanged(ct, b);
+			
+			for(Build bld : builds) { bld.refresh(); }
+		});
 		
 		builds.addListener(new ListChangeListener<>()
 		{
@@ -77,34 +86,19 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 			{
 				while(c.next())
 				{
-					resetConflictList(c.getList());
 					for(Build b : c.getAddedSubList())
 					{
 						b.getParentTransactionProperty().set(INSTANCE);
-						while(true)
-						{
-							boolean duplicateUIDFound = false;
-							for(Build bld : c.getList())
-							{
-								if(bld.equals(b)) continue;
-								
-								if(bld.getBuildUUID() == b.getBuildUUID())
-								{
-									duplicateUIDFound = true;
-									break;
-								}
-							}
-							if(duplicateUIDFound) b.regenerateBuildUUID();
-							else break;
-						}
-						b.getIsDirtyProperty().addListener(conflictsListListener);
-						
 						cleanseAndRebindBuildData(b);
+						
+						b.refresh();
+						fireBuildListChangedEvent(BuildChangeType.ADDED, b);
 					}
 					for(Build rb : c.getRemoved())
 					{
+						fireBuildListChangedEvent(BuildChangeType.REMOVED, rb);
+						
 						rb.getParentTransactionProperty().set(null);
-						rb.getIsDirtyProperty().removeListener(conflictsListListener);
 					}
 				}
 			}
@@ -112,7 +106,36 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		
 		builds.setAll(blds);
 		
-		resetConflictList(builds);
+		conflicts.clear();
+	}
+	
+	protected final void onBuildListChanged(BuildChangeType ct, Build b)
+	{
+		if(ct.wasAdded())
+		{
+			while(true)
+			{
+				boolean duplicateUIDFound = false;
+				for(Build bld : this.getAllBuildsIncludingChildren())
+				{
+					if(bld.equals(b)) continue;
+					
+					if(bld.getBuildUUID() == b.getBuildUUID())
+					{
+						duplicateUIDFound = true;
+						break;
+					}
+				}
+				
+				if(duplicateUIDFound) b.regenerateBuildUUID();
+				else break;
+			}
+		}
+		
+		for(Build cb : b.getChildBuilds())
+		{
+			onBuildListChanged(ct, cb);
+		}
 	}
 	
 	private void cleanseAndRebindBuildData(Build b)
@@ -148,18 +171,6 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		b.setDirty();
 	}
 	
-	private void resetConflictList(List<? extends Build> blds)
-	{
-		conflicts.clear();
-		for(Build b : blds) concatConflictsRecursive(conflicts, b);
-	}
-	
-	private void concatConflictsRecursive(ObservableList<Conflict> conf, Build b)
-	{
-		conf.setAll(FXCollections.concat(conf, b.getConflicts()));
-		for(Build cb : b.getChildBuilds()) concatConflictsRecursive(conf, cb);
-	}
-	
 	@Getter @Setter String compatibleVersion;
 	@Getter @Setter String id;
 	@Getter @Setter String displayName;
@@ -177,7 +188,38 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
 	@Getter ObservableList<Tag> tags;
 	
-	@JsonIgnore @Getter private ObservableList<Conflict> conflicts;
+	@JsonIgnore private final ReadOnlyMapWrapper<Integer, List<Conflict>> conflicts = new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
+	public final ReadOnlyMapProperty<Integer, List<Conflict>> getConflictsReadOnly() { return conflicts.getReadOnlyProperty(); }
+	@JsonIgnore protected void addConflict(Build build, Conflict conflict)
+	{
+		if(conflicts.containsKey(build.getBuildUUID()))
+		{
+			List<Conflict> buildConflicts = conflicts.get(build.getBuildUUID());
+			
+			Optional<Conflict> matchingConflict = buildConflicts.stream().filter(c -> c.getMessage().equals(conflict.getMessage())).findFirst();
+			
+			if(matchingConflict.isPresent())
+			{
+				buildConflicts.remove(matchingConflict.get());
+				buildConflicts.add(conflict);
+			}
+			else buildConflicts.add(conflict);
+		}
+		else conflicts.put(build.getBuildUUID(), new ArrayList<>(Arrays.asList(conflict)));
+	}
+	protected void removeConflictsForBuild(Integer uid) { removeConflictsForBuildRecursive(uid); }
+	private void removeConflictsForBuildRecursive(Integer uid)
+	{
+		conflicts.remove(uid);
+		Build found = getAllBuildsByUID().get(uid);
+		
+		// Parent conflicts need to be cleared and rechecked on child conflict clearing. Why they dont clear on their own? Thats a huge trail to follow. And I'm tired.
+		if(found.parentBuildProperty.get() != null)
+		{
+			removeConflictsForBuildRecursive(found.parentBuildProperty.get().getBuildUUID());
+			found.parentBuildProperty.get().detectConflicts();
+		}
+	}
 	
 	@JsonIgnore
 	public Map<Integer, Build> getAllBuildsByUID()
@@ -186,16 +228,40 @@ public class Transaction extends ValueStorageRecord implements Conflictable
 		for(Build b : builds)
 		{
 			allBuilds.put(b.getBuildUUID(), b);
-			allBuilds.putAll(b.getChildBuildsMap());
+			allBuilds.putAll(b.getAllChildBuildsByUID());
 		}
 		return allBuilds;
 	}
-
-	@Override
-	public void addConflict(Conflict conflict) { throw new UnsupportedOperationException("Add conflicts to individual children, not the transaction as a whole!"); }
-
-	@Override
-	public void clearConflicts() { throw new UnsupportedOperationException("Clear conflicts from individual children, not the transaction as a whole!"); }
+	
+	@JsonIgnore
+	public List<Build> getAllBuildsIncludingChildren()
+	{
+		List<Build> allBuilds = new ArrayList<>();
+		for(Build b : builds) { allBuilds.addAll(getAllBuildsRecursive(b)); }
+		return allBuilds;
+	}
+	
+	@JsonIgnore
+	private List<Build> getAllBuildsRecursive(Build parent)
+	{
+		List<Build> allBuilds = new ArrayList<>();
+		
+		allBuilds.add(parent);
+		for(Build b : parent.getChildBuilds()) { allBuilds.addAll(getAllBuildsRecursive(b)); }
+		
+		return allBuilds;
+	}
+	
+	@JsonIgnore
+	public int getGreatestChildDepth()
+	{
+		int depth = 0;
+		for(Build b : getAllBuildsIncludingChildren())
+		{
+			if(b.getChildDepth().get() > depth) depth = b.getChildDepth().get();
+		}
+		return depth;
+	}
 	
 	@Override
 	public String toString() { return "[ Transaction: " + displayName + " (" + id + ") - Created Version: " + compatibleVersion + " ]"; }

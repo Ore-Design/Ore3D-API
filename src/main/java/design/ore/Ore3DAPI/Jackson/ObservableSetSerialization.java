@@ -15,9 +15,8 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.DataTypes.Build.Tag;
+import design.ore.Ore3DAPI.DataTypes.Protected.Tag;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 
 public class ObservableSetSerialization

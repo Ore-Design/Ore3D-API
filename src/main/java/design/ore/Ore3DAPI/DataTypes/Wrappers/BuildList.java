@@ -8,7 +8,7 @@ import java.util.ListIterator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;

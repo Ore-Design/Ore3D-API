@@ -11,8 +11,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import design.ore.Ore3DAPI.DataTypes.Build.BuildPrice;
-import javafx.util.Pair;
+import design.ore.Ore3DAPI.DataTypes.Protected.BuildPrice;
 
 public class BuildDataSerialization
 {

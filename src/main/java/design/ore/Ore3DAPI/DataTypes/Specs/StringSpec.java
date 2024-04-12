@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableBooleanValue;

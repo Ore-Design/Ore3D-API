@@ -12,8 +12,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
-import design.ore.Ore3DAPI.Util.Log;
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -22,7 +21,6 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -117,13 +115,19 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		
 		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
+//		list.predicateProperty().bind(filterPredicate);
 		list.setPredicate(filterPredicate.get());
 		filterPredicate.addListener((obs, oldVal, newVal) ->
 		{
 			valueProperty.setValue(null);
-			Platform.runLater(() -> list.setPredicate(newVal));
+			Platform.runLater(() ->
+			{
+				dropdown.setItems(FXCollections.observableArrayList());
+				list.setPredicate(newVal);
+				dropdown.setItems(list);
+			});
 		});
-		dropdown.setItems(FXCollections.observableArrayList(matchingMap.keySet()));
+		dropdown.setItems(list);
 		dropdown.setMinHeight(10);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
 		dropdown.setConverter(converter);

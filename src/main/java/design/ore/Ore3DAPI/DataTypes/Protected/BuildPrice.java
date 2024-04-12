@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Build;
+package design.ore.Ore3DAPI.DataTypes.Protected;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

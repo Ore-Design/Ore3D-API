@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
-import design.ore.Ore3DAPI.DataTypes.CRM.Transaction;
+import design.ore.Ore3DAPI.DataTypes.Protected.Transaction;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.UpdatePacket;
 
 public abstract class CustomSaveCycleReference

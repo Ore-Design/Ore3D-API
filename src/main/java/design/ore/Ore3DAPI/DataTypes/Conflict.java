@@ -16,4 +16,7 @@ public class Conflict
 {
 	String message;
 	boolean isWarning;
+	
+	@Override
+	public String toString() { return "Conflict: " + message + " (Is Warning?: " + isWarning + ")"; }
 }

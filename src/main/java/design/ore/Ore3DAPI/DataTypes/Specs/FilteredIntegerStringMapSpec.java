@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
-import design.ore.Ore3DAPI.DataTypes.Build.Build;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -122,7 +122,12 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 		filterPredicate.addListener((obs, oldVal, newVal) ->
 		{
 			valueProperty.setValue(null);
-			Platform.runLater(() -> list.setPredicate(newVal));
+			Platform.runLater(() ->
+			{
+				dropdown.setItems(FXCollections.observableArrayList());
+				list.setPredicate(newVal);
+				dropdown.setItems(list);
+			});
 		});
 		dropdown.setItems(list);
 		dropdown.setMinHeight(0);

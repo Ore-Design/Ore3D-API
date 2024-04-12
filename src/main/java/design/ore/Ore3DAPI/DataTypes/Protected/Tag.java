@@ -1,4 +1,4 @@
-package design.ore.Ore3DAPI.DataTypes.Build;
+package design.ore.Ore3DAPI.DataTypes.Protected;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
