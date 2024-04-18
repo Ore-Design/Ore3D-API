@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -74,7 +75,11 @@ public class StringSpec extends Spec<String>
 			inputField.setText(firstVal);
 			inputField.textProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { try { ((Spec<String>)p).setValue(inputField.getText()); } catch(Exception e) {} });
+				toBind.forEach(p ->
+				{
+					if(p instanceof StringSpec) ((StringSpec) p).setValue(inputField.getText());
+					else Log.getLogger().warn("Non-StringSpec passed into StringSpec multiselect!");
+				});
 			});
 		}
 		else inputField.textProperty().bindBidirectional(valueProperty);

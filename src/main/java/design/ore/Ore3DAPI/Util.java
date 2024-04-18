@@ -57,7 +57,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class Util
-{
+{	
 	public class Colors
 	{
 		@Getter @Setter static Color foreground;

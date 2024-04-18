@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.Util.Colors;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -87,7 +88,11 @@ public class LargeTextSpec extends Spec<String>
 			editArea.setText("-");
 			editArea.textProperty().addListener((obs, oldVal, newVal) ->
 			{
-				toBind.forEach(p -> { try { ((Spec<String>)p).setValue(editArea.getText()); } catch(Exception e) {} });
+				toBind.forEach(p ->
+				{
+					if(p instanceof LargeTextSpec) ((LargeTextSpec) p).setValue(editArea.getText());
+					else Log.getLogger().warn("Non-LargeTextSpec passed into LargeTextSpec multiselect!");
+				});
 			});
 		}
 		else editArea.textProperty().bindBidirectional(valueProperty);

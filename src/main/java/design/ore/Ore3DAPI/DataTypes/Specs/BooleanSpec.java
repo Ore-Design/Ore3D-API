@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
@@ -82,7 +82,11 @@ public class BooleanSpec extends Spec<Boolean>
 			
 			check.selectedProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<Boolean>)p).setValue(check.isSelected()); });
+				toBind.forEach(p ->
+				{
+					if(p instanceof BooleanSpec) ((BooleanSpec) p).setValue(check.isSelected());
+					else Log.getLogger().warn("Non-BooleanSpec passed into BooleanSpec multiselect!");
+				});
 			});
 		}
 		else

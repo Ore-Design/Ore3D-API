@@ -10,11 +10,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
@@ -159,7 +159,11 @@ public class FilteredIntegerStringMapSpec extends Spec<Integer>
 			
 			dropdown.valueProperty().addListener(l ->
 			{
-				toBind.forEach(p -> { ((Property<Integer>)p).setValue(dropdown.getValue()); });
+				toBind.forEach(p ->
+				{
+					if(p instanceof FilteredIntegerStringMapSpec) ((FilteredIntegerStringMapSpec) p).setValue(dropdown.getValue());
+					else Log.getLogger().warn("Non-FilteredIntegerStringMapSpec passed into FilteredIntegerStringMapSpec multiselect!");
+				});
 			});
 		}
 		else

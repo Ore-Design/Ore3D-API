@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
 import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -111,7 +112,11 @@ public class PositiveIntSpec extends Spec<Integer>
 				{
 					String text = inputField.getText();
 					int val = text.equals("") ? 1 : Integer.parseInt(inputField.getText());
-					toBind.forEach(p -> { ((Spec<Integer>)p).setValue(val); });
+					toBind.forEach(p ->
+					{
+						if(p instanceof PositiveIntSpec) ((PositiveIntSpec) p).setValue(val);
+						else Log.getLogger().warn("Non-PositiveIntSpec passed into PositiveIntSpec multiselect!");
+					});
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

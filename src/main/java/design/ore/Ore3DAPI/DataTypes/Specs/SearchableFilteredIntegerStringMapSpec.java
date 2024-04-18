@@ -12,11 +12,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
@@ -81,7 +86,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 	
 	@Override
 	public Pane getUI(List<Spec<?>> toBind, String popoutID)
-	{
+	{	
 		Map<Integer, String> matchingMap = Registry.getRegisteredIntegerStringMaps().get(mapID);
 		if(matchingMap == null) throw new NullPointerException("No registered map exits with ID " + mapID + "!");
 		
@@ -115,7 +120,6 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		
 		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
-//		list.predicateProperty().bind(filterPredicate);
 		list.setPredicate(filterPredicate.get());
 		filterPredicate.addListener((obs, oldVal, newVal) ->
 		{
@@ -152,6 +156,17 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 		});
 		
+		/*
+		 *  TODO: Watch out for this. It's kind of a silly way to fix the
+		 *  issues presented by the searchable dropdown field provided by the ControlsFX.
+		 *  For some reason, re-selecting the same value that is already selected
+		 *  causes the value changed event to fire a third time. In order to combat
+		 *  this, the skipNext property is set to true when the new value is the
+		 *  same, so the third event fired is ignored.
+		 */
+		final BooleanProperty skipNext = new SimpleBooleanProperty(false);
+		final ObjectProperty<Integer> selectedDropdownItem = new SimpleObjectProperty<Integer>(getValue());
+		
 		if(toBind != null && toBind.size() > 0)
 		{
 			try
@@ -174,14 +189,43 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 			catch (Exception e) { dropdown.getSelectionModel().clearSelection(); }
 			
-			dropdown.valueProperty().addListener(l ->
+			dropdown.valueProperty().addListener((obs, oldVal, newVal) -> selectedDropdownItem.setValue(newVal));
+			
+			selectedDropdownItem.addListener((obs, oldVal, newVal) ->
 			{
-				toBind.forEach(p -> { ((Spec<Integer>)p).setValue(dropdown.getValue()); });
+				if(skipNext.get())
+				{
+					Platform.runLater(() -> dropdown.setValue(getValue()));
+					skipNext.setValue(false);
+					return;
+				}
+				
+				if(newVal == getValue()) skipNext.setValue(true);
+				else if(newVal != null)
+				{
+					toBind.forEach(p ->
+					{
+						if(p instanceof SearchableFilteredIntegerStringMapSpec) ((SearchableFilteredIntegerStringMapSpec) p).setValue(dropdown.getValue());
+						else Log.getLogger().warn("Non-SearchableFilteredIntegerStringMapSpec passed into SearchableFilteredIntegerStringMapSpec multiselect!");
+					});
+				}
 			});
 		}
 		else
 		{
-			dropdown.valueProperty().bindBidirectional(valueProperty);
+			dropdown.valueProperty().bindBidirectional(selectedDropdownItem);
+			selectedDropdownItem.addListener((obs, oldVal, newVal) ->
+			{
+				if(skipNext.get())
+				{
+					Platform.runLater(() -> dropdown.setValue(getValue()));
+					skipNext.setValue(false);
+					return;
+				}
+				
+				if(newVal == getValue()) skipNext.setValue(true);
+				else if(newVal != null) valueProperty.setValue(newVal);
+			});
 		}
 		
 		HBox input = new HBox(idLabel, dropdown);

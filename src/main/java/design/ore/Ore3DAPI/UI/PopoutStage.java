@@ -26,8 +26,8 @@ public class PopoutStage extends Stage
 		scene.setFill(Colors.getBackground());
 		this.setScene(scene);
 		
-		content.prefWidthProperty().bind(scene.widthProperty());
-		content.prefHeightProperty().bind(scene.heightProperty());
+//		content.prefWidthProperty().bind(scene.widthProperty());
+//		content.prefHeightProperty().bind(scene.heightProperty());
 		content.setMinSize(600, 400);
 		content.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		

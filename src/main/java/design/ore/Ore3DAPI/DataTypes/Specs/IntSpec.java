@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.JavaFX.IntegerTextFormatter;
 import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -99,7 +100,11 @@ public class IntSpec extends Spec<Integer>
 				{
 					String text = inputField.getText();
 					int val = text.equals("") ? 0 : Integer.parseInt(inputField.getText());
-					toBind.forEach(p -> { ((Spec<Integer>)p).setValue(val); });
+					toBind.forEach(p ->
+					{
+						if(p instanceof IntSpec) ((IntSpec) p).setValue(val);
+						else Log.getLogger().warn("Non-IntSpec passed into IntSpec multiselect!");
+					});
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

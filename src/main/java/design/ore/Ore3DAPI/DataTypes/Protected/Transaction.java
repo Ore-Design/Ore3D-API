@@ -1,7 +1,6 @@
 package design.ore.Ore3DAPI.DataTypes.Protected;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +21,11 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.PricingData;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
 import design.ore.Ore3DAPI.Jackson.ObservableListSerialization;
-import javafx.beans.property.ReadOnlyMapProperty;
-import javafx.beans.property.ReadOnlyMapWrapper;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.IntegerBinding;
+import javafx.beans.property.ReadOnlyListProperty;
+import javafx.beans.property.ReadOnlyListWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -183,43 +185,34 @@ public class Transaction extends ValueStorageRecord
 	public boolean canGenerateWorkOrders() { return canGenerateWorkOrders; }
 	@Getter @Setter String lockedBy;
 	@Getter @Setter boolean expired;
+	@Getter @Setter boolean reorderAllowed = true;
 
 	@JsonSerialize(using = ObservableListSerialization.TagList.Serializer.class)
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
 	@Getter ObservableList<Tag> tags;
 	
-	@JsonIgnore private final ReadOnlyMapWrapper<Integer, List<Conflict>> conflicts = new ReadOnlyMapWrapper<>(FXCollections.observableHashMap());
-	public final ReadOnlyMapProperty<Integer, List<Conflict>> getConflictsReadOnly() { return conflicts.getReadOnlyProperty(); }
-	@JsonIgnore protected void addConflict(Build build, Conflict conflict)
+	@JsonIgnore private final ReadOnlyListWrapper<Conflict> conflicts = new ReadOnlyListWrapper<>(FXCollections.observableArrayList());
+	public final ReadOnlyListProperty<Conflict> getConflictsReadOnly() { return conflicts.getReadOnlyProperty(); }
+	@JsonIgnore protected void addConflict(Conflict conflict)
 	{
-		if(conflicts.containsKey(build.getBuildUUID()))
-		{
-			List<Conflict> buildConflicts = conflicts.get(build.getBuildUUID());
-			
-			Optional<Conflict> matchingConflict = buildConflicts.stream().filter(c -> c.getMessage().equals(conflict.getMessage())).findFirst();
-			
-			if(matchingConflict.isPresent())
-			{
-				buildConflicts.remove(matchingConflict.get());
-				buildConflicts.add(conflict);
-			}
-			else buildConflicts.add(conflict);
-		}
-		else conflicts.put(build.getBuildUUID(), new ArrayList<>(Arrays.asList(conflict)));
+		Optional<Conflict> duplicate = conflicts.stream().filter(cnf -> cnf.equals(conflict)).findFirst();
+		if(duplicate.isPresent()) conflicts.remove(duplicate.get());
+		conflicts.add(conflict);
 	}
-	protected void removeConflictsForBuild(Integer uid) { removeConflictsForBuildRecursive(uid); }
-	private void removeConflictsForBuildRecursive(Integer uid)
+	protected void removeConflictsForBuild(int uid)
 	{
-		conflicts.remove(uid);
-		Build found = getAllBuildsByUID().get(uid);
-		
-		// Parent conflicts need to be cleared and rechecked on child conflict clearing. Why they dont clear on their own? Thats a huge trail to follow. And I'm tired.
-		if(found.parentBuildProperty.get() != null)
-		{
-			removeConflictsForBuildRecursive(found.parentBuildProperty.get().getBuildUUID());
-			found.parentBuildProperty.get().detectConflicts();
-		}
+		List<Conflict> matching = conflicts.stream().filter(c -> c.getBuildUID() == uid).toList();
+		conflicts.removeAll(matching);
 	}
+	public IntegerBinding warningConflictCount() { return Bindings.createIntegerBinding(() -> conflicts.stream().filter(cnf -> cnf.isWarning()).toList().size(), conflicts); }
+	public IntegerBinding errorConflictCount() { return Bindings.createIntegerBinding(() -> conflicts.stream().filter(cnf -> !cnf.isWarning()).toList().size(), conflicts); }
+	public BooleanBinding buildHasWarningConflicts(Build b)
+	{ return Bindings.createBooleanBinding(() -> conflicts.stream().anyMatch(cnf -> cnf.getBuildUID() == b.getBuildUUID() && cnf.isWarning()), conflicts); }
+	public BooleanBinding buildHasErrorConflicts(Build b)
+	{ return Bindings.createBooleanBinding(() -> conflicts.stream().anyMatch(cnf -> cnf.getBuildUID() == b.getBuildUUID() && !cnf.isWarning()), conflicts); }
+	public BooleanBinding buildHasConflicts(Build b) { return buildHasWarningConflicts(b).or(buildHasErrorConflicts(b)); }
+	public List<Conflict> getConflictsForBuild(Build b)
+	{ return conflicts.stream().filter(cnf -> cnf.getBuildUID() == b.getBuildUUID()).toList(); }
 	
 	@JsonIgnore
 	public Map<Integer, Build> getAllBuildsByUID()

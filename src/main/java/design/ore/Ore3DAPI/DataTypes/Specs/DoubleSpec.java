@@ -9,11 +9,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
-import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
@@ -107,8 +106,8 @@ public class DoubleSpec extends Spec<Number>
 					double val = text.equals("") ? 0.0 : Double.parseDouble(text);
 					for(Spec<?> p : toBind)
 					{
-						if(!(p.getValue() instanceof Number)) throw new Exception("Spec to bind is not of matching generic type!");
-						((Property<Number>) p).setValue(val);
+						if(p instanceof DoubleSpec) ((DoubleSpec) p).setValue(val);
+						else Log.getLogger().warn("Non-DoubleSpec passed into DoubleSpec multiselect!");
 					}
 				}
 				catch(Exception e)
@@ -133,7 +132,7 @@ public class DoubleSpec extends Spec<Number>
 					else valueProperty.setValue(Double.parseDouble(inputField.getText()));
 				}
 			};
-			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { if (newVal != null) { inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + ""); } };
+			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { if (newVal != null && newVal.doubleValue() != Double.NaN && !Double.isInfinite(newVal.doubleValue())) { inputField.textProperty().setValue(new BigDecimal(getDoubleValue()).setScale(4, RoundingMode.HALF_UP) + ""); } };
 			
 			inputField.setTextFormatter(Util.getDecimalFormatter(4));
 			if(holdCalculateTillCompleteProperty.getValue() != null) { setHoldCalculateTillCompleteBindings(holdCalculateTillCompleteProperty.getValue(), inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); }

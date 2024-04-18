@@ -10,6 +10,7 @@ import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullDoubleStringConverter;
 import design.ore.Ore3DAPI.UI.ToggleIconButton;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -146,7 +147,11 @@ public class LinkedDoubleSpec extends Spec<Number>
 				{
 					String text = inputField.getText();
 					Number val = text.equals("") ? 0.0 : Double.parseDouble(text);
-					toBind.forEach(p -> { ((Spec<Number>)p).setValue(val); });
+					toBind.forEach(p ->
+					{
+						if(p instanceof LinkedDoubleSpec) ((LinkedDoubleSpec) p).setValue(val);
+						else Log.getLogger().warn("Non-LinkedDoubleSpec passed into LinkedDoubleSpec multiselect!");
+					});
 				}
 				catch(Exception e) { inputField.setText(preEdit); } });
 		}

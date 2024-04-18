@@ -124,6 +124,26 @@ public abstract class Build extends ValueStorageRecord
 	
 	@JsonIgnore @Getter protected BooleanBinding hasGeneratedWorkOrderBinding = workOrder.getProperty().isNotEqualTo("")
 			.or(Bindings.createBooleanBinding(() -> parentBuildProperty.getValue() != null ? parentBuildProperty.getValue().getHasGeneratedWorkOrderBinding().get() : false, parentBuildProperty));
+	
+	@JsonIgnore ReadOnlyBooleanWrapper buildHasConflicts = new ReadOnlyBooleanWrapper(false);
+	public ReadOnlyBooleanProperty getBuildHasConflicts() { return buildHasConflicts.getReadOnlyProperty(); }
+	
+	@JsonIgnore public final BooleanBinding getCanGenerateWorkOrders()
+	{
+		BooleanBinding parentCanGenerate = Bindings.createBooleanBinding(() ->
+		{
+			if(parentBuildProperty.get() == null) return true;
+			else
+			{
+				if(parentBuildProperty.get().getHasGeneratedWorkOrderBinding().get()) return false;
+				else return true;
+			}
+		}, parentBuildProperty);
+		
+		BooleanBinding childrenCanGenerate = Bindings.createBooleanBinding(() -> { return childBuilds.stream().allMatch(cb -> cb.getCanGenerateWorkOrders().get()); }, childBuilds);
+		
+		return hasGeneratedWorkOrderBinding.and(buildHasConflicts).not().and(allowWorkOrders()).and(parentCanGenerate).and(childrenCanGenerate);
+	}
 
 	// We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
 	// 1/11/24 SIKE!, we changed to using @JsonMerge annotation to do the same thing.
@@ -135,11 +155,6 @@ public abstract class Build extends ValueStorageRecord
 	
 	@JsonIgnore protected final ReadOnlyBooleanWrapper atEndOfParentWrapper = new ReadOnlyBooleanWrapper();
 	@JsonIgnore public ReadOnlyBooleanProperty getAtEndOfParentProperty() { return atEndOfParentWrapper.getReadOnlyProperty(); }
-	
-//	@Getter @JsonIgnore
-//	protected final IntegerBinding indexInParent = Bindings.createIntegerBinding(() -> (getParentBuildProperty().isNotNull().get() ?
-//		getParentBuildProperty().get().getChildBuilds().indexOf(this) :
-//		getParentTransactionProperty().isNotNull().get() ? getParentTransactionProperty().get().getBuilds().indexOf(this) : -1), getParentBuildProperty(), getParentTransactionProperty());
 
 	@JsonSerialize(using = ObservableSetSerialization.IntSet.Serializer.class)
 	@JsonDeserialize(using = ObservableSetSerialization.IntSet.Deserializer.class)
@@ -232,15 +247,17 @@ public abstract class Build extends ValueStorageRecord
 		
 		parentTransactionProperty.addListener((obs, oldVal, newVal) ->
 		{
-			if(newVal != null)
-			{
-				newVal.addOnBuildListChangedListener(indexCheckConsumer);
-				newVal.getBuilds().addListener(indexCheckListener);
-			}
 			if(oldVal != null)
 			{
+				buildHasConflicts.unbind();
 				oldVal.removeOnBuildListChangedListener(indexCheckConsumer);
 				oldVal.getBuilds().removeListener(indexCheckListener);
+			}
+			if(newVal != null)
+			{
+				buildHasConflicts.bind(newVal.buildHasConflicts(this));
+				newVal.addOnBuildListChangedListener(indexCheckConsumer);
+				newVal.getBuilds().addListener(indexCheckListener);
 			}
 			checkIndex();
 		});
@@ -471,7 +488,7 @@ public abstract class Build extends ValueStorageRecord
 
 	public void addConflict(Conflict conflict)
 	{
-		if(parentTransactionProperty.get() != null) parentTransactionProperty.get().addConflict(this, conflict);
+		if(parentTransactionProperty.get() != null) parentTransactionProperty.get().addConflict(conflict);
 	}
 	
 	private void runCatalogDetection()
