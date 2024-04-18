@@ -1,5 +1,7 @@
 jdk:
   - openjdk17
 before_install:
+  - sdk update
+  - sdk list java
   - sdk install java 17.0.10.fx-zulu
   - sdk use java 17.0.10.fx-zulu
