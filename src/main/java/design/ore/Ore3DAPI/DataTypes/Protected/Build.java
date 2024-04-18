@@ -219,8 +219,18 @@ public abstract class Build extends ValueStorageRecord
 					
 					setDirty();
 				}
+				
+//				BooleanBinding childrenMiscBinding = Bindings.createBooleanBinding(() -> misc.size() > 0, misc);
+//				for(Build child : childBuilds) { childrenMiscBinding = childrenMiscBinding.or(child.getThisOrChildrenHaveMiscCharges()); }
+//				thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
 			}
 		});
+		
+//		BooleanBinding childrenMiscBinding = Bindings.createBooleanBinding(() -> misc.size() > 0, misc);
+//		for(Build child : childBuilds) { childrenMiscBinding = childrenMiscBinding.or(child.getThisOrChildrenHaveMiscCharges()); }
+//		thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
+//		
+//		getThisOrChildrenHaveMiscCharges().addListener((obs, oldVal, newVal) -> Log.getLogger().debug(titleProperty.getValue() + " or Children Have Misc: " + newVal));
 		
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
@@ -295,6 +305,9 @@ public abstract class Build extends ValueStorageRecord
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	public abstract BooleanBinding allowWorkOrders();
+	
+//	private final ReadOnlyBooleanWrapper thisOrChildrenHaveMiscCharges = new ReadOnlyBooleanWrapper();
+//	public ReadOnlyBooleanProperty getThisOrChildrenHaveMiscCharges() { return thisOrChildrenHaveMiscCharges.getReadOnlyProperty(); }
 	
 	public final Build duplicate()
 	{
