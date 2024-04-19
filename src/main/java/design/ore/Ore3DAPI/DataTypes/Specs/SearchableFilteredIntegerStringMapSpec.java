@@ -156,15 +156,6 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 		});
 		
-		/*
-		 *  TODO: Watch out for this. It's kind of a silly way to fix the
-		 *  issues presented by the searchable dropdown field provided by the ControlsFX.
-		 *  For some reason, re-selecting the same value that is already selected
-		 *  causes the value changed event to fire a third time. In order to combat
-		 *  this, the skipNext property is set to true when the new value is the
-		 *  same, so the third event fired is ignored.
-		 */
-		final BooleanProperty skipNext = new SimpleBooleanProperty(false);
 		final ObjectProperty<Integer> selectedDropdownItem = new SimpleObjectProperty<Integer>(getValue());
 		
 		if(toBind != null && toBind.size() > 0)
@@ -193,15 +184,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			
 			selectedDropdownItem.addListener((obs, oldVal, newVal) ->
 			{
-				if(skipNext.get())
-				{
-					Platform.runLater(() -> dropdown.setValue(getValue()));
-					skipNext.setValue(false);
-					return;
-				}
-				
-				if(newVal == getValue()) skipNext.setValue(true);
-				else if(newVal != null)
+				if(newVal != null)
 				{
 					toBind.forEach(p ->
 					{
@@ -214,18 +197,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 		else
 		{
 			dropdown.valueProperty().bindBidirectional(selectedDropdownItem);
-			selectedDropdownItem.addListener((obs, oldVal, newVal) ->
-			{
-				if(skipNext.get())
-				{
-					Platform.runLater(() -> dropdown.setValue(getValue()));
-					skipNext.setValue(false);
-					return;
-				}
-				
-				if(newVal == getValue()) skipNext.setValue(true);
-				else if(newVal != null) valueProperty.setValue(newVal);
-			});
+			selectedDropdownItem.addListener((obs, oldVal, newVal) -> { if(newVal != null) valueProperty.setValue(newVal); });
 		}
 		
 		HBox input = new HBox(idLabel, dropdown);

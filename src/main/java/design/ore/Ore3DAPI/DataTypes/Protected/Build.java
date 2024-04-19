@@ -144,9 +144,7 @@ public abstract class Build extends ValueStorageRecord
 		
 		return hasGeneratedWorkOrderBinding.and(buildHasConflicts).not().and(allowWorkOrders()).and(parentCanGenerate).and(childrenCanGenerate);
 	}
-
-	// We have to serialize child builds using a custom setter, otherwise linking children to parent fails.
-	// 1/11/24 SIKE!, we changed to using @JsonMerge annotation to do the same thing.
+	
 	@Getter @JsonMerge
 	protected final BuildList childBuilds = new BuildList();
 	
@@ -182,6 +180,9 @@ public abstract class Build extends ValueStorageRecord
 	@JsonSerialize(using = ObservableListSerialization.MiscEntryList.Serializer.class)
 	@Getter @JsonMerge
 	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
+	
+	@JsonIgnore private final ReadOnlyBooleanWrapper thisOrChildrenHaveMiscCharges = new ReadOnlyBooleanWrapper(false);
+	@JsonIgnore public ReadOnlyBooleanProperty getThisOrChildrenHaveMiscCharges() { return thisOrChildrenHaveMiscCharges.getReadOnlyProperty(); }
 	
 	@JsonIgnore @Getter protected ObservableList<Spec<?>> specs;
 	@JsonIgnore public abstract boolean allowUnitPriceOverride();
@@ -219,18 +220,10 @@ public abstract class Build extends ValueStorageRecord
 					
 					setDirty();
 				}
-				
-//				BooleanBinding childrenMiscBinding = Bindings.createBooleanBinding(() -> misc.size() > 0, misc);
-//				for(Build child : childBuilds) { childrenMiscBinding = childrenMiscBinding.or(child.getThisOrChildrenHaveMiscCharges()); }
-//				thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
+
+				rebindMiscListener();
 			}
 		});
-		
-//		BooleanBinding childrenMiscBinding = Bindings.createBooleanBinding(() -> misc.size() > 0, misc);
-//		for(Build child : childBuilds) { childrenMiscBinding = childrenMiscBinding.or(child.getThisOrChildrenHaveMiscCharges()); }
-//		thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
-//		
-//		getThisOrChildrenHaveMiscCharges().addListener((obs, oldVal, newVal) -> Log.getLogger().debug(titleProperty.getValue() + " or Children Have Misc: " + newVal));
 		
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
@@ -273,6 +266,9 @@ public abstract class Build extends ValueStorageRecord
 		});
 		
 		parentBuildProperty.addListener((obs, oldVal, newVal) -> checkIndex());
+		
+		rebindMiscListener();
+		getThisOrChildrenHaveMiscCharges().addListener((obs, oldVal, newVal) -> Log.getLogger().debug(titleProperty.getValue() + " or Children Have Misc: " + newVal));
 	}
 	
 	ListChangeListener<Build> indexCheckListener = (ListChangeListener.Change<? extends Build> change) -> checkIndex();
@@ -297,6 +293,15 @@ public abstract class Build extends ValueStorageRecord
 		}
 	}
 	
+	protected void rebindMiscListener()
+	{
+		BooleanBinding childrenMiscBinding = Bindings.createBooleanBinding(() -> misc.size() > 0, misc);
+		for(Build cb : childBuilds)
+		{ childrenMiscBinding = childrenMiscBinding.or(cb.getThisOrChildrenHaveMiscCharges()); }
+		
+		thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
+	}
+	
 	@JsonIgnore @Getter protected final ObservableMap<String, Build> allowedChildBuilds = FXCollections.observableHashMap();
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
@@ -305,9 +310,6 @@ public abstract class Build extends ValueStorageRecord
 	protected abstract DoubleBinding getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	public abstract BooleanBinding allowWorkOrders();
-	
-//	private final ReadOnlyBooleanWrapper thisOrChildrenHaveMiscCharges = new ReadOnlyBooleanWrapper();
-//	public ReadOnlyBooleanProperty getThisOrChildrenHaveMiscCharges() { return thisOrChildrenHaveMiscCharges.getReadOnlyProperty(); }
 	
 	public final Build duplicate()
 	{
@@ -504,7 +506,7 @@ public abstract class Build extends ValueStorageRecord
 		if(parentTransactionProperty.get() != null) parentTransactionProperty.get().addConflict(conflict);
 	}
 	
-	private void runCatalogDetection()
+	private final void runCatalogDetection()
 	{
 		for(Build cb : getChildBuilds()) { cb.runCatalogDetection(); }
 		
