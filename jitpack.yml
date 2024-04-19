@@ -1,8 +1,7 @@
 jdk:
   - openjdk17
 before_install:
-  - sdkman_insecure_ssl=true
   - sdk update
   - sdk list java
-  - sdk install java 17.0.10.fx-zulu
+  - sdk install -k java 17.0.10.fx-zulu
   - sdk use java 17.0.10.fx-zulu
