@@ -6,10 +6,10 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.JavaFX.NonNullIntegerStringConverter;
-import design.ore.Ore3DAPI.JavaFX.PositiveIntegerTextFormatter;
-import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -122,16 +122,24 @@ public class PositiveIntSpec extends Spec<Integer>
 		}
 		else
 		{
-			inputField.setTextFormatter(new PositiveIntegerTextFormatter());
-			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullIntegerStringConverter());
-			inputField.focusedProperty().addListener(new ChangeListener<Boolean>()
+			final ChangeListener<Boolean> avoidEmpty = (obs, oldVal, newVal) -> { if (!newVal) { if(inputField.getText().equals("")) inputField.setText("0.0"); } };
+			final ChangeListener<Boolean> calculateOnEnd = (obs, oldVal, newVal) ->
 			{
-			    @Override
-			    public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue)
-			    {
-			        if (!newPropertyValue) { if(inputField.getText().equals("")) inputField.setText("1"); }
-			    }
-			});
+				if (!newVal)
+				{
+					if(inputField.getText().equals(""))
+					{
+						inputField.setText("0.0");
+						valueProperty.setValue(0);
+					}
+					else valueProperty.setValue(Integer.parseInt(inputField.getText()));
+				}
+			};
+			final ChangeListener<Number> updateFieldOnValueChange = (obs, oldVal, newVal) -> { if (newVal != null) { inputField.textProperty().setValue(getValue() + ""); } };
+			
+			inputField.setTextFormatter(Util.getDecimalFormatter(4));
+			if(holdCalculateTillCompleteProperty.getValue() != null) { setHoldCalculateTillCompleteBindings(holdCalculateTillCompleteProperty.getValue(), inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); }
+			holdCalculateTillCompleteProperty.addListener((observable, oldValue, newValue) -> { if(newValue != null) { setHoldCalculateTillCompleteBindings(newValue, inputField, avoidEmpty, calculateOnEnd, updateFieldOnValueChange); } });
 		}
 		
 		HBox input = new HBox(idLabel, inputField);
@@ -146,5 +154,28 @@ public class PositiveIntSpec extends Spec<Integer>
 		input.setMaxHeight(Control.USE_PREF_SIZE);
 		
 		return input;
+	}
+	
+	private void setHoldCalculateTillCompleteBindings(boolean hold, TextField inputField, final ChangeListener<Boolean> avoidEmpty, final ChangeListener<Boolean> calculateOnEnd, final ChangeListener<Number> updateFieldOnValueChange)
+	{
+		if(hold)
+		{
+			inputField.focusedProperty().removeListener(avoidEmpty);
+			
+			inputField.textProperty().unbindBidirectional(this.valueProperty);
+			inputField.textProperty().setValue(getValue() + "");
+			
+			inputField.focusedProperty().addListener(calculateOnEnd);
+			valueProperty.addListener(updateFieldOnValueChange);
+		}
+		else
+		{
+			inputField.focusedProperty().removeListener(calculateOnEnd);
+			valueProperty.removeListener(updateFieldOnValueChange);
+			
+			inputField.textProperty().bindBidirectional(this.valueProperty, new NonNullIntegerStringConverter());
+			
+			inputField.focusedProperty().addListener(avoidEmpty);
+		}
 	}
 }

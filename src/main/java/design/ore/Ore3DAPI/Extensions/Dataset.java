@@ -11,7 +11,9 @@ import design.ore.Ore3DAPI.DataTypes.BuildTreeViewItem;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.ProductFamily;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.TreeItem;
+import javafx.scene.layout.Pane;
 
 public interface Dataset extends ExtensionPoint
 {
@@ -21,4 +23,5 @@ public interface Dataset extends ExtensionPoint
 	Map<String, ? extends RoutingEntry> retrieveRoutings();
 	List<NamedType> retrieveBuildSubtypes();
 	void reload();
+	Pane getCreateBOMComponentUI(SimpleObjectProperty<BOMEntry> createdBOMEntry);
 }

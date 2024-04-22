@@ -11,4 +11,7 @@ public class CatalogItem
 	Build build;
 	double price;
 	String displayName;
+	
+	@Override
+	public String toString() { return displayName + " (Build Type: " + build.getClass() + ") $" + price; }
 }

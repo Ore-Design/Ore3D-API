@@ -12,8 +12,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import design.ore.Ore3DAPI.Util;
-import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;

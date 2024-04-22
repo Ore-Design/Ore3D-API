@@ -7,10 +7,12 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import lombok.Getter;
+import lombok.Setter;
 
-public class PopoutStage extends Stage
+public class PopoutStage<T> extends Stage
 {
 	Scene scene;
+	@Setter private T result;
 	
 	@Getter protected final BooleanProperty closeOnTrue;
 	
@@ -34,5 +36,11 @@ public class PopoutStage extends Stage
 		closeOnTrue = new SimpleBooleanProperty(false);
 		closeOnTrue.addListener((obs, oldVal, newVal) -> { if(newVal && this.isShowing()) this.close(); });
 		setOnCloseRequest(e -> { if(!closeOnTrue.get()) closeOnTrue.setValue(true); });
+	}
+	
+	public T showAndWaitForResult()
+	{
+		this.showAndWait();
+		return result;
 	}
 }

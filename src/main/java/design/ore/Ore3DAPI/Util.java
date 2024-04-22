@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 
 import org.controlsfx.control.Notifications;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.qos.logback.classic.Logger;
@@ -49,11 +50,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 public class Util
@@ -82,6 +85,29 @@ public class Util
 	public class Mapper
 	{
 		@Getter protected static ObjectMapper mapper = null;
+		public static <T> T quickClone(@NonNull T toClone, Class<? extends T> clazz)
+		{
+			try
+			{
+				String serialized = mapper.writeValueAsString(toClone);
+				Log.getLogger().debug("Running quick clone, JSON is\n" + serialized);
+				return mapper.readValue(serialized, clazz);
+			}
+			catch (Exception e)
+			{
+				Log.getLogger().warn(Util.formatThrowable("Error quick cloning object " + toClone, e));
+				return null;
+			}
+		}
+		public static <T> T quickClone(@NonNull T toClone, TypeReference<? extends T> type)
+		{
+			try { return mapper.readValue(mapper.writeValueAsString(toClone), type); }
+			catch (Exception e)
+			{
+				Log.getLogger().warn(Util.formatThrowable("Error quick cloning object " + toClone, e));
+				return null;
+			}
+		}
 	}
 	
 	@Getter private static final Image brokenChainIcon = new Image("ui/icons/BrokenChainIcon.png");
@@ -375,10 +401,29 @@ public class Util
 				return null;
 			}
 			
-			PopoutStage stage = new PopoutStage(popoutAreas.get(navigationID), content, title, useStylesheet);
+			PopoutStage<Void> stage = new PopoutStage<>(popoutAreas.get(navigationID), content, title, useStylesheet);
 			stage.show();
 			
 			return stage.getCloseOnTrue();
+		}
+		
+		public static void showPopupAndWait(Pane content, String navigationID, String title, boolean useStylesheet)
+		{
+			if(!popoutAreas.containsKey(navigationID))
+			{
+				Log.getLogger().warn("No popout area has been registered with ID " + navigationID + " yet!");
+				return;
+			}
+			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
+				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(navigationID))))
+			{
+				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
+				return;
+			}
+			
+			PopoutStage<Void> stage = new PopoutStage<Void>(popoutAreas.get(navigationID), content, title, useStylesheet);
+			stage.initModality(Modality.WINDOW_MODAL);
+			stage.showAndWait();
 		}
 		
 		public static void closePopouts(String popoutID)
