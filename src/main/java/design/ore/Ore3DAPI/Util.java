@@ -90,7 +90,7 @@ public class Util
 			try
 			{
 				String serialized = mapper.writeValueAsString(toClone);
-				Log.getLogger().debug("Running quick clone, JSON is\n" + serialized);
+//				Log.getLogger().debug("Running quick clone, JSON is\n" + serialized);
 				return mapper.readValue(serialized, clazz);
 			}
 			catch (Exception e)

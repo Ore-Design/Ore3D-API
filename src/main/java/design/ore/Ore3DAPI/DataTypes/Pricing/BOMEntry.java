@@ -1,14 +1,11 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
+import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -22,46 +19,56 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableNumberValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonSerialize(using = ComponentSerialization.BOMs.Serializer.class)
-@JsonDeserialize(using = ComponentSerialization.BOMs.Deserializer.class)
-public class BOMEntry extends ValueStorageRecord implements Conflictable
+public class BOMEntry extends ValueStorageRecord
 {
-	@Getter protected final String id;
-	@Getter protected final String shortName;
-	@Getter protected final String longName;
-	@Getter protected final String unitOfMeasure;
-	@Getter protected final double costPerQuantity;
+	public BOMEntry() { this("", "", "", "", 0, true, 0, 0, false, Util.zeroDoubleBinding()); }
+	
+	@Getter @Setter protected String id;
+	@JsonProperty("sn") @Getter @Setter protected String shortName;
+	@JsonProperty("ln") @Getter @Setter protected String longName;
+	@JsonProperty("uom") @Getter @Setter protected String unitOfMeasure;
+	@JsonProperty("cpq") @Getter @Setter protected double costPerQuantity;
+	
 	protected final ReadOnlyBooleanWrapper customEntry;
-	public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
+	@JsonProperty("cust") public boolean isCustomEntry() { return customEntry.get(); }
+	@JsonProperty("cust") public void setCustomEntry(boolean val) { customEntry.set(val); }
 	
-	@Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
-	@Getter protected final SimpleDoubleProperty overridenQuantityProperty;
-	@Getter protected BooleanBinding quantityOverriddenProperty;
+	@JsonIgnore @Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
+	@JsonProperty("q") public double getQuantity() { return unoverriddenQuantityProperty.get(); }
+	@JsonProperty("q") public void setQuantity(int val) { unoverriddenQuantityProperty.set(val); }
+	@JsonIgnore @Getter protected final SimpleDoubleProperty overridenQuantityProperty;
+	@JsonProperty("ovrq") public double getOverriddenQuantity() { return overridenQuantityProperty.get(); }
+	@JsonProperty("ovrq") public void setOverriddenQuantity(int val) { overridenQuantityProperty.set(val); }
+	@JsonIgnore @Getter protected BooleanBinding quantityOverriddenProperty;
 
-	@Getter protected final SimpleIntegerProperty unoverriddenMarginProperty;
-	@Getter protected final SimpleIntegerProperty overridenMarginProperty;
-	@Getter protected BooleanBinding marginOverriddenProperty;
+	@JsonIgnore @Getter protected final SimpleIntegerProperty unoverriddenMarginProperty;
+	@JsonProperty("m") public int getMargin() { return unoverriddenMarginProperty.get(); }
+	@JsonProperty("m") public void setMargin(int val) { unoverriddenMarginProperty.set(val); }
+	@JsonIgnore @Getter protected final SimpleIntegerProperty overridenMarginProperty;
+	@JsonProperty("ovrm") public int getOverriddenMargin() { return overridenMarginProperty.get(); }
+	@JsonProperty("ovrm") public void setOverriddenMargin(int val) { overridenMarginProperty.set(val); }
+	@JsonIgnore @Getter protected BooleanBinding marginOverriddenProperty;
 	
-	@Getter protected SimpleBooleanProperty ignoreParentQuantityProperty;
+	@JsonIgnore @Getter protected SimpleBooleanProperty ignoreParentQuantityProperty;
+	@JsonProperty("ipq") public boolean getIgnoreParentQuantity() { return ignoreParentQuantityProperty.get(); }
+	@JsonProperty("ipq") public void setIgnoreParentQuantity(boolean val) { ignoreParentQuantityProperty.set(val); }
 
 	protected final ReadOnlyDoubleWrapper quantityProperty;
-	public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyDoubleWrapper totalCostProperty;
-	public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyIntegerWrapper marginProperty;
-	public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
-	protected final DoubleBinding marginDenominatorProperty;
-	@Getter protected final DoubleBinding totalPriceProperty;
-	@Getter protected final DoubleBinding unitCostProperty;
-	@Getter protected final DoubleBinding unitPriceProperty;
+	@JsonIgnore public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
 	
-	@Getter protected ObservableList<Conflict> conflicts;
+	protected final DoubleBinding marginDenominatorProperty;
+	@JsonIgnore @Getter protected final DoubleBinding totalPriceProperty;
+	@JsonIgnore @Getter protected final DoubleBinding unitCostProperty;
+	@JsonIgnore @Getter protected final DoubleBinding unitPriceProperty;
 	
 	public BOMEntry(String id, String shortName, String longName, String unitOfMeasure, double costPerQuantity, boolean customEntry, double quantity, int margin, boolean ignoreParentQuantity, ObservableNumberValue parentQuantity)
 	{
@@ -71,7 +78,6 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		this.unitOfMeasure = unitOfMeasure;
 		this.costPerQuantity = costPerQuantity;
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
-		this.conflicts = FXCollections.observableArrayList();
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
@@ -153,10 +159,4 @@ public class BOMEntry extends ValueStorageRecord implements Conflictable
 		newEntry.putStoredValues(getStoredValues());
 		return newEntry;
 	}
-
-	@Override
-	public void addConflict(Conflict conflict) { conflicts.add(conflict); }
-
-	@Override
-	public void clearConflicts() { conflicts.clear(); }
 }

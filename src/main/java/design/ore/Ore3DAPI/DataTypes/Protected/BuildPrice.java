@@ -9,27 +9,26 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import lombok.Getter;
+import lombok.NonNull;
 
 public class BuildPrice
 {
-	ReadOnlyDoubleWrapper unitPriceProperty;
+	final ReadOnlyDoubleWrapper unitPriceProperty;
 	public ReadOnlyDoubleProperty getUnitPrice() { return unitPriceProperty.getReadOnlyProperty(); }
-	ReadOnlyDoubleWrapper overriddenUnitPriceProperty;
+	final ReadOnlyDoubleWrapper overriddenUnitPriceProperty;
 	public ReadOnlyDoubleProperty getOverriddenUnitPrice() { return overriddenUnitPriceProperty.getReadOnlyProperty(); }
-	@Getter BooleanBinding unitPriceOverriddenProperty;
+	@Getter final BooleanBinding unitPriceOverriddenProperty;
 
-	ReadOnlyDoubleWrapper totalPriceProperty;
+	final ReadOnlyDoubleWrapper totalPriceProperty;
 	public ReadOnlyDoubleProperty getTotalPrice() { return totalPriceProperty.getReadOnlyProperty(); }
-	ReadOnlyDoubleWrapper overriddenTotalPriceProperty;
+	final ReadOnlyDoubleWrapper overriddenTotalPriceProperty;
 	public ReadOnlyDoubleProperty getOverriddenTotalPrice() { return overriddenTotalPriceProperty.getReadOnlyProperty(); }
-	@Getter BooleanBinding totalPriceOverriddenProperty;
-	ReadOnlyDoubleWrapper unoverriddenTotalPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
+	@Getter final BooleanBinding totalPriceOverriddenProperty;
+	final ReadOnlyDoubleWrapper unoverriddenTotalPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
 	public ReadOnlyDoubleProperty getUnoverriddenTotalPriceProperty() { return unoverriddenTotalPriceProperty.getReadOnlyProperty(); };
 	
-	public BuildPrice(Build parent)
+	public BuildPrice(@NonNull Build parent)
 	{
-		if(parent == null) return;
-		
 		unitPriceProperty = new ReadOnlyDoubleWrapper();
 		overriddenUnitPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
 		

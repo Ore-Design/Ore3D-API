@@ -185,15 +185,15 @@ public class ObservableListSerialization
 				gen.writeEndArray();
 			}
 			
-			@Override
-			public void serializeWithType(ObservableList<Build> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
-			{
-				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
-				typeSer.writeTypePrefix(gen, typeId);
-				gen.writeFieldName("buildobslist");
-				serialize(value, gen, provider);
-				typeSer.writeTypeSuffix(gen, typeId);
-			}
+//			@Override
+//			public void serializeWithType(ObservableList<Build> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
+//			{
+//				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
+//				typeSer.writeTypePrefix(gen, typeId);
+//				gen.writeFieldName("buildobslist");
+//				serialize(value, gen, provider);
+//				typeSer.writeTypeSuffix(gen, typeId);
+//			}
 		}
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<Build>>

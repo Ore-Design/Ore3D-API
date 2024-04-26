@@ -1,36 +1,36 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableNumberValue;
 import lombok.Getter;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonSerialize(using = ComponentSerialization.Misc.Serializer.class)
-@JsonDeserialize(using = ComponentSerialization.Misc.Deserializer.class)
 public class MiscEntry extends ValueStorageRecord
 {
-	@Getter protected final SimpleStringProperty nameProperty;
-	public String getName() { return nameProperty.get(); }
-	@Getter protected final SimpleDoubleProperty priceProperty;
-	public double getPrice() { return priceProperty.get(); }
+	@JsonIgnore @Getter protected final SimpleStringProperty nameProperty;
+	@JsonProperty("n") public String getName() { return nameProperty.get(); }
+	@JsonProperty("n") public void setName(String val) { nameProperty.set(val); }
+	@JsonIgnore @Getter protected final SimpleDoubleProperty priceProperty;
+	@JsonProperty("c") public double getPrice() { return priceProperty.get(); }
+	@JsonProperty("c") public void setPrice(double val) { priceProperty.set(val); }
 
 	@Getter protected final SimpleDoubleProperty quantityProperty;
-	@Getter protected DoubleBinding totalPriceProperty;
-	@Getter protected final DoubleBinding unitPriceProperty;
+	@JsonProperty("q") public double getQuantity() { return quantityProperty.get(); }
+	@JsonProperty("q") public void setQuantity(double val) { quantityProperty.set(val); }
+	
+	@JsonIgnore @Getter protected DoubleBinding totalPriceProperty;
+	@JsonIgnore @Getter protected final DoubleBinding unitPriceProperty;
 	
 	public MiscEntry(String name, double cost, double quantity, ObservableNumberValue parentQuantity)
 	{

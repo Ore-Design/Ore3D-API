@@ -11,7 +11,8 @@ import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -66,9 +67,9 @@ import javafx.collections.ObservableSet;
 import javafx.util.Pair;
 import lombok.Getter;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Build extends ValueStorageRecord
 {
 	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
@@ -76,6 +77,8 @@ public abstract class Build extends ValueStorageRecord
 		@Override
 		public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal) { if(newVal) { buildIsDirty.setValue(true); } }
 	};
+
+	private final ChangeListener<Boolean> childCatalogListener = (obs, oldVal, newVal) -> runCatalogDetection();
 	
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
 	public void regenerateBuildUUID() { buildUUID = new Random().nextInt(111111, 1000000); }
@@ -92,16 +95,25 @@ public abstract class Build extends ValueStorageRecord
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
 	
 	private final ReadOnlyBooleanWrapper buildIsDirty = new ReadOnlyBooleanWrapper(false);
-	public final ReadOnlyBooleanProperty getIsDirtyProperty() { return buildIsDirty.getReadOnlyProperty(); }
+	@JsonIgnore public final ReadOnlyBooleanProperty getIsDirtyProperty() { return buildIsDirty.getReadOnlyProperty(); }
 	public final void setDirty()
 	{
 		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
+		if(parentBuildProperty.isNotNull().get()) parentBuildProperty.get().setDirtyFromChild(this);
 //		else Log.getLogger().debug("Build " + titleProperty.get() + " has no transaction parent, so request to dirty-fy was rejected!");
 	}
+	public final void setDirtyFromChild(Build child)
+	{
+		dirtyFrom = child;
+		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
+	}
+	
+	// This is used to prevent infinite looping of marking dirty from children
+	@JsonIgnore private Build dirtyFrom = null;
 
 	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
 	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
-	@JsonMerge @Getter protected BuildPrice price;
+	@JsonMerge @Getter protected final BuildPrice price;
 
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
@@ -205,6 +217,7 @@ public abstract class Build extends ValueStorageRecord
 					cb.parentBuildProperty.setValue(this);
 					cb.parentTransactionProperty.bind(parentTransactionProperty);
 					cb.buildIsDirty.addListener(childUpdateListener);
+					cb.isCatalog.addListener(childCatalogListener);
 					
 					setDirty();
 					
@@ -217,6 +230,7 @@ public abstract class Build extends ValueStorageRecord
 					cb.parentBuildProperty.setValue(null);
 					cb.parentTransactionProperty.unbind();
 					cb.buildIsDirty.removeListener(childUpdateListener);
+					cb.isCatalog.removeListener(childCatalogListener);
 					
 					setDirty();
 				}
@@ -361,7 +375,11 @@ public abstract class Build extends ValueStorageRecord
 	
 	protected void refresh()
 	{	
-		for(Build cb : childBuilds) { cb.refresh(); }
+		for(Build cb : childBuilds)
+		{
+			if(dirtyFrom != null && dirtyFrom.getBuildUUID() == cb.getBuildUUID()) dirtyFrom = null;
+			else cb.refresh();
+		}
 		
 		Transaction parentTran = parentTransactionProperty.get();
 		if(parentTran != null && !parentTran.isExpired())

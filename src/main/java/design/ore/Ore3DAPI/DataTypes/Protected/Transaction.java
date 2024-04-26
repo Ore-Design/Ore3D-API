@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -177,7 +178,7 @@ public class Transaction extends ValueStorageRecord
 	@Getter @Setter String id;
 	@Getter @Setter String displayName;
 	@Getter @Setter PricingData pricing;
-	@Getter final BuildList builds;
+	@Getter @JsonMerge final BuildList builds;
 	@Getter @Setter Customer customer;
 	@Setter boolean canBeDuplicated;
 	public boolean canBeDuplicated() { return canBeDuplicated; }
@@ -191,7 +192,9 @@ public class Transaction extends ValueStorageRecord
 	@JsonDeserialize(using = ObservableListSerialization.TagList.Deserializer.class)
 	@Getter ObservableList<Tag> tags;
 	
-	@JsonIgnore private final ReadOnlyListWrapper<Conflict> conflicts = new ReadOnlyListWrapper<>(FXCollections.observableArrayList());
+	@JsonIgnore
+	private final ReadOnlyListWrapper<Conflict> conflicts = new ReadOnlyListWrapper<>(FXCollections.observableArrayList());
+	@JsonIgnore
 	public final ReadOnlyListProperty<Conflict> getConflictsReadOnly() { return conflicts.getReadOnlyProperty(); }
 	@JsonIgnore protected void addConflict(Conflict conflict)
 	{

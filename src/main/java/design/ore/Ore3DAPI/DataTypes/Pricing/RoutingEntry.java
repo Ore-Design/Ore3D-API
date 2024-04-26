@@ -1,17 +1,13 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
-import design.ore.Ore3DAPI.DataTypes.Conflict;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.Conflictable;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Jackson.ComponentSerialization;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -23,61 +19,59 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableNumberValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-@JsonSerialize(using = ComponentSerialization.Routings.Serializer.class)
-@JsonDeserialize(using = ComponentSerialization.Routings.Deserializer.class)
-public class RoutingEntry extends ValueStorageRecord implements Conflictable
+public class RoutingEntry extends ValueStorageRecord
 {
-	@Getter protected final String id;
-	@Getter protected final String name;
-	@Getter protected double costPerQuantity;
+	public RoutingEntry() { this("", "", 0, 0, 0, Util.zeroDoubleBinding(), false); }
 	
-	@Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
-	@Getter protected final SimpleDoubleProperty overridenQuantityProperty;
-	@Getter protected BooleanBinding quantityOverriddenProperty;
+	@Getter @Setter protected String id;
+	@JsonProperty("n") @Getter @Setter protected String name;
+	@JsonProperty("cpq") @Getter @Setter protected double costPerQuantity;
 	
 	protected final ReadOnlyBooleanWrapper customEntry;
-	public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
+	@JsonProperty("cust") public boolean isCustomEntry() { return customEntry.get(); }
+	@JsonProperty("cust") public void setCustomEntry(boolean val) { customEntry.set(val); }
+	
+	@JsonIgnore @Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
+	@JsonProperty("q") public double getQuantity() { return unoverriddenQuantityProperty.get(); }
+	@JsonProperty("q") public void setQuantity(int val) { unoverriddenQuantityProperty.set(val); }
+	@JsonIgnore @Getter protected final SimpleDoubleProperty overridenQuantityProperty;
+	@JsonProperty("ovrq") public double getOverriddenQuantity() { return overridenQuantityProperty.get(); }
+	@JsonProperty("ovrq") public void setOverriddenQuantity(int val) { overridenQuantityProperty.set(val); }
+	@JsonIgnore @Getter protected BooleanBinding quantityOverriddenProperty;
 
 	protected final ReadOnlyDoubleWrapper quantityProperty;
-	public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyDoubleWrapper totalCostProperty;
-	public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
+	@JsonIgnore public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyIntegerWrapper marginProperty;
-	public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
+	@JsonProperty("m") public int getMargin() { return marginProperty.get(); }
+	@JsonProperty("m") public void setMargin(int val) { marginProperty.set(val); }
+	@JsonIgnore public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
+
 	protected final DoubleBinding marginDenominatorProperty;
-	@Getter protected final DoubleBinding totalPriceProperty;
-	@Getter protected final DoubleBinding unitCostProperty;
-	@Getter protected final DoubleBinding unitPriceProperty;
-	
-	@Getter protected ObservableList<Conflict> conflicts;
+	@JsonIgnore @Getter protected final DoubleBinding totalPriceProperty;
+	@JsonIgnore @Getter protected final DoubleBinding unitCostProperty;
+	@JsonIgnore @Getter protected final DoubleBinding unitPriceProperty;
 	
 	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity, boolean customEntry)
 	{
 		this.id = id;
 		this.name = name;
 		this.costPerQuantity = costPerQuantity;
-		this.conflicts = FXCollections.observableArrayList();
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
 		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
-//		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 		
 		quantityProperty = new ReadOnlyDoubleWrapper();
 
 		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
-		
-//		quantityOverriddenProperty.addListener((observable, oldValue, newValue) ->
-//		{
-//			quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
-//		});
 		
 		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
 		
@@ -116,13 +110,7 @@ public class RoutingEntry extends ValueStorageRecord implements Conflictable
 			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);;
 			return newEntry;
 		}
-		catch (Exception e) { Log.getLogger().error("Error duplicationg routing entry:\n" + Util.stackTraceArrayToString(e)); }
+		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.stackTraceArrayToString(e)); }
 		return null;
 	}
-
-	@Override
-	public void addConflict(Conflict conflict) { conflicts.add(conflict); }
-
-	@Override
-	public void clearConflicts() { conflicts.clear(); }
 }
