@@ -29,7 +29,9 @@ public class RoutingEntry extends ValueStorageRecord
 	
 	@Getter @Setter protected String id;
 	@JsonProperty("n") @Getter @Setter protected String name;
-	@JsonProperty("cpq") @Getter @Setter protected double costPerQuantity;
+	@JsonIgnore @Getter protected SimpleDoubleProperty costPerQuantityProperty;
+	@JsonProperty("cpq") public double getCostPerQuantity() { return costPerQuantityProperty.get(); }
+	@JsonProperty("cpq") public void setCostPerQuantity(double cost) { costPerQuantityProperty.set(cost); }
 	
 	protected final ReadOnlyBooleanWrapper customEntry;
 	@JsonIgnore public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
@@ -62,7 +64,7 @@ public class RoutingEntry extends ValueStorageRecord
 	{
 		this.id = id;
 		this.name = name;
-		this.costPerQuantity = costPerQuantity;
+		this.costPerQuantityProperty = new SimpleDoubleProperty();
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
@@ -70,10 +72,10 @@ public class RoutingEntry extends ValueStorageRecord
 		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 		
 		quantityProperty = new ReadOnlyDoubleWrapper();
-
 		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
 		
-		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
+		this.costPerQuantityProperty.setValue(costPerQuantity);
+		this.unitCostProperty = quantityProperty.multiply(costPerQuantityProperty);
 		
 		this.totalCostProperty = new ReadOnlyDoubleWrapper();
 		
@@ -104,7 +106,7 @@ public class RoutingEntry extends ValueStorageRecord
 			String json = Mapper.getMapper().writeValueAsString(this);
 			RoutingEntry newEntry = Mapper.getMapper().readValue(json, RoutingEntry.class);
 			if(isCustom != null) newEntry.customEntry.set(isCustom);
-			if(newCostPerQuantity != null) newEntry.costPerQuantity = newCostPerQuantity;
+			if(newCostPerQuantity != null) newEntry.setCostPerQuantity(newCostPerQuantity);
 			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
 			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));
 			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);;

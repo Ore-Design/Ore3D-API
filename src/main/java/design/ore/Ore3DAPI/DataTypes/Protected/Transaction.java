@@ -202,6 +202,7 @@ public class Transaction extends ValueStorageRecord
 		if(duplicate.isPresent()) conflicts.remove(duplicate.get());
 		conflicts.add(conflict);
 	}
+	public void invalidateConflicts() { conflicts.set(conflicts); }
 	protected void removeConflictsForBuild(int uid)
 	{
 		List<Conflict> matching = conflicts.stream().filter(c -> c.getBuildUID() == uid).toList();
