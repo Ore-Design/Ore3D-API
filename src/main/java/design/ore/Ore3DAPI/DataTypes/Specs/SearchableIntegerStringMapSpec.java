@@ -13,9 +13,7 @@ import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.UI.SearchableDropdown;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Control;
@@ -123,7 +121,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 			}
 		});
 		
-		final ObjectProperty<Integer> selectedDropdownItem = new SimpleObjectProperty<Integer>(getValue());
+//		final ObjectProperty<Integer> selectedDropdownItem = new SimpleObjectProperty<Integer>(getValue());
 		
 		if(toBind != null && toBind.size() > 0)
 		{
@@ -147,9 +145,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 			}
 			catch (Exception e) { dropdown.clearSelection(); }
 			
-			dropdown.valueProperty().addListener((obs, oldVal, newVal) -> selectedDropdownItem.setValue(newVal));
-			
-			selectedDropdownItem.addListener((obs, oldVal, newVal) ->
+			dropdown.valueProperty().addListener((obs, oldVal, newVal) ->
 			{
 				if(newVal != null)
 				{
@@ -159,13 +155,10 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 						else Log.getLogger().warn("Non-SearchableFilteredIntegerStringMapSpec passed into SearchableFilteredIntegerStringMapSpec multiselect!");
 					});
 				}
+				Log.getLogger().debug("Dropdown update from multi spec!");
 			});
 		}
-		else
-		{
-			dropdown.valueProperty().bindBidirectional(selectedDropdownItem);
-			selectedDropdownItem.addListener((obs, oldVal, newVal) -> { if(newVal != null) valueProperty.setValue(newVal); });
-		}
+		else { dropdown.valueProperty().bindBidirectional(valueProperty); }
 		
 		HBox input = new HBox(idLabel, dropdown);
 		input.setAlignment(Pos.CENTER_LEFT);
