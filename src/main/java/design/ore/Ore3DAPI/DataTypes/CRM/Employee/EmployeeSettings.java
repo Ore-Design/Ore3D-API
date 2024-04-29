@@ -13,4 +13,5 @@ public class EmployeeSettings
 {
 	boolean displayNewBuildsInTreeMode = false;
 	boolean displayNavigationTree = true;
+	int autosaveInterval = 60;
 }

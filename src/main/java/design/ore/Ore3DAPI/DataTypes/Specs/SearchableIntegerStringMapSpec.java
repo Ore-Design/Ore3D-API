@@ -5,14 +5,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 
-import org.controlsfx.control.SearchableComboBox;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
+import design.ore.Ore3DAPI.UI.SearchableDropdown;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -99,7 +98,7 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 			}
 		};
 		
-		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
+		SearchableDropdown<Integer> dropdown = new SearchableDropdown<>();
 		dropdown.getItems().setAll(matchingMap.keySet());
 		dropdown.setMinHeight(0);
 		// This converter makes the multiselect appear as dash, and converts from integer value to string display
@@ -138,15 +137,15 @@ public class SearchableIntegerStringMapSpec extends Spec<Integer>
 						Integer nextVal = (Integer) toBind.get(x).getValue();
 						if(firstVal != nextVal)
 						{
-							dropdown.getSelectionModel().clearSelection();
+							dropdown.clearSelection();
 							firstVal = null;
 							break;
 						}
-					} catch(Exception e) { dropdown.getSelectionModel().clearSelection(); firstVal = null; }
+					} catch(Exception e) { dropdown.clearSelection(); firstVal = null; }
 				}
 				if(firstVal != null) dropdown.setValue(firstVal);
 			}
-			catch (Exception e) { dropdown.getSelectionModel().clearSelection(); }
+			catch (Exception e) { dropdown.clearSelection(); }
 			
 			dropdown.valueProperty().addListener((obs, oldVal, newVal) -> selectedDropdownItem.setValue(newVal));
 			

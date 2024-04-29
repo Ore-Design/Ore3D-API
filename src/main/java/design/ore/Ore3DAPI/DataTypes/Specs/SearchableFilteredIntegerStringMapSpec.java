@@ -6,20 +6,17 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 
-import org.controlsfx.control.SearchableComboBox;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
+import design.ore.Ore3DAPI.UI.SearchableDropdown;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableBooleanValue;
@@ -118,7 +115,7 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 			}
 		};
 		
-		SearchableComboBox<Integer> dropdown = new SearchableComboBox<>();
+		SearchableDropdown<Integer> dropdown = new SearchableDropdown<>();
 		FilteredList<Integer> list = new FilteredList<>(FXCollections.observableArrayList(matchingMap.keySet()));
 		list.setPredicate(filterPredicate.get());
 		filterPredicate.addListener((obs, oldVal, newVal) ->
@@ -170,15 +167,15 @@ public class SearchableFilteredIntegerStringMapSpec extends Spec<Integer>
 						Integer nextVal = (Integer) toBind.get(x).getValue();
 						if(firstVal != nextVal)
 						{
-							dropdown.getSelectionModel().clearSelection();
+							dropdown.clearSelection();
 							firstVal = null;
 							break;
 						}
-					} catch(Exception e) { dropdown.getSelectionModel().clearSelection(); firstVal = null; }
+					} catch(Exception e) { dropdown.clearSelection(); firstVal = null; }
 				}
 				if(firstVal != null) dropdown.setValue(firstVal);
 			}
-			catch (Exception e) { dropdown.getSelectionModel().clearSelection(); }
+			catch (Exception e) { dropdown.clearSelection(); }
 			
 			dropdown.valueProperty().addListener((obs, oldVal, newVal) -> selectedDropdownItem.setValue(newVal));
 			
