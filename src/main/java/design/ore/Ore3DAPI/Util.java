@@ -85,6 +85,18 @@ public class Util
 	public class Mapper
 	{
 		@Getter protected static ObjectMapper mapper = null;
+		protected static Callable<ObjectMapper> mapperFactory = null;
+		public static ObjectMapper createMapper()
+		{
+			if(mapperFactory != null)
+			{
+				try { return mapperFactory.call(); }
+				catch (Exception e) { Log.getLogger().warn(Util.formatThrowable("Error creating new mapper!", e)); }
+			}
+			else Log.getLogger().warn("Mapper Creator has not yet been registered!");
+			
+			return null;
+		}
 		public static <T> T quickClone(@NonNull T toClone, Class<? extends T> clazz)
 		{
 			try
@@ -152,7 +164,7 @@ public class Util
 	public static TextFormatter<?> getIntegerFormatter()
 	{
 		return new TextFormatter<>((UnaryOperator<TextFormatter.Change>) change ->
-		{ return Pattern.compile("\\d*").matcher(change.getControlNewText()).matches() ? change : null; });
+		{ return Pattern.compile("(\\+|-)?(\\d*)").matcher(change.getControlNewText()).matches() ? change : null; });
 	}
 	
 	public static TextFormatter<?> get0to99IntegerFormatter()
@@ -166,8 +178,8 @@ public class Util
 	public static BOMEntry duplicateBOMWithPricing(Transaction transaction, Build parent, BOMEntry entry, boolean isCustom)
 	{
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
-		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerUnit(), 1, parent.getQuantity().getIntProperty(), isCustom);
-		else return entry.duplicate(1, parent.getQuantity().getIntProperty(), isCustom);
+		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerUnit(), 1, parent.getQuantity(), isCustom);
+		else return entry.duplicate(1, parent.getQuantity(), isCustom);
 	}
 	
 	public static BOMEntry duplicateBOMWithPricing(Transaction transaction, Build parent, BOMEntry entry, BOMEntry originalEntry)
@@ -175,8 +187,8 @@ public class Util
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
 		BOMEntry newEntry = null;
 		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
-			parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
-		else newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity().getIntProperty(),
+			parent.getQuantity(), originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
+		else newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity(),
 			originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
 		
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
@@ -188,9 +200,9 @@ public class Util
 	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, boolean isCustom, Double overriddenQuantity)
 	{
 		Optional<RoutingPricing> pricing = transaction.getPricing().getRoutings().stream().filter(bp -> bp.getId().equals(entry.getId())).findFirst();
-		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity().getIntProperty(),
+		if(pricing.isPresent()) return entry.duplicate(pricing.get().getCostPerMinute(), 1d, parent.getQuantity(),
 			isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
-		else return entry.duplicate(null, 1d, parent.getQuantity().getIntProperty(), isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
+		else return entry.duplicate(null, 1d, parent.getQuantity(), isCustom, entry.getQuantityOverriddenProperty().get() ? entry.getOverridenQuantityProperty().get() : null);
 	}
 	
 	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, RoutingEntry originalEntry)
@@ -198,8 +210,8 @@ public class Util
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
 		RoutingEntry newEntry = null;
 		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
-			parent.getQuantity().getIntProperty(), originalEntry.getCustomEntryProperty().get(), null);
-		else newEntry = entry.duplicate(null, originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity().getIntProperty(),
+			parent.getQuantity(), originalEntry.getCustomEntryProperty().get(), null);
+		else newEntry = entry.duplicate(null, originalEntry.getUnoverriddenQuantityProperty().get(), parent.getQuantity(),
 			originalEntry.getCustomEntryProperty().get(), null);
 		
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());

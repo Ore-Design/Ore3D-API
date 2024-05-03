@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.pf4j.ExtensionPoint;
 
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-
 import design.ore.Ore3DAPI.DataTypes.BuildTreeViewItem;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
@@ -21,7 +19,6 @@ public interface Dataset extends ExtensionPoint
 	TreeItem<BuildTreeViewItem> retrieveNewBuildListViewTree();
 	Map<String, ? extends BOMEntry> retrieveBOM();
 	Map<String, ? extends RoutingEntry> retrieveRoutings();
-	List<NamedType> retrieveBuildSubtypes();
 	void reload();
 	Pane getCreateBOMComponentUI(SimpleObjectProperty<BOMEntry> createdBOMEntry);
 }

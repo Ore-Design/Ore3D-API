@@ -8,13 +8,14 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -33,52 +34,53 @@ public class SearchableDropdown<T> extends TextField
 	public void clearSelection() { searchList.getSelectionModel().clearSelection(); }
 	public SimpleObjectProperty<T> valueProperty() { return valueProperty; }
 	private final ChangeListener<Number> resizeListener = (obs, oldVal, newVal) -> translatePopup();
+	private final EventHandler<? super ScrollEvent> scrollEvent = e -> translatePopup();
 	
 	private final BooleanBinding paneVisibleBinding;
 	
 	@Getter @Setter private StringConverter<T> converter;
 	
-	private final ScrollPane searchPane;
+//	private final ScrollPane searchPane;
 	private final ListView<T> searchList;
 	
 	public SearchableDropdown() { this(FXCollections.observableArrayList()); }
 	
+	private final SearchableDropdown<T> INSTANCE;
+	
 	public SearchableDropdown(ObservableList<T> items)
 	{
 		super();
+		INSTANCE = this;
 		this.items = items;
 		
 		filteredItems = this.items.filtered(item -> true);
+		
 		searchList = new ListView<>(filteredItems);
 		searchList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-		
-		searchPane = new ScrollPane(searchList);
-		searchPane.maxWidthProperty().bind(widthProperty());
-		searchPane.setFitToWidth(true);
-		searchPane.visibleProperty().bind(focusedProperty());
-		searchPane.setMaxHeight(200);
-		searchPane.setMinHeight(USE_PREF_SIZE);
-		searchPane.getStyleClass().add("searchable-dropdown-pane");
-		
-		searchList.prefWidthProperty().bind(searchPane.widthProperty());
+		searchList.prefWidthProperty().bind(widthProperty());
 		searchList.setMaxWidth(USE_PREF_SIZE);
 		searchList.getStyleClass().add("searchable-dropdown-list");
+		searchList.setMaxHeight(300);
 		
 		paneVisibleBinding = focusedProperty().or(searchList.focusedProperty());
-		searchPane.visibleProperty().bind(paneVisibleBinding);
+		searchList.visibleProperty().bind(paneVisibleBinding);
 		
 		valueProperty.addListener((obs, oldVal, newVal) -> { if(newVal != null) setText(converter.toString(newVal)); });
 		
 		textProperty().addListener((obs, oldVal, newVal) ->
 		{
-			this.filteredItems.setPredicate(item ->
+			if(newVal != null && !newVal.equals(""))
 			{
-				String converted = converter.toString(item);
-				return converted != null && newVal != null && converted.toLowerCase().contains(newVal.toLowerCase());
-			});
+				this.filteredItems.setPredicate(item ->
+				{
+					String converted = converter.toString(item);
+					return converted != null && newVal != null && converted.toLowerCase().contains(newVal.toLowerCase());
+				});
+			}
+			else this.filteredItems.setPredicate(item -> true);
 		});
 		
-		setOnKeyPressed(e -> { if(e.getCode() == KeyCode.ESCAPE) searchPane.requestFocus(); });
+		setOnKeyPressed(e -> { if(e.getCode() == KeyCode.ESCAPE) getParent().requestFocus(); });
 		
 		getStyleClass().add("searchable-dropdown");
 		boundsInLocalProperty().addListener((obs, oldVal, newVal) -> translatePopup());
@@ -88,14 +90,14 @@ public class SearchableDropdown<T> extends TextField
 			if(oldVal != null && oldVal.getRoot() instanceof StackPane)
 			{
 				StackPane oldRoot = (StackPane) oldVal.getRoot();
-				oldRoot.getChildren().remove(searchPane);
+				oldRoot.getChildren().remove(searchList);
 				oldRoot.widthProperty().removeListener(resizeListener);
 				oldRoot.heightProperty().removeListener(resizeListener);
 			}
 			if(newVal != null && newVal.getRoot() instanceof StackPane)
 			{
 				StackPane newRoot = (StackPane) newVal.getRoot();
-				newRoot.getChildren().add(searchPane);
+				newRoot.getChildren().add(searchList);
 				newRoot.widthProperty().addListener(resizeListener);
 				newRoot.heightProperty().addListener(resizeListener);
 				
@@ -109,9 +111,11 @@ public class SearchableDropdown<T> extends TextField
 			{
 				if(valueProperty.get() == null) setText("-");
 				else { setText(converter.toString(valueProperty.get())); }
+				getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
 			}
 			else if(newVal)
 			{
+				getScene().addEventFilter(ScrollEvent.ANY, scrollEvent);
 				setText("");
 				translatePopup();
 				searchList.getSelectionModel().select(getValue());
@@ -129,7 +133,7 @@ public class SearchableDropdown<T> extends TextField
 			cell.setOnMouseClicked(e ->
 			{
 				setValue(cell.getItem());
-				searchPane.requestFocus();
+				INSTANCE.getParent().requestFocus();
 			});
 			return cell;
 		});
@@ -138,7 +142,7 @@ public class SearchableDropdown<T> extends TextField
 	private void translatePopup()
 	{
 		Bounds posInScene = localToScene(getBoundsInLocal());
-		searchPane.setTranslateX(posInScene.getMinX());
-		searchPane.setTranslateY(posInScene.getMaxY());
+		searchList.setTranslateX(posInScene.getMinX());
+		searchList.setTranslateY(posInScene.getMaxY());
 	}
 }

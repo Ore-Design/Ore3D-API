@@ -7,93 +7,131 @@ import java.util.concurrent.Callable;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import design.ore.Ore3DAPI.Util;
-import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.ISpecUI;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
-import javafx.beans.property.Property;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableBooleanValue;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.layout.Pane;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(value = {"bound", "name", "bean"}, ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes(value = {
-	@Type(value = BooleanSpec.class, name = "boolspec"),
-	@Type(value = DoubleSpec.class, name = "doublespec"),
-	@Type(value = StringSpec.class, name = "strspec"),
-	@Type(value = PositiveIntSpec.class, name = "posintspec"),
-	@Type(value = EnumSpec.class, name = "enumspec"),
-	@Type(value = IntSpec.class, name = "intspec"),
-	@Type(value = SearchableIntegerStringMapSpec.class, name = "sismspec"),
-	@Type(value = IntegerStringMapSpec.class, name = "ismspec"),
-	@Type(value = LinkedDoubleSpec.class, name = "ldspec"),
-	@Type(value = LargeTextSpec.class, name = "ltspec"),
-})
-
-public abstract class Spec<T>
+public abstract class Spec<T> extends SimpleObjectProperty<T>
 {
-	public Spec() { valueProperty = new SimpleObjectProperty<T>(); }
+	@Getter @JsonIgnore protected final SimpleBooleanProperty readOnlyProperty = new SimpleBooleanProperty(false);
+	@JsonIgnore public boolean isReadOnly() { return readOnlyProperty.get(); }
+	@JsonIgnore public void setReadOnly(boolean readOnly) { readOnlyProperty.set(readOnly); }
 	
-	public Spec(Build parent, String id, Property<T> value, ObservableBooleanValue readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty, String uniqueBehaviorNotifier)
+	@Getter @JsonIgnore protected final SimpleBooleanProperty countsAsMatchProperty = new SimpleBooleanProperty(false);
+	@JsonIgnore public boolean countsAsMatch() { return countsAsMatchProperty.get(); }
+	@JsonIgnore public void setCountsAsMatch(boolean countsAsMatch) { countsAsMatchProperty.set(countsAsMatch); }
+	
+	public Spec() { this(null); }
+	
+	public Spec(Build parent) { parentBuild = parent; }
+	
+	public Spec(Build parent, String id, T initialValue, boolean readOnly, String section, boolean countsAsMatch, Callable<T> calculateOnDirty, String uniqueBehaviorNotifier)
 	{
 		this.id = id;
-		this.valueProperty = value;
-		this.valueProperty.addListener((obs, oldVal, newVal) -> runListeners(obs, oldVal, newVal));
-		this.readOnlyProperty.bind(readOnly);
+		setValue(initialValue);
+		this.countsAsMatchProperty.set(countsAsMatch);
+		this.readOnlyProperty.set(readOnly);
 		this.section = section;
-		this.countsAsMatch = countsAsMatch;
 		this.calculateOnDirty = calculateOnDirty;
-		this.parent = parent;
+		this.parentBuild = parent;
 		this.uniqueBehaviorNotifierProperty.setValue(uniqueBehaviorNotifier);
+		
+		addListener((obs, oldVal, newVal) -> linkedSpecs.forEach(s -> { if(s.linkIsActive()) s.setValue(newVal); }));
+		previousUIProperty.addListener((obs, oldVal, newVal) ->
+		{
+			if(oldVal != null)
+			{
+				Parent uiParent = oldVal.getUINode().getParent();
+				if(uiParent instanceof VBox) ((VBox) uiParent).getChildren().remove(oldVal.getUINode());
+				oldVal.unbindUI();
+			}
+		});
 	}
+	
+	// These overrides allow us to change the JSON key for these values
+	@Override
+	@JsonProperty("val")
+	public T getValue() { return super.getValue(); }
 
-	@Getter protected final SimpleBooleanProperty readOnlyProperty = new SimpleBooleanProperty(false);
-	@Setter protected boolean countsAsMatch;
-	public boolean countsAsMatch() { return countsAsMatch; }
-	@Getter @Setter protected String section;
-	@Getter @Setter protected String id;
-	@Getter protected final Property<T> valueProperty; // TODO: Refactor for read only
+	@Override
+	@JsonProperty("val")
+	public void setValue(T val) { super.setValue(val); }
+	
+	// TODO: Link spec UI for all specs other than DoubleSpec
+	protected final ObservableList<Spec<T>> linkedSpecs = FXCollections.observableArrayList();
+	public void link(Spec<T> toLink)
+	{
+		linkedSpecs.add(toLink);
+		toLink.linkFromOtherSpec(this);
+	}
+	protected void linkFromOtherSpec(Spec<T> toLink) { linkedSpecs.add(toLink); }
+	@Getter @JsonIgnore private final SimpleBooleanProperty linkIsActiveProperty = new SimpleBooleanProperty(false);
+	@JsonIgnore public boolean linkIsActive() { return linkIsActiveProperty.get(); }
+	@JsonIgnore public void setLinkIsActive(boolean link) { linkIsActiveProperty.set(link); }
+	public BooleanBinding isLinked() { return Bindings.createBooleanBinding(() -> linkedSpecs.size() > 0, linkedSpecs); }
+	
+	// TODO: Figure out how/if these can be final
+	@JsonIgnore @Getter @Setter protected String section;
+	@JsonIgnore @Getter @Setter protected String id;
+	
 	@JsonIgnore @Getter @Setter protected Callable<T> calculateOnDirty;
-	@JsonIgnore List<ChangeListener<? super T>> listeners = new ArrayList<>();
-	@JsonIgnore protected Build parent;
+	@JsonIgnore @Getter protected final Build parentBuild;
+	
 	@JsonIgnore @Getter protected final SimpleStringProperty uniqueBehaviorNotifierProperty = new SimpleStringProperty();
 	@JsonIgnore @Getter protected final SimpleBooleanProperty holdCalculateTillCompleteProperty = new SimpleBooleanProperty(false);
-
-	public void setValue(T val) { valueProperty.setValue(val); }
-	public T getValue() { return valueProperty.getValue(); }
-	public void addListener(ChangeListener<? super T> listener) { listeners.add(listener); }
-	public void removeListener(ChangeListener<? super T> listener) { listeners.remove(listener); }
-	public void clearListeners() { listeners.clear(); }
-	protected void runListeners(ObservableValue<? extends T> obs, T oldVal, T newVal) { for(ChangeListener<? super T> listener : listeners) { listener.changed(obs, oldVal, newVal); } }
-	public void bind(ObservableValue<? extends T> obs) { valueProperty.bind(obs); }
-	public void bindBidirectional(Property<T> other) { valueProperty.bindBidirectional(other); }
-	public boolean isReadOnly() { return readOnlyProperty.get(); }
 	
-	public void setPropertyToCallable()
+	@JsonIgnore public void setPropertyToCallable()
 	{
 		if(calculateOnDirty != null)
 		{
 			try
 			{
 				T calledValue = calculateOnDirty.call();
-				if(calledValue != null) valueProperty.setValue(calledValue);
+				if(calledValue != null) setValue(calledValue);
 			}
-			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!"); Log.getLogger().debug(Util.stackTraceArrayToString(e)); }
+			catch (Exception e) { Util.Log.getLogger().warn(Util.formatThrowable("Error assigning value from Callable to property!", e)); }
 		}
 	}
 	
-	public abstract Pane getUI(List<Spec<?>> props, String popoutID);
+	public abstract ISpecUI<T> generateUI();
+	private SimpleObjectProperty<ISpecUI<T>> previousUIProperty = new SimpleObjectProperty<>();
+	public void clearPreviousUI() { previousUIProperty.set(null); }
+	
+	@SuppressWarnings("unchecked") // We check the spec conversion in the for loop/cleanedSpecs check
+	@JsonIgnore public final Node getUI(List<Spec<?>> props, String popoutID)
+	{
+		ISpecUI<T> ui = generateUI();
+
+		if(props == null || props.size() == 0) { ui.rebind(null, popoutID); }
+		else
+		{
+			// Filter out specs of differing types
+			List<Spec<T>> cleanedSpecs = new ArrayList<>();
+			for(Spec<?> s : props) { if(s.getClass().equals(this.getClass())) cleanedSpecs.add((Spec<T>) s); }
+			ui.rebind((List<Spec<T>>) cleanedSpecs, popoutID);
+		}
+		
+		previousUIProperty.set(ui);
+		return ui.getUINode();
+	}
 	
 	public boolean matches(Spec<?> spec)
 	{

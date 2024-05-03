@@ -3,7 +3,6 @@ package design.ore.Ore3DAPI.DataTypes.Protected;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -49,7 +48,7 @@ public class BuildPrice
 			.then(overriddenUnitPriceProperty).otherwise(parent.getUnitPrice()));
 		
 		unoverriddenTotalPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
-			.then(overriddenUnitPriceProperty.multiply(((PositiveIntSpec) parent.getQuantity()).getIntProperty()))
+			.then(overriddenUnitPriceProperty.multiply(parent.getQuantity()))
 			.otherwise(parent.getTotalPrice()));
 		
 		totalPriceProperty.bind(

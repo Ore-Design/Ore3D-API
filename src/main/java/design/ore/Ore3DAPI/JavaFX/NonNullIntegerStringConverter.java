@@ -2,11 +2,11 @@ package design.ore.Ore3DAPI.JavaFX;
 
 import javafx.util.StringConverter;
 
-public class NonNullIntegerStringConverter extends StringConverter<Integer>
+public class NonNullIntegerStringConverter extends StringConverter<Number>
 {
     public NonNullIntegerStringConverter() {}
 
-    @Override public Integer fromString(String value)
+    @Override public Number fromString(String value)
     {
         if (value == null) return 0;
 
@@ -17,10 +17,10 @@ public class NonNullIntegerStringConverter extends StringConverter<Integer>
         return Integer.valueOf(value);
     }
 
-    @Override public String toString(Integer value)
+    @Override public String toString(Number value)
     {
         if (value == null) return "";
         
-        return value.toString();
+        return value.intValue() + "";
     }
 }

@@ -1,12 +1,15 @@
 package design.ore.Ore3DAPI.UI;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 
 public class ToggleIconButton extends Button
 {
-	public ToggleIconButton(ImageView iconToggledTrue, ImageView iconToggledFalse, boolean bindHeight, BooleanProperty binding)
+	final SimpleBooleanProperty toggledProperty = new SimpleBooleanProperty();
+	
+	public ToggleIconButton(ImageView iconToggledTrue, ImageView iconToggledFalse, boolean bindHeight)
 	{
 		super();
 		
@@ -18,11 +21,15 @@ public class ToggleIconButton extends Button
 		this.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		this.setMinSize(10, 10);
 		
-		this.setGraphic(binding.get() ? iconToggledTrue : iconToggledFalse);
+		this.setGraphic(toggledProperty.get() ? iconToggledTrue : iconToggledFalse);
 		this.getStyleClass().add("icon-button");
+		this.setOnAction(e -> toggledProperty.setValue(!toggledProperty.getValue()));
 		
-		binding.addListener((obs, oldVal, newVal) -> this.setGraphic(newVal ? iconToggledTrue : iconToggledFalse));
+		toggledProperty.addListener((obs, oldVal, newVal) -> this.setGraphic(newVal ? iconToggledTrue : iconToggledFalse));
 	}
+	
+	public void bind(BooleanProperty binding) { toggledProperty.bindBidirectional(binding); }
+	public void unbind(BooleanProperty binding) { toggledProperty.unbindBidirectional(binding); }
 	
 	private void setSizeBindings(ImageView icon, boolean bindHeight)
 	{

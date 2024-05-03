@@ -22,6 +22,8 @@ public class BuildDataSerialization
 		
 		public static class Serializer extends StdSerializer<BuildPrice>
 		{
+			private static final long serialVersionUID = 1L;
+
 			protected Serializer() { this(null); }
 			protected Serializer(Class<BuildPrice> t) { super(t); }
 		
@@ -37,6 +39,8 @@ public class BuildDataSerialization
 		
 		public static class Deserializer extends StdDeserializer<BuildPrice>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<BuildPrice> t) { super(t); }
 	

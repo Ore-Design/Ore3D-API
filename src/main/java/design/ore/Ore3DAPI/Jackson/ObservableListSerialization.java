@@ -30,6 +30,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<BOMEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<BOMEntry>> t) { super(t); }
 		
@@ -54,6 +56,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<BOMEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<BOMEntry>> t) { super(t); }
 	
@@ -78,6 +82,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<RoutingEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<RoutingEntry>> t) { super(t); }
 		
@@ -102,6 +108,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<RoutingEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<RoutingEntry>> t) { super(t); }
 	
@@ -126,6 +134,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<MiscEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<MiscEntry>> t) { super(t); }
 		
@@ -150,6 +160,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<MiscEntry>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<MiscEntry>> t) { super(t); }
 	
@@ -174,6 +186,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Build>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<Build>> t) { super(t); }
 		
@@ -184,20 +198,12 @@ public class ObservableListSerialization
 				for(Build b : value) { gen.writeObject(b); }
 				gen.writeEndArray();
 			}
-			
-//			@Override
-//			public void serializeWithType(ObservableList<Build> value, JsonGenerator gen, SerializerProvider provider, TypeSerializer typeSer) throws IOException
-//			{
-//				WritableTypeId typeId = typeSer.typeId(value, JsonToken.START_OBJECT);
-//				typeSer.writeTypePrefix(gen, typeId);
-//				gen.writeFieldName("buildobslist");
-//				serialize(value, gen, provider);
-//				typeSer.writeTypeSuffix(gen, typeId);
-//			}
 		}
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<Build>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<Build>> t) { super(t); }
 	
@@ -221,6 +227,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Conflict>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<Conflict>> t) { super(t); }
 		
@@ -245,6 +253,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<Conflict>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<Conflict>> t) { super(t); }
 	
@@ -269,6 +279,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Tag>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<Tag>> t) { super(t); }
 		
@@ -293,6 +305,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<Tag>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<Tag>> t) { super(t); }
 	
@@ -317,6 +331,8 @@ public class ObservableListSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableList<Integer>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableList<Integer>> t) { super(t); }
 		
@@ -341,6 +357,8 @@ public class ObservableListSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableList<Integer>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableList<Integer>> t) { super(t); }
 	

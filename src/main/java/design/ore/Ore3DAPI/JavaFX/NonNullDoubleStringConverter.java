@@ -24,6 +24,6 @@ public class NonNullDoubleStringConverter extends StringConverter<Number>
     {
         if (value == null) return "";
         
-        return new BigDecimal(value.doubleValue()).setScale(4, RoundingMode.HALF_UP).doubleValue() + "";
+        return new BigDecimal(value.doubleValue()).setScale(2, RoundingMode.HALF_UP).doubleValue() + "";
     }
 }

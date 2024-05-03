@@ -27,6 +27,8 @@ public class PropertySerialization
 	{
 		public static class Serializer extends StdSerializer<StringProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<StringProperty> t) { super(t); }
 		
@@ -48,6 +50,8 @@ public class PropertySerialization
 		
 		public static class Deserializer extends StdDeserializer<StringProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<StringProperty> t) { super(t); }
 	
@@ -71,6 +75,8 @@ public class PropertySerialization
 	{
 		public static class Serializer extends StdSerializer<ReadOnlyStringWrapper>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ReadOnlyStringWrapper> t) { super(t); }
 		
@@ -92,6 +98,8 @@ public class PropertySerialization
 		
 		public static class Deserializer extends StdDeserializer<ReadOnlyStringWrapper>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ReadOnlyStringWrapper> t) { super(t); }
 	
@@ -116,6 +124,8 @@ public class PropertySerialization
 	{
 		public static class Serializer extends StdSerializer<BooleanProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<BooleanProperty> t) { super(t); }
 		
@@ -137,6 +147,8 @@ public class PropertySerialization
 		
 		public static class Deserializer extends StdDeserializer<BooleanProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<BooleanProperty> t) { super(t); }
 	
@@ -161,6 +173,8 @@ public class PropertySerialization
 	{
 		public static class Serializer extends StdSerializer<DoubleProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<DoubleProperty> t) { super(t); }
 		
@@ -182,6 +196,8 @@ public class PropertySerialization
 		
 		public static class Deserializer extends StdDeserializer<DoubleProperty>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<DoubleProperty> t) { super(t); }
 	

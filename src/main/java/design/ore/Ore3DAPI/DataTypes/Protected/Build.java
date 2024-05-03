@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
@@ -29,7 +30,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Protected.Transaction.BuildChangeType;
-import design.ore.Ore3DAPI.DataTypes.Specs.PositiveIntSpec;
+import design.ore.Ore3DAPI.DataTypes.Specs.IntegerSpec;
 import design.ore.Ore3DAPI.DataTypes.Specs.Spec;
 import design.ore.Ore3DAPI.DataTypes.Specs.StringSpec;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.BuildList;
@@ -83,7 +84,7 @@ public abstract class Build extends ValueStorageRecord
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
 	public void regenerateBuildUUID() { buildUUID = new Random().nextInt(111111, 1000000); }
 	
-	@JsonMerge @Getter protected PositiveIntSpec quantity = new PositiveIntSpec(this, "Quantity", 1, false, "Overview", false);
+	@JsonMerge @Getter protected IntegerSpec quantity = new IntegerSpec(this, "Quantity", 1, false, "Overview", false, true);
 	@JsonMerge @Getter protected StringSpec workOrder = new StringSpec(this, "Work Order", "", false, null, false);
 
 	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
@@ -131,10 +132,10 @@ public abstract class Build extends ValueStorageRecord
 	@JsonIgnore @Getter protected BooleanBinding descriptionIsOverridenBinding = overridenDescriptionProperty.isNotEqualTo("").and(overridenDescriptionProperty.isNotEqualTo(unoverridenDescriptionProperty));
 	@JsonIgnore @Getter protected StringBinding descriptionBinding = Bindings.when(descriptionIsOverridenBinding).then(overridenDescriptionProperty).otherwise(unoverridenDescriptionProperty);
 	
-	@JsonIgnore protected ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
+	@JsonIgnore protected final ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
 	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
 	
-	@JsonIgnore @Getter protected BooleanBinding hasGeneratedWorkOrderBinding = workOrder.getProperty().isNotEqualTo("")
+	@JsonIgnore @Getter protected BooleanBinding hasGeneratedWorkOrderBinding = workOrder.isNotEqualTo("")
 			.or(Bindings.createBooleanBinding(() -> parentBuildProperty.getValue() != null ? parentBuildProperty.getValue().getHasGeneratedWorkOrderBinding().get() : false, parentBuildProperty));
 	
 	@JsonIgnore ReadOnlyBooleanWrapper buildHasConflicts = new ReadOnlyBooleanWrapper(false);
@@ -204,6 +205,8 @@ public abstract class Build extends ValueStorageRecord
 	
 	public Build()
 	{
+		Mapper.getMapper().registerSubtypes(this.getClass());
+		
 		this.price = new BuildPrice(this);
 		
 		childBuilds.addListener((ListChangeListener.Change<? extends Build> c) ->
@@ -258,6 +261,12 @@ public abstract class Build extends ValueStorageRecord
 				}
 				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
 			}
+		});
+		
+		quantity.setCalculateOnDirty(() ->
+		{
+			if(quantity.getValue() <= 0) return 1;
+			else return null;
 		});
 		
 		specs.addAll(quantity, workOrder);
@@ -507,7 +516,7 @@ public abstract class Build extends ValueStorageRecord
 	
 	protected DoubleBinding getTotalPrice()
 	{
-		DoubleBinding binding = getUnitPrice().multiply(this.quantity.getNumberProperty());
+		DoubleBinding binding = getUnitPrice().multiply(quantity);
 		
 		for(BOMEntry bomEntry : bom)
 		{
@@ -544,6 +553,13 @@ public abstract class Build extends ValueStorageRecord
 		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
 			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents())) catalogPrice.set(catPrice);
 		else catalogPrice.set(-1);
+	}
+	
+	public void forceResetCatalog()
+	{
+		catalogPrice.set(-1);
+		catalogPrice.set(1);
+		runCatalogDetection();
 	}
 	
 	@Override

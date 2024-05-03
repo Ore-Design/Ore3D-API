@@ -63,7 +63,11 @@ public abstract class ValueStorageRecord
 			if(entry.getKey() != null && !entry.getKey().equals("") && entry.getValue() != null && entry.getValue().getValue() != null && !entry.getValue().getValue().equals(""))
 			{
 				try { values.put(entry.getKey(), Mapper.getMapper().readValue(entry.getValue().getValue(), JsonNode.class)); }
-				catch (Exception e) { Log.getLogger().warn(Util.formatThrowable("Error serializing stored value! Skipping!", e)); }
+				catch (Exception e)
+				{
+					try { values.put(entry.getKey(), Mapper.getMapper().readValue("\"" + entry.getValue().getValue() + "\"", JsonNode.class)); }
+					catch (Exception ex) { Log.getLogger().warn(Util.formatThrowable("Error serializing stored value from class type '" + getClass().toString() + "'! Skipping!", e)); }
+				}
 			}
 			else Log.getLogger().warn("Stored value with key " + entry.getKey() + " has null/empty data! Skipping...");
 		}

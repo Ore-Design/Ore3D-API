@@ -25,6 +25,8 @@ public class ObservableSetSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableSet<Tag>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableSet<Tag>> t) { super(t); }
 		
@@ -47,6 +49,8 @@ public class ObservableSetSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableSet<Tag>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableSet<Tag>> t) { super(t); }
 	
@@ -65,6 +69,8 @@ public class ObservableSetSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableSet<Integer>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableSet<Integer>> t) { super(t); }
 		
@@ -87,6 +93,8 @@ public class ObservableSetSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableSet<Integer>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableSet<Integer>> t) { super(t); }
 	
@@ -105,6 +113,8 @@ public class ObservableSetSerialization
 	{
 		public static class Serializer extends StdSerializer<ObservableSet<String>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			protected Serializer() { this(null); }
 			protected Serializer(Class<ObservableSet<String>> t) { super(t); }
 		
@@ -127,6 +137,8 @@ public class ObservableSetSerialization
 		
 		public static class Deserializer extends StdDeserializer<ObservableSet<String>>
 		{
+			private static final long serialVersionUID = 1L;
+			
 			public Deserializer() { this(null); }
 			protected Deserializer(Class<ObservableSet<String>> t) { super(t); }
 	
