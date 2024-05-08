@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
@@ -109,7 +110,8 @@ public class RoutingEntry extends ValueStorageRecord
 			if(newCostPerQuantity != null) newEntry.setCostPerQuantity(newCostPerQuantity);
 			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
 			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));
-			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);;
+			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);
+			Registry.handleRoutingDuplicate(newEntry);
 			return newEntry;
 		}
 		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.stackTraceArrayToString(e)); }

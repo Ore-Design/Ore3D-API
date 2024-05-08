@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
@@ -121,42 +122,12 @@ public class BOMEntry extends ValueStorageRecord
 	{
 		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity);
 		newEntry.putStoredValues(getStoredValues());
+		Registry.handleBOMDuplicate(newEntry);
 		return newEntry;
 	}
-
-	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom)
-	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
-		newEntry.putStoredValues(getStoredValues());
-		return newEntry;
-	}
-
-	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom, boolean ignoreParentQuantity)
-	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parentQuantity);
-		newEntry.putStoredValues(getStoredValues());
-		return newEntry;
-	}
-
-	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom)
-	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
-		newEntry.putStoredValues(getStoredValues());
-		return newEntry;
-	}
-
-	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity)
-	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
-		newEntry.putStoredValues(getStoredValues());
-		return newEntry;
-	}
-	
-	public BOMEntry duplicate(ObservableNumberValue parentQuantity)
-	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, costPerQuantity, customEntry.get(), unoverriddenQuantityProperty.get(),
-			unoverriddenMarginProperty.get(), ignoreParentQuantityProperty.get(), parentQuantity);
-		newEntry.putStoredValues(getStoredValues());
-		return newEntry;
-	}
+	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom) { return duplicate(newCostPerQuantity, newQuantity, parentQuantity, isCustom, getIgnoreParentQuantity()); }
+	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom, boolean ignoreParentQuantity) { return duplicate(getCostPerQuantity(), newQuantity, parentQuantity, isCustom, ignoreParentQuantity); }
+	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom) { return duplicate(newQuantity, parentQuantity, isCustom, getIgnoreParentQuantity()); }
+	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity) { return duplicate(newQuantity, parentQuantity, isCustomEntry()); }
+	public BOMEntry duplicate(ObservableNumberValue parentQuantity) { return duplicate(getQuantity(), parentQuantity); }
 }

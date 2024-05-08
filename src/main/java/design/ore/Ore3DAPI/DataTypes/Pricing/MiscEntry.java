@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
@@ -50,6 +51,7 @@ public class MiscEntry extends ValueStorageRecord
 			String json = Mapper.getMapper().writeValueAsString(this);
 			newEntry = Mapper.getMapper().readValue(json, MiscEntry.class);
 			newEntry.totalPriceProperty = newEntry.unitPriceProperty.multiply(newParentQuantity);
+			Registry.handleMiscDuplicate(newEntry);
 		}
 		catch (JsonProcessingException e) 
 		{

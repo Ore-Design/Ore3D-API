@@ -347,6 +347,7 @@ public abstract class Build extends ValueStorageRecord
 		
 		duplicate.regenerateBuildUUID();
 		duplicate.workOrder.setValue("");
+		Registry.handleBuildDuplicate(duplicate);
 		
 		return duplicate;
 	}

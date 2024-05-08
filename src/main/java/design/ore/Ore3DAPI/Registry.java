@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,7 +17,9 @@ import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
+import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
+import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
 import lombok.Getter;
 import lombok.Setter;
@@ -132,4 +135,41 @@ public class Registry
 			}
 		}
 	}
+	
+	private static Map<String, Consumer<Build>> registeredBuildDuplicateHandlers = new HashMap<>();
+	public static void registerBuildDuplicateHandler(String handlerID, Consumer<Build> handler)
+	{
+		if(registeredBuildDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("Build Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
+		registeredBuildDuplicateHandlers.put(handlerID, handler);
+	}
+	public static void handleBuildDuplicate(Build build) { handleBuildDuplicateRecursive(build); }
+	private static void handleBuildDuplicateRecursive(Build build)
+	{
+		registeredBuildDuplicateHandlers.values().forEach(handler -> handler.accept(build));
+		for(Build cb : build.getChildBuilds()) handleBuildDuplicateRecursive(cb);
+	}
+	
+	private static Map<String, Consumer<BOMEntry>> registeredBOMDuplicateHandlers = new HashMap<>();
+	public static void registerBOMDuplicateHandler(String handlerID, Consumer<BOMEntry> handler)
+	{
+		if(registeredBOMDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("BOMEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
+		registeredBOMDuplicateHandlers.put(handlerID, handler);
+	}
+	public static void handleBOMDuplicate(BOMEntry entry) { registeredBOMDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
+	
+	private static Map<String, Consumer<RoutingEntry>> registeredRoutingDuplicateHandlers = new HashMap<>();
+	public static void registerRoutingDuplicateHandler(String handlerID, Consumer<RoutingEntry> handler)
+	{
+		if(registeredRoutingDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("RoutingEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
+		registeredRoutingDuplicateHandlers.put(handlerID, handler);
+	}
+	public static void handleRoutingDuplicate(RoutingEntry entry) { registeredRoutingDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
+	
+	private static Map<String, Consumer<MiscEntry>> registeredMiscDuplicateHandlers = new HashMap<>();
+	public static void registerMiscDuplicateHandler(String handlerID, Consumer<MiscEntry> handler)
+	{
+		if(registeredMiscDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("MiscEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
+		registeredMiscDuplicateHandlers.put(handlerID, handler);
+	}
+	public static void handleMiscDuplicate(MiscEntry entry) { registeredMiscDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
 }
