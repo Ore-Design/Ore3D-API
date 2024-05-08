@@ -28,7 +28,7 @@ public class MapSpec<T, V> extends Spec<T>
 		
 		if(map.getValue() != null && map.getValue().size() > 0)
 		{
-			if(map.getValue().containsKey(initialValue)) setValue(initialValue);
+			if(map.getValue().containsKey(initialValue) || initialValue == null) setValue(initialValue);
 			else setValue(map.getValue().keySet().iterator().next());
 		}
 		
@@ -57,7 +57,7 @@ public class MapSpec<T, V> extends Spec<T>
 	public void set(T val)
 	{
 		if(map.getValue() == null || map.getValue().size() <= 0) { /*Log.getLogger().warn("Map has not yet been initialized! Wait to initialize map before setting a value!");*/ }
-		else if(map.getValue().containsKey(val)) super.set(val);
+		else if(map.getValue().containsKey(val) || val == null) super.set(val);
 		else throw new IllegalArgumentException("Map for spec " + id + " does not contain key " + val + "! Options are " + map.getValue().keySet() + ".");
 	}
 
