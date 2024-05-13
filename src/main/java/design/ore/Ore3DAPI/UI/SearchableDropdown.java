@@ -65,7 +65,11 @@ public class SearchableDropdown<T> extends TextField
 		paneVisibleBinding = focusedProperty().or(searchList.focusedProperty());
 		searchList.visibleProperty().bind(paneVisibleBinding);
 		
-		valueProperty.addListener((obs, oldVal, newVal) -> { if(newVal != null) setText(converter.toString(newVal)); });
+		valueProperty.addListener((obs, oldVal, newVal) ->
+		{
+			if(newVal != null) setText(converter.toString(newVal));
+			else setText("-");
+		});
 		
 		textProperty().addListener((obs, oldVal, newVal) ->
 		{

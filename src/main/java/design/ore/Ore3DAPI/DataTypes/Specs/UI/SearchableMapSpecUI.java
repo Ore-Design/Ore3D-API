@@ -56,11 +56,13 @@ public class SearchableMapSpecUI<T, V> extends HBox implements ISpecUI<T>
 				{
 					setText("");
 					setDisable(true);
+					setTooltip(null);
 				}
 				else
 				{
 					setText(parentSpec.getMap().get().get(item).toString());
 					setDisable(false);
+					setTooltip(new Tooltip(parentSpec.getMap().get().get(item).toString()));
 				}
 			}
 		});

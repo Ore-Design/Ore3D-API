@@ -297,7 +297,10 @@ public class Util
 		
 		private static void showNotification(Stage owner, String title, String message, double seconds)
 		{
-			Notifications.create().threshold(3, null).title(title).text(message).hideAfter(Duration.seconds(seconds))
+			Notifications thresholdNotif = Notifications.create().title("Multiple Changes").text("Multiple changes affected!").hideAfter(Duration.seconds(5))
+				.owner(owner).position(Pos.TOP_RIGHT).styleClass("notification");
+			
+			Notifications.create().threshold(3, thresholdNotif).title(title).text(message).hideAfter(Duration.seconds(seconds))
 				.owner(owner).position(Pos.TOP_RIGHT).styleClass("notification").show();
 		}
 		

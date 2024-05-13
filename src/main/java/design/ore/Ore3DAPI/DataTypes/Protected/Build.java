@@ -365,7 +365,7 @@ public abstract class Build extends ValueStorageRecord
 	
 	public boolean matches(Build toMatch)
 	{
-		if(this == toMatch) return true;
+		if(this.equals(toMatch)) return true;
 		
 		if(!this.getClass().equals(toMatch.getClass())) return false;
 		
@@ -552,8 +552,10 @@ public abstract class Build extends ValueStorageRecord
 		boolean childrenHaveNonCatalog = getChildBuilds().stream().anyMatch(cb -> !cb.isCatalog.get());
 		
 		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
-			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents())) catalogPrice.set(catPrice);
-		else catalogPrice.set(-1);
+			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents() || childBuilds.size() == 0))
+		{ catalogPrice.set(catPrice); }
+		else
+		{ catalogPrice.set(-1); }
 	}
 	
 	public void forceResetCatalog()
