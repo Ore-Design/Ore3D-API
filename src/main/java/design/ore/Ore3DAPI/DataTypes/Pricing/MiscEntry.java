@@ -11,6 +11,8 @@ import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableNumberValue;
@@ -26,22 +28,26 @@ public class MiscEntry extends ValueStorageRecord
 	@JsonProperty("c") public double getPrice() { return priceProperty.get(); }
 	@JsonProperty("c") public void setPrice(double val) { priceProperty.set(val); }
 
-	@Getter protected final SimpleDoubleProperty quantityProperty;
+	@JsonIgnore @Getter protected final SimpleDoubleProperty quantityProperty;
 	@JsonProperty("q") public double getQuantity() { return quantityProperty.get(); }
 	@JsonProperty("q") public void setQuantity(double val) { quantityProperty.set(val); }
 	
-	@JsonIgnore @Getter protected DoubleBinding totalPriceProperty;
+	@JsonIgnore protected ReadOnlyDoubleWrapper totalPriceProperty = new ReadOnlyDoubleWrapper();
+	@JsonIgnore public ReadOnlyDoubleProperty getTotalPriceProperty() { return totalPriceProperty.getReadOnlyProperty(); }
 	@JsonIgnore @Getter protected final DoubleBinding unitPriceProperty;
-	
+
+	public MiscEntry() { this("", 0, 1, Util.zeroDoubleBinding()); }
 	public MiscEntry(String name, double cost, double quantity, ObservableNumberValue parentQuantity)
 	{
 		nameProperty = new SimpleStringProperty(name);
 		priceProperty = new SimpleDoubleProperty(cost);
 		quantityProperty = new SimpleDoubleProperty(quantity);
-		
 		unitPriceProperty = quantityProperty.multiply(priceProperty);
-		totalPriceProperty = unitPriceProperty.multiply(parentQuantity);
+		
+		totalPriceProperty.bind(unitPriceProperty.multiply(parentQuantity));
 	}
+	
+	public void rebind(ObservableNumberValue parentQuantity) { totalPriceProperty.bind(unitPriceProperty.multiply(parentQuantity)); }
 
 	public MiscEntry duplicate(ObservableNumberValue newParentQuantity)
 	{
@@ -50,7 +56,7 @@ public class MiscEntry extends ValueStorageRecord
 		{
 			String json = Mapper.getMapper().writeValueAsString(this);
 			newEntry = Mapper.getMapper().readValue(json, MiscEntry.class);
-			newEntry.totalPriceProperty = newEntry.unitPriceProperty.multiply(newParentQuantity);
+			newEntry.rebind(newParentQuantity);
 			Registry.handleMiscDuplicate(newEntry);
 		}
 		catch (JsonProcessingException e) 

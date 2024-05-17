@@ -242,6 +242,14 @@ public abstract class Build extends ValueStorageRecord
 			}
 		});
 		
+		misc.addListener((ListChangeListener.Change<? extends MiscEntry> c) ->
+		{
+			while(c.next())
+			{
+				for(MiscEntry me : c.getAddedSubList()) { me.rebind(quantity); }
+			}
+		});
+		
 		buildIsDirty.addListener((obs, oldVal, newVal) ->
 		{
 			// Refresh must be called AFTER dirty listeners to avoid mismatch data

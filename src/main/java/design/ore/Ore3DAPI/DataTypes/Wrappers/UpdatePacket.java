@@ -6,10 +6,12 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.DataTypes.SaveTask;
 import design.ore.Ore3DAPI.DataTypes.Tuple;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -39,21 +41,32 @@ public class UpdatePacket
 		
 		totalProgressBinding = progressBinding.divide(maxProgressProperty);
 		
-		isCompleteBinding = totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0));
+		cancelWrapper.addListener((obs, oldVal, newVal) ->
+		{
+			if(newVal != null && newVal)
+			{
+				isCompleteWrapper.unbind();
+				isCompleteWrapper.setValue(true);
+			}
+		});
 		
-		this.updateTasks.addListener((ListChangeListener.Change<? extends Tuple<String, String, Task<?>>> c) ->
+		isCompleteWrapper.bind(totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0)));
+		
+		this.updateTasks.addListener((ListChangeListener.Change<? extends Tuple<String, String, SaveTask<?>>> c) ->
 		{
 			while(c.next())
 			{
-				for(Tuple<String, String, Task<?>> added : c.getAddedSubList())
+				for(Tuple<String, String, SaveTask<?>> added : c.getAddedSubList())
 				{
 					Task<?> addedTask = added.getThird();
+					addedTask.setOnFailed(e -> cancelWrapper.setValue(true));
+					
 					if(progressBinding == null) progressBinding = Bindings.createDoubleBinding(() ->
 						addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty());
 					else progressBinding = progressBinding.add(Bindings.createDoubleBinding(() ->
 						addedTask.progressProperty().get() < 0 ? 0.0 : addedTask.progressProperty().get(), addedTask.progressProperty()));
 				}
-				for(Tuple<String, String, Task<?>> removed : c.getRemoved())
+				for(Tuple<String, String, SaveTask<?>> removed : c.getRemoved())
 				{
 					Task<?> removedTask = removed.getThird();
 					if(progressBinding != null) progressBinding = progressBinding.subtract(removedTask.progressProperty());
@@ -61,7 +74,7 @@ public class UpdatePacket
 				
 				totalProgressBinding = progressBinding.divide(maxProgressProperty);
 				
-				isCompleteBinding = totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0));
+				isCompleteWrapper.bind(totalProgressBinding.greaterThanOrEqualTo(1.0).and(maxProgressProperty.greaterThan(0)));
 			}
 		});
 	}
@@ -69,13 +82,16 @@ public class UpdatePacket
 	@Getter String title;
 	boolean runSimultaneaously;
 	public boolean canRunSimultaneaously() { return runSimultaneaously; }
-	@Getter ObservableList<Tuple<String, String, Task<?>>> updateTasks;
+	@Getter ObservableList<Tuple<String, String, SaveTask<?>>> updateTasks;
 	@Getter DoubleBinding totalProgressBinding;
 	DoubleBinding progressBinding; 
 	ReadOnlyDoubleWrapper maxProgressProperty;
 	public ReadOnlyDoubleProperty getMaxProgressProperty() { return maxProgressProperty.getReadOnlyProperty(); }
-	@Getter BooleanBinding isCompleteBinding;
+	ReadOnlyBooleanWrapper isCompleteWrapper = new ReadOnlyBooleanWrapper(false);
+	public ReadOnlyBooleanProperty getIsCompleteProperty() { return isCompleteWrapper.getReadOnlyProperty(); }
 	@Setter private Callable<UpdatePacket> generateNextUpdatePacket;
+	ReadOnlyBooleanWrapper cancelWrapper = new ReadOnlyBooleanWrapper(false);
+	public ReadOnlyBooleanProperty getCancelProperty() { return cancelWrapper.getReadOnlyProperty(); }
 	public UpdatePacket getNextUpdate()
 	{
 		if(generateNextUpdatePacket == null) return null;
@@ -89,12 +105,12 @@ public class UpdatePacket
 	}
 	@Getter private final List<Pair<String, Runnable>> generateOnCompleteButtons = new ArrayList<>();
 	
-	public void addTask(String title, String subtitle, Task<?> updateTask) { updateTasks.add(new Tuple<>(title, subtitle, updateTask)); }
+	public void addTask(String title, String subtitle, SaveTask<?> updateTask) { updateTasks.add(new Tuple<>(title, subtitle, updateTask)); }
 	
 	public void run(ExecutorService executor)
 	{
 		List<Callable<Object>> toRun = new ArrayList<>();
-		for(Tuple<String, String, Task<?>> tuple : updateTasks)
+		for(Tuple<String, String, SaveTask<?>> tuple : updateTasks)
 		{
 			Task<?> t = tuple.getThird();
 			toRun.add(new Callable<Object>()
