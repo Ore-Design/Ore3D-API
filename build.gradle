@@ -21,7 +21,7 @@ targetCompatibility = 17
 
 def packagename = "Ore3DAPI"
 group = "design.ore"
-version = "2.1.15"
+version = "2.1.16"
 
 repositories {
     mavenCentral()

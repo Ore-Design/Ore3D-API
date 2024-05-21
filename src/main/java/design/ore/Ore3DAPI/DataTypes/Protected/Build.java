@@ -373,8 +373,6 @@ public abstract class Build extends ValueStorageRecord
 	
 	public boolean matches(Build toMatch)
 	{
-		if(this.equals(toMatch)) return true;
-		
 		if(!this.getClass().equals(toMatch.getClass())) return false;
 		
 		for(Spec<?> s : this.specs)
@@ -384,7 +382,7 @@ public abstract class Build extends ValueStorageRecord
 				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId() == s.getId()).findFirst();
 				if(optionalMatch.isEmpty()) return false;
 				Spec<?> matching = optionalMatch.get();
-				if(s.getValue() == null || matching.getValue() == null || !matching.getValue().equals(s.getValue())) return false;
+				if((s.getValue() == null && matching.getValue() != null) || (s.getValue() != null && matching.getValue() == null) || !matching.getValue().equals(s.getValue())) return false;
 			}
 		}
 		
@@ -546,31 +544,35 @@ public abstract class Build extends ValueStorageRecord
 	{
 		for(Build cb : getChildBuilds()) { cb.runCatalogDetection(); }
 		
-		Double catPrice = null;
+		CatalogItem catalog = null;
 		for(CatalogItem ci : Registry.getRegisteredCatalogItems())
 		{
 			if(ci.getBuild().matches(this))
 			{
-				catPrice = ci.getPrice();
+				catalog = ci;
 				break;
 			}
 		}
 		
+		if(catalog == null) return;
+		
 		boolean parentIsCatalog = parentBuildProperty.isNotNull().get() && parentBuildProperty.get().isCatalog.get();
 		boolean childrenHaveNonCatalog = getChildBuilds().stream().anyMatch(cb -> !cb.isCatalog.get());
 		
-		if(catPrice != null && (parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
+		if((parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
 			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents() || childBuilds.size() == 0))
-		{ catalogPrice.set(catPrice); }
+		{ catalogPrice.set(catalog.getPrice()); }
 		else
 		{ catalogPrice.set(-1); }
+		
+		
 	}
 	
 	public void forceResetCatalog()
 	{
-		catalogPrice.set(-1);
-		catalogPrice.set(1);
+		catalogPrice.set(catalogPrice.get() > 0 ? -1 : 1);
 		runCatalogDetection();
+		unoverridenDescriptionProperty.bind(calculateDefaultDescription());
 	}
 	
 	@Override

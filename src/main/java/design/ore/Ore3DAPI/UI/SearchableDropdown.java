@@ -115,11 +115,11 @@ public class SearchableDropdown<T> extends TextField
 			{
 				if(valueProperty.get() == null) setText("-");
 				else { setText(converter.toString(valueProperty.get())); }
-				getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
+				if(getScene() != null) getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
 			}
 			else if(newVal)
 			{
-				getScene().addEventFilter(ScrollEvent.ANY, scrollEvent);
+				if(getScene() != null) getScene().addEventFilter(ScrollEvent.ANY, scrollEvent);
 				setText("");
 				translatePopup();
 				searchList.getSelectionModel().select(getValue());
