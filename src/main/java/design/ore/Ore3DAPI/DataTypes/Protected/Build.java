@@ -87,10 +87,8 @@ public abstract class Build extends ValueStorageRecord
 	@JsonMerge @Getter protected IntegerSpec quantity = new IntegerSpec(this, "Quantity", 1, false, "Overview", false, true);
 	@JsonMerge @Getter protected StringSpec workOrder = new StringSpec(this, "Work Order", "", false, null, false);
 
-	@JsonSerialize(using = PropertySerialization.DoubleSer.Serializer.class)
-	@JsonDeserialize(using = PropertySerialization.DoubleSer.Deserializer.class)
-	@JsonMerge @Getter protected DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
-	@JsonIgnore @Getter protected BooleanBinding isCatalog = catalogPrice.greaterThanOrEqualTo(0);
+	@JsonIgnore @JsonMerge @Getter protected final DoubleProperty catalogPrice = new SimpleDoubleProperty(-1);
+	@JsonIgnore @Getter protected final BooleanBinding isCatalog = catalogPrice.greaterThanOrEqualTo(0);
 	
 	@JsonIgnore @Getter protected final ObjectProperty<Transaction> parentTransactionProperty = new SimpleObjectProperty<Transaction>();
 	public boolean parentIsExpired() { return parentTransactionProperty.get() != null && parentTransactionProperty.get().isExpired(); }
@@ -121,9 +119,7 @@ public abstract class Build extends ValueStorageRecord
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
 	
 	// Description Stuff
-	@JsonSerialize(using = PropertySerialization.ReadOnlyStringSer.Serializer.class)
-	@JsonDeserialize(using = PropertySerialization.ReadOnlyStringSer.Deserializer.class)
-	@JsonMerge final protected ReadOnlyStringWrapper unoverridenDescriptionProperty = new ReadOnlyStringWrapper("");
+	@JsonIgnore @JsonMerge final protected ReadOnlyStringWrapper unoverridenDescriptionProperty = new ReadOnlyStringWrapper("");
 	
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
@@ -379,10 +375,23 @@ public abstract class Build extends ValueStorageRecord
 		{
 			if(s.countsAsMatch())
 			{
-				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId() == s.getId()).findFirst();
+				Optional<Spec<?>> optionalMatch = toMatch.specs.stream().filter(sp -> sp.getId().equals(s.getId())).findFirst();
 				if(optionalMatch.isEmpty()) return false;
 				Spec<?> matching = optionalMatch.get();
-				if((s.getValue() == null && matching.getValue() != null) || (s.getValue() != null && matching.getValue() == null) || !matching.getValue().equals(s.getValue())) return false;
+				if((s.getValue() == null && matching.getValue() != null) || (s.getValue() != null && matching.getValue() == null) ||
+					(s.getValue() != null && matching.getValue() != null && !matching.getValue().equals(s.getValue()))) return false;
+			}
+		}
+		
+		for(Spec<?> s : toMatch.specs)
+		{
+			if(s.countsAsMatch())
+			{
+				Optional<Spec<?>> optionalMatch = this.specs.stream().filter(sp -> sp.getId().equals(s.getId())).findFirst();
+				if(optionalMatch.isEmpty()) return false;
+				Spec<?> matching = optionalMatch.get();
+				if((s.getValue() == null && matching.getValue() != null) || (s.getValue() != null && matching.getValue() == null) ||
+					(s.getValue() != null && matching.getValue() != null && !matching.getValue().equals(s.getValue()))) return false;
 			}
 		}
 		
@@ -547,25 +556,28 @@ public abstract class Build extends ValueStorageRecord
 		CatalogItem catalog = null;
 		for(CatalogItem ci : Registry.getRegisteredCatalogItems())
 		{
-			if(ci.getBuild().matches(this))
+			if(this.matches(ci.getBuild()))
 			{
 				catalog = ci;
 				break;
 			}
 		}
 		
-		if(catalog == null) return;
-		
-		boolean parentIsCatalog = parentBuildProperty.isNotNull().get() && parentBuildProperty.get().isCatalog.get();
-		boolean childrenHaveNonCatalog = getChildBuilds().stream().anyMatch(cb -> !cb.isCatalog.get());
-		
-		if((parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
-			(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents() || childBuilds.size() == 0))
-		{ catalogPrice.set(catalog.getPrice()); }
-		else
-		{ catalogPrice.set(-1); }
-		
-		
+		if(catalog != null)
+		{
+			boolean parentIsCatalog = parentBuildProperty.isNotNull().get() && parentBuildProperty.get().isCatalog.get();
+			boolean childrenHaveNonCatalog = getChildBuilds().stream().anyMatch(cb -> !cb.isCatalog.get());
+			
+			if((parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
+				(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents() || childBuilds.size() == 0))
+			{
+				Log.getLogger().debug("Setting " + titleProperty.get() + " as catalog using catalog item " + catalog.getDisplayName());
+				catalogPrice.set(catalog.getPrice());
+				return;
+			}
+		}
+
+		catalogPrice.set(-1);
 	}
 	
 	public void forceResetCatalog()
