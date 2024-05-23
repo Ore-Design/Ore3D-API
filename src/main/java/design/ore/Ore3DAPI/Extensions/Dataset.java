@@ -6,12 +6,11 @@ import java.util.Map;
 import org.pf4j.ExtensionPoint;
 
 import design.ore.Ore3DAPI.DataTypes.BuildTreeViewItem;
+import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomBOMComponentUI;
 import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
 import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
 import design.ore.Ore3DAPI.DataTypes.Wrappers.ProductFamily;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.TreeItem;
-import javafx.scene.layout.Pane;
 
 public interface Dataset extends ExtensionPoint
 {
@@ -20,5 +19,5 @@ public interface Dataset extends ExtensionPoint
 	Map<String, ? extends BOMEntry> retrieveBOM();
 	Map<String, ? extends RoutingEntry> retrieveRoutings();
 	void reload();
-	Pane getCreateBOMComponentUI(SimpleObjectProperty<BOMEntry> createdBOMEntry);
+	CustomBOMComponentUI getCreateBOMComponentUI();
 }

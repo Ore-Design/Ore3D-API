@@ -571,7 +571,6 @@ public abstract class Build extends ValueStorageRecord
 			if((parentIsCatalog || parentBuildProperty.isNull().get() || !Registry.isChildrenOnlyCatalogIfParentIsCatalog()) &&
 				(!childrenHaveNonCatalog || !Registry.isCustomChildrenPreventCatalogParents() || childBuilds.size() == 0))
 			{
-				Log.getLogger().debug("Setting " + titleProperty.get() + " as catalog using catalog item " + catalog.getDisplayName());
 				catalogPrice.set(catalog.getPrice());
 				return;
 			}
