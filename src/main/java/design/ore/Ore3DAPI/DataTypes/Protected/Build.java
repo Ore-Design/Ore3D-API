@@ -43,7 +43,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -125,8 +124,13 @@ public abstract class Build extends ValueStorageRecord
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
 	@JsonMerge @Getter protected final SimpleStringProperty overridenDescriptionProperty = new SimpleStringProperty("");
 	
-	@JsonIgnore @Getter protected BooleanBinding descriptionIsOverridenBinding = overridenDescriptionProperty.isNotEqualTo("").and(overridenDescriptionProperty.isNotEqualTo(unoverridenDescriptionProperty));
-	@JsonIgnore @Getter protected StringBinding descriptionBinding = Bindings.when(descriptionIsOverridenBinding).then(overridenDescriptionProperty).otherwise(unoverridenDescriptionProperty);
+	@JsonIgnore @Getter protected BooleanBinding descriptionIsOverridenBinding = overridenDescriptionProperty.isNotEqualTo(unoverridenDescriptionProperty);
+	
+	@JsonIgnore public String getDescription() { return overridenDescriptionProperty.get(); }
+	public void resetDescription()
+	{
+		overridenDescriptionProperty.set(unoverridenDescriptionProperty.get());
+	}
 	
 	@JsonIgnore protected final ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
 	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
@@ -204,6 +208,14 @@ public abstract class Build extends ValueStorageRecord
 		Mapper.getMapper().registerSubtypes(this.getClass());
 		
 		this.price = new BuildPrice(this);
+		
+		unoverridenDescriptionProperty.addListener((obs, oldVal, newVal) ->
+		{
+			if(oldVal != null && newVal != null && overridenDescriptionProperty.isNotNull().get() && overridenDescriptionProperty.getValue().equals(oldVal))
+			{
+				overridenDescriptionProperty.set(newVal);
+			}
+		});
 		
 		childBuilds.addListener((ListChangeListener.Change<? extends Build> c) ->
 		{
