@@ -32,7 +32,10 @@ public class BOMEntry extends ValueStorageRecord
 	@JsonProperty("sn") @Getter @Setter protected String shortName;
 	@JsonProperty("ln") @Getter @Setter protected String longName;
 	@JsonProperty("uom") @Getter @Setter protected String unitOfMeasure;
-	@JsonProperty("cpq") @Getter @Setter protected double costPerQuantity;
+	
+	@JsonIgnore @Getter protected final SimpleDoubleProperty costPerQuantityProperty;
+	@JsonProperty("cpq") public double getCostPerQuantity() { return costPerQuantityProperty.get(); }
+	@JsonProperty("cpq") public void setCostPerQuantity(double val) { costPerQuantityProperty.set(val); }
 	
 	protected final ReadOnlyBooleanWrapper customEntry;
 	@JsonIgnore public ReadOnlyBooleanProperty getCustomEntryProperty() { return customEntry.getReadOnlyProperty(); }
@@ -77,7 +80,7 @@ public class BOMEntry extends ValueStorageRecord
 		this.shortName = shortName;
 		this.longName = longName;
 		this.unitOfMeasure = unitOfMeasure;
-		this.costPerQuantity = costPerQuantity;
+		this.costPerQuantityProperty = new SimpleDoubleProperty(costPerQuantity);
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
@@ -93,7 +96,7 @@ public class BOMEntry extends ValueStorageRecord
 		quantityProperty = new ReadOnlyDoubleWrapper();
 		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
 		
-		this.unitCostProperty = quantityProperty.multiply(costPerQuantity);
+		this.unitCostProperty = quantityProperty.multiply(costPerQuantityProperty);
 		
 		this.totalCostProperty = new ReadOnlyDoubleWrapper();
 		totalCostProperty.bind(Bindings.when(ignoreParentQuantityProperty).then(unitCostProperty).otherwise(unitCostProperty.multiply(parentQuantity)));
