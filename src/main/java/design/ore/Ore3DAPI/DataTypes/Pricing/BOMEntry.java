@@ -1,5 +1,8 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -44,10 +48,10 @@ public class BOMEntry extends ValueStorageRecord
 	
 	@JsonIgnore @Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
 	@JsonProperty("q") public double getQuantity() { return unoverriddenQuantityProperty.get(); }
-	@JsonProperty("q") public void setQuantity(int val) { unoverriddenQuantityProperty.set(val); }
+	@JsonProperty("q") public void setQuantity(double val) { unoverriddenQuantityProperty.set(val); }
 	@JsonIgnore @Getter protected final SimpleDoubleProperty overridenQuantityProperty;
 	@JsonProperty("ovrq") public double getOverriddenQuantity() { return overridenQuantityProperty.get(); }
-	@JsonProperty("ovrq") public void setOverriddenQuantity(int val) { overridenQuantityProperty.set(val); }
+	@JsonProperty("ovrq") public void setOverriddenQuantity(double val) { overridenQuantityProperty.set(val); }
 	@JsonIgnore @Getter protected BooleanBinding quantityOverriddenProperty;
 
 	@JsonIgnore @Getter protected final SimpleIntegerProperty unoverriddenMarginProperty;
@@ -61,6 +65,8 @@ public class BOMEntry extends ValueStorageRecord
 	@JsonIgnore @Getter protected SimpleBooleanProperty ignoreParentQuantityProperty;
 	@JsonProperty("ipq") public boolean getIgnoreParentQuantity() { return ignoreParentQuantityProperty.get(); }
 	@JsonProperty("ipq") public void setIgnoreParentQuantity(boolean val) { ignoreParentQuantityProperty.set(val); }
+	
+	@Getter protected final List<String> searchableTags = new ArrayList<>();
 
 	protected final ReadOnlyDoubleWrapper quantityProperty;
 	@JsonIgnore public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
@@ -84,6 +90,7 @@ public class BOMEntry extends ValueStorageRecord
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
+		this.unoverriddenQuantityProperty.addListener((obs, oldVal, newVal) -> Log.getLogger().debug("BOM quantity changed from " + oldVal + " to " + newVal));
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
 		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 

@@ -41,10 +41,10 @@ public class RoutingEntry extends ValueStorageRecord
 	
 	@JsonIgnore @Getter protected final SimpleDoubleProperty unoverriddenQuantityProperty;
 	@JsonProperty("q") public double getQuantity() { return unoverriddenQuantityProperty.get(); }
-	@JsonProperty("q") public void setQuantity(int val) { unoverriddenQuantityProperty.set(val); }
+	@JsonProperty("q") public void setQuantity(double val) { unoverriddenQuantityProperty.set(val); }
 	@JsonIgnore @Getter protected final SimpleDoubleProperty overridenQuantityProperty;
 	@JsonProperty("ovrq") public double getOverriddenQuantity() { return overridenQuantityProperty.get(); }
-	@JsonProperty("ovrq") public void setOverriddenQuantity(int val) { overridenQuantityProperty.set(val); }
+	@JsonProperty("ovrq") public void setOverriddenQuantity(double val) { overridenQuantityProperty.set(val); }
 	@JsonIgnore @Getter protected BooleanBinding quantityOverriddenProperty;
 
 	protected final ReadOnlyDoubleWrapper quantityProperty;
