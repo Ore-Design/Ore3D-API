@@ -120,11 +120,27 @@ public class Util
 				return null;
 			}
 		}
+		
+		public static void printItem(String name, Object obj)
+		{
+			try { Log.getLogger().info(name + ": " + mapper.writeValueAsString(obj)); }
+			catch(Exception e) { Log.getLogger().warn(Util.formatThrowable("Failed to print item " + name + "!", e)); }
+		}
 	}
 	
-	@Getter private static final Image brokenChainIcon = new Image("ui/icons/BrokenChainIcon.png");
-	@Getter private static final Image chainIcon = new Image("ui/icons/ChainIcon.png");
-	@Getter private static final Image xIcon = new Image("ui/icons/XIcon.png");
+	@Getter private static Image brokenChainIcon;
+	@Getter private static Image chainIcon;
+	@Getter private static Image xIcon;
+	static
+	{
+		try
+		{
+			brokenChainIcon = new Image("ui/icons/BrokenChainIcon.png");
+			chainIcon = new Image("ui/icons/ChainIcon.png");
+			xIcon = new Image("ui/icons/XIcon.png");
+		}
+		catch(Exception e) { Log.getLogger().warn(Util.formatThrowable("Failed to initialize UI elements!", e)); }
+	}
 	
 	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); }
 	public static StringExpression stringExpression(String str) { return Bindings.createStringBinding(() -> str); } 
