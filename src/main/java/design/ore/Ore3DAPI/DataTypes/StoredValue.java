@@ -22,13 +22,17 @@ public class StoredValue
 	public String getValue() { return valueProperty.getValue(); }
 	@Getter boolean userViewable;
 	@Getter boolean userEditable;
+	@Getter boolean dataRequired;
 	
-	public StoredValue(String value, boolean userViewable, boolean userEditable)
+	public StoredValue(String value, boolean userViewable, boolean userEditable, boolean dataRequired)
 	{
 		valueProperty.setValue(value);
 		this.userViewable = userViewable;
 		this.userEditable = userViewable == false ? false : userEditable;
+		this.dataRequired = dataRequired;
 	}
 	
-	public StoredValue duplicate() { return new StoredValue(valueProperty.getValue(), userViewable, userEditable); }
+	public StoredValue(String value, boolean userViewable, boolean userEditable) { this(value, userViewable, userEditable, false); }
+	
+	public StoredValue duplicate() { return new StoredValue(valueProperty.getValue(), userViewable, userEditable, dataRequired); }
 }

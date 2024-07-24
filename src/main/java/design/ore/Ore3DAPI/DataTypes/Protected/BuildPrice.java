@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import lombok.Getter;
@@ -44,12 +45,18 @@ public class BuildPrice
 	
 	public void rebindPricing(Build parent)
 	{
+		DoubleBinding roundedOverriddenUnitProperty = Bindings.createDoubleBinding(() ->
+			new BigDecimal(overriddenUnitPriceProperty.get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), overriddenUnitPriceProperty);
+		DoubleBinding roundedUnoverriddenUnitProperty = Bindings.createDoubleBinding(() ->
+			new BigDecimal(parent.getUnitPrice().get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), parent.getUnitPrice());
+		
+		
 		unitPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
-			.then(overriddenUnitPriceProperty).otherwise(parent.getUnitPrice()));
+			.then(roundedOverriddenUnitProperty).otherwise(roundedUnoverriddenUnitProperty));
 		
 		unoverriddenTotalPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
-			.then(overriddenUnitPriceProperty.multiply(parent.getQuantity()))
-			.otherwise(parent.getTotalPrice()));
+			.then(roundedOverriddenUnitProperty.multiply(parent.getQuantity()))
+			.otherwise(roundedUnoverriddenUnitProperty.multiply(parent.getQuantity())));
 		
 		totalPriceProperty.bind(
 			Bindings.when(totalPriceOverriddenProperty)

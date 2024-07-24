@@ -9,6 +9,9 @@ import java.util.Map.Entry;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import design.ore.Ore3DAPI.Util;
@@ -17,6 +20,7 @@ import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import lombok.Getter;
 
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class ValueStorageRecord
 {
 	@JsonIgnore @Getter private Map<String, StoredValue> storedValues = new HashMap<String, StoredValue>();
@@ -26,6 +30,7 @@ public abstract class ValueStorageRecord
 	@JsonIgnore public StoredValue putStoredValue(String key, String value, boolean userViewable, boolean userEditable) { return putStoredValue(key, new StoredValue(value, userViewable, userEditable)); }
 	@JsonIgnore public void putStoredValues(Map<String, StoredValue> values) { this.storedValues.putAll(values); }
 	@JsonIgnore public StoredValue removeStoredValue(String key) { return this.storedValues.remove(key); }
+	
 	@JsonIgnore
 	public StoredValue putStoredValueIgnoringKeyCase(String key, StoredValue value)
 	{
@@ -38,6 +43,7 @@ public abstract class ValueStorageRecord
 		removeValueFromKeyIgnoreKeyCase(key);
 		return putStoredValue(key, new StoredValue(value, userViewable, userEditable));
 	}
+	
 	@JsonIgnore
 	public void removeValueFromKeyIgnoreKeyCase(String key)
 	{
@@ -48,18 +54,34 @@ public abstract class ValueStorageRecord
 		for(String str : keysToRemove) storedValues.remove(str);
 	}
 	
+	@JsonProperty(value = "storedValuesWithRequiredData", access = Access.READ_ONLY)
+	public Map<String, StoredValue> getStoredValuesWithRequiredData()
+	{
+		Map<String, StoredValue> values = new HashMap<>();
+		for(Entry<String, StoredValue> entry : storedValues.entrySet())
+		{
+			if(entry.getValue().isDataRequired()) values.put(entry.getKey(), entry.getValue());
+		}
+		return values;
+	}
+	
+	@JsonProperty(value = "storedValuesWithRequiredData", access = Access.WRITE_ONLY)
+	public void setStoredValuesWithRequiredData(Map<String, StoredValue> values) { values.forEach((key, val) -> storedValues.put(key, val)); }
+	
 	@JsonAnySetter
 	public void addAdditionalValue(String name, JsonNode value)
 	{
-		putStoredValue(name, value.toString(), true, false);
+		putStoredValue(name, value.toString(), false, false);
 	}
 	
 	@JsonAnyGetter
 	public Map<String, JsonNode> getAdditionalValues()
 	{
 		Map<String, JsonNode> values = new HashMap<>();
-		for(Entry<String, StoredValue> entry : getStoredValues().entrySet())
+		for(Entry<String, StoredValue> entry : storedValues.entrySet())
 		{
+			if(entry.getValue().isDataRequired()) continue;
+			
 			if(entry.getKey() != null && !entry.getKey().equals("") && entry.getValue() != null && entry.getValue().getValue() != null && !entry.getValue().getValue().equals(""))
 			{
 				try { values.put(entry.getKey(), Mapper.getMapper().readValue(entry.getValue().getValue(), JsonNode.class)); }
