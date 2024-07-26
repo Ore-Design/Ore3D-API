@@ -6,62 +6,67 @@ import java.math.RoundingMode;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Getter;
 import lombok.NonNull;
 
 public class BuildPrice
 {
-	final ReadOnlyDoubleWrapper unitPriceProperty;
-	public ReadOnlyDoubleProperty getUnitPrice() { return unitPriceProperty.getReadOnlyProperty(); }
+	@Getter final NumberBinding unitPrice;
+	@Getter final NumberBinding totalPrice;
+	@Getter final NumberBinding unoverriddenTotalPriceProperty;
+	
+	@Getter final BooleanBinding unitPriceOverriddenProperty;
+	@Getter final BooleanBinding totalPriceOverriddenProperty;
+	
 	final ReadOnlyDoubleWrapper overriddenUnitPriceProperty;
 	public ReadOnlyDoubleProperty getOverriddenUnitPrice() { return overriddenUnitPriceProperty.getReadOnlyProperty(); }
-	@Getter final BooleanBinding unitPriceOverriddenProperty;
-
-	final ReadOnlyDoubleWrapper totalPriceProperty;
-	public ReadOnlyDoubleProperty getTotalPrice() { return totalPriceProperty.getReadOnlyProperty(); }
 	final ReadOnlyDoubleWrapper overriddenTotalPriceProperty;
 	public ReadOnlyDoubleProperty getOverriddenTotalPrice() { return overriddenTotalPriceProperty.getReadOnlyProperty(); }
-	@Getter final BooleanBinding totalPriceOverriddenProperty;
-	final ReadOnlyDoubleWrapper unoverriddenTotalPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
-	public ReadOnlyDoubleProperty getUnoverriddenTotalPriceProperty() { return unoverriddenTotalPriceProperty.getReadOnlyProperty(); };
+
+	private final SimpleDoubleProperty parentQuantityProperty = new SimpleDoubleProperty(0);
+	private final SimpleDoubleProperty parentUnitPriceProperty = new SimpleDoubleProperty(0);
+	
+	private final DoubleBinding roundedOverriddenUnitProperty;
+	private final DoubleBinding roundedUnoverriddenUnitProperty;
 	
 	public BuildPrice(@NonNull Build parent)
 	{
-		unitPriceProperty = new ReadOnlyDoubleWrapper();
 		overriddenUnitPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
+		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThan(-Double.MAX_VALUE);
 		
-		totalPriceProperty = new ReadOnlyDoubleWrapper();
+		roundedOverriddenUnitProperty = Bindings.createDoubleBinding(() ->
+		new BigDecimal(overriddenUnitPriceProperty.get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), overriddenUnitPriceProperty);
+		roundedUnoverriddenUnitProperty = Bindings.createDoubleBinding(() ->
+		new BigDecimal(parentUnitPriceProperty.get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), parentUnitPriceProperty);
+		
 		overriddenTotalPriceProperty = new ReadOnlyDoubleWrapper(-Double.MAX_VALUE);
 		
-		unitPriceOverriddenProperty = overriddenUnitPriceProperty.greaterThan(-Double.MAX_VALUE);
+		unoverriddenTotalPriceProperty = Bindings.when(unitPriceOverriddenProperty)
+				.then(roundedOverriddenUnitProperty.multiply(parentQuantityProperty))
+				.otherwise(roundedUnoverriddenUnitProperty.multiply(parentQuantityProperty));
+		
 		totalPriceOverriddenProperty = overriddenTotalPriceProperty.greaterThan(-Double.MAX_VALUE)
-			.and(Bindings.createDoubleBinding(() -> new BigDecimal(unoverriddenTotalPriceProperty.get()).setScale(2, RoundingMode.HALF_UP)
+			.and(Bindings.createDoubleBinding(() -> new BigDecimal(unoverriddenTotalPriceProperty.getValue().doubleValue()).setScale(2, RoundingMode.HALF_UP)
 			.doubleValue(), unoverriddenTotalPriceProperty).isEqualTo(overriddenTotalPriceProperty).not());
+		
+		unitPrice = Bindings.when(unitPriceOverriddenProperty)
+			.then(roundedOverriddenUnitProperty).otherwise(roundedUnoverriddenUnitProperty);
+
+		totalPrice = Bindings.when(totalPriceOverriddenProperty)
+			.then(overriddenTotalPriceProperty)
+			.otherwise(unoverriddenTotalPriceProperty);
 		
 		rebindPricing(parent);
 	}
 	
 	public void rebindPricing(Build parent)
-	{
-		DoubleBinding roundedOverriddenUnitProperty = Bindings.createDoubleBinding(() ->
-			new BigDecimal(overriddenUnitPriceProperty.get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), overriddenUnitPriceProperty);
-		DoubleBinding roundedUnoverriddenUnitProperty = Bindings.createDoubleBinding(() ->
-			new BigDecimal(parent.getUnitPrice().get()).setScale(2, RoundingMode.HALF_UP).doubleValue(), parent.getUnitPrice());
-		
-		
-		unitPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
-			.then(roundedOverriddenUnitProperty).otherwise(roundedUnoverriddenUnitProperty));
-		
-		unoverriddenTotalPriceProperty.bind(Bindings.when(unitPriceOverriddenProperty)
-			.then(roundedOverriddenUnitProperty.multiply(parent.getQuantity()))
-			.otherwise(roundedUnoverriddenUnitProperty.multiply(parent.getQuantity())));
-		
-		totalPriceProperty.bind(
-			Bindings.when(totalPriceOverriddenProperty)
-			.then(overriddenTotalPriceProperty)
-			.otherwise(unoverriddenTotalPriceProperty));
+	{	
+		parentUnitPriceProperty.bind(parent.getUnitPrice());
+		parentQuantityProperty.bind(parent.getQuantity());
 	}
 	
 	public void resetUnitPrice() { overriddenUnitPriceProperty.setValue(-Double.MAX_VALUE); }

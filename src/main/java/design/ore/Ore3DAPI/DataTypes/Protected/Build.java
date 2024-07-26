@@ -307,7 +307,6 @@ public abstract class Build extends ValueStorageRecord
 		parentBuildProperty.addListener((obs, oldVal, newVal) -> checkIndex());
 		
 		rebindMiscListener();
-		getThisOrChildrenHaveMiscCharges().addListener((obs, oldVal, newVal) -> Log.getLogger().debug(titleProperty.getValue() + " or Children Have Misc: " + newVal));
 	}
 	
 	ListChangeListener<Build> indexCheckListener = (ListChangeListener.Change<? extends Build> change) -> checkIndex();
@@ -532,7 +531,7 @@ public abstract class Build extends ValueStorageRecord
 		}
 		for(MiscEntry miscEntry : misc)
 		{
-			binding = binding.add(miscEntry.getUnitPriceProperty());
+			binding = binding.add(miscEntry.getTotalPriceProperty());
 		}
 		for(Build childBuild : childBuilds)
 		{
