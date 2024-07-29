@@ -16,8 +16,9 @@ import lombok.NonNull;
 public class BuildPrice
 {
 	@Getter final NumberBinding unitPrice;
-	@Getter final NumberBinding totalPrice;
 	@Getter final NumberBinding unoverriddenTotalPriceProperty;
+	
+	protected final NumberBinding totalPrice;
 	
 	@Getter final BooleanBinding unitPriceOverriddenProperty;
 	@Getter final BooleanBinding totalPriceOverriddenProperty;

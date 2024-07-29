@@ -43,6 +43,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.IntegerBinding;
+import javafx.beans.binding.NumberBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -531,19 +532,19 @@ public abstract class Build extends ValueStorageRecord
 		}
 		for(MiscEntry miscEntry : misc)
 		{
-			binding = binding.add(miscEntry.getTotalPriceProperty());
+			binding = binding.add(miscEntry.getUnitPriceProperty());
 		}
 		for(Build childBuild : childBuilds)
 		{
-			binding = binding.add(childBuild.getPrice().getTotalPrice());
+			binding = binding.add(childBuild.getTotalPrice());
 		}
 		
 		return (DoubleBinding) Bindings.when(isCatalog).then(binding.add(catalogPrice)).otherwise(binding.add(nonCatalogValues));
 	}
 	
-	protected DoubleBinding getTotalPrice()
+	public NumberBinding getTotalPrice()
 	{
-		DoubleBinding binding = getUnitPrice().multiply(quantity);
+		NumberBinding binding = price.getUnitPrice().multiply(quantity);
 		
 		for(BOMEntry bomEntry : bom)
 		{
