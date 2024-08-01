@@ -11,9 +11,11 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
+import org.apache.http.client.methods.HttpRequestBase;
 import org.controlsfx.control.Notifications;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -29,6 +31,7 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.DataTypes.Protected.Transaction;
 import design.ore.Ore3DAPI.UI.PopoutStage;
+import design.ore.Ore3DAPI.Util.Log;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -74,6 +77,29 @@ public class Util
 		@Getter @Setter static Color transparentBackground;
 		@Getter @Setter static Color dimBackground;
 		@Getter @Setter static Color accent;
+	}
+	
+	public class Auth
+	{
+		private static Function<HttpRequestBase, HttpRequestBase> registeredAuthSigner;
+		public static void registerAuthSigner(Function<HttpRequestBase, HttpRequestBase> authSigner)
+		{
+			if(registeredAuthSigner != null)
+			{
+				Log.getLogger().warn("A second auth signer was attempted to be registered! Ignoring...");
+				return;
+			}
+			registeredAuthSigner = authSigner;
+		}
+		public static HttpRequestBase signWithcORECreds(HttpRequestBase request)
+		{
+			if(registeredAuthSigner == null)
+			{
+				Log.getLogger().warn("Auth Signer is not yet registered! Cannot sign!");
+				return request;
+			}
+			return registeredAuthSigner.apply(request);
+		}
 	}
 	
 	public class Log
