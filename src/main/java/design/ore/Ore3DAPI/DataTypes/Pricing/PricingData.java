@@ -1,6 +1,6 @@
 package design.ore.Ore3DAPI.DataTypes.Pricing;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +20,11 @@ import lombok.Setter;
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 public class PricingData
 {
-	public PricingData(OffsetDateTime timestamp)
+	public PricingData(Instant timestamp)
 	{
 		this.timestamp = timestamp;
 	}
-	OffsetDateTime timestamp;
+	Instant timestamp;
 	List<RoutingPricing> routings = new ArrayList<>();
 	List<BOMPricing> bom = new ArrayList<>();
 }

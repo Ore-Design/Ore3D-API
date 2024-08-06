@@ -31,7 +31,6 @@ import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
 import design.ore.Ore3DAPI.DataTypes.Protected.Build;
 import design.ore.Ore3DAPI.DataTypes.Protected.Transaction;
 import design.ore.Ore3DAPI.UI.PopoutStage;
-import design.ore.Ore3DAPI.Util.Log;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;

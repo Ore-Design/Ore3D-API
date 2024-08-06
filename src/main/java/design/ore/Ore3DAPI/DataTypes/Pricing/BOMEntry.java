@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
-import design.ore.Ore3DAPI.Util.Log;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -90,7 +89,6 @@ public class BOMEntry extends ValueStorageRecord
 		this.customEntry = new ReadOnlyBooleanWrapper(customEntry);
 		
 		this.unoverriddenQuantityProperty = new SimpleDoubleProperty(quantity);
-		this.unoverriddenQuantityProperty.addListener((obs, oldVal, newVal) -> Log.getLogger().debug("BOM quantity changed from " + oldVal + " to " + newVal));
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
 		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 

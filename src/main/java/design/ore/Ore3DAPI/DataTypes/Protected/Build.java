@@ -99,7 +99,6 @@ public abstract class Build extends ValueStorageRecord
 	{
 		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
 		if(parentBuildProperty.isNotNull().get()) parentBuildProperty.get().setDirtyFromChild(this);
-//		else Log.getLogger().debug("Build " + titleProperty.get() + " has no transaction parent, so request to dirty-fy was rejected!");
 	}
 	public final void setDirtyFromChild(Build child)
 	{
@@ -208,6 +207,19 @@ public abstract class Build extends ValueStorageRecord
 	{
 		Mapper.getMapper().registerSubtypes(this.getClass());
 		
+		specs = FXCollections.observableArrayList();
+		specs.addListener((ListChangeListener.Change<? extends Spec<?>> l) ->
+		{
+			while(l.next())
+			{
+				for(Spec<?> s : l.getAddedSubList())
+				{
+					s.addListener((obs, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) setDirty(); });
+				}
+				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
+			}
+		});
+		
 		this.price = new BuildPrice(this);
 		
 		unoverridenDescriptionProperty.addListener((obs, oldVal, newVal) ->
@@ -231,8 +243,6 @@ public abstract class Build extends ValueStorageRecord
 					cb.buildIsDirty.addListener(childUpdateListener);
 					cb.isCatalog.addListener(childCatalogListener);
 					
-					setDirty();
-					
 					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
 				}
 				for(Build cb : c.getRemoved())
@@ -243,12 +253,11 @@ public abstract class Build extends ValueStorageRecord
 					cb.parentTransactionProperty.unbind();
 					cb.buildIsDirty.removeListener(childUpdateListener);
 					cb.isCatalog.removeListener(childCatalogListener);
-					
-					setDirty();
 				}
-
-				rebindMiscListener();
 			}
+			
+			setDirty();
+			rebindMiscListener();
 		});
 		
 		misc.addListener((ListChangeListener.Change<? extends MiscEntry> c) ->
@@ -265,19 +274,6 @@ public abstract class Build extends ValueStorageRecord
 			if(newVal) refresh();
 			
 			buildIsDirty.setValue(false);
-		});
-		
-		specs = FXCollections.observableArrayList();
-		specs.addListener((ListChangeListener.Change<? extends Spec<?>> l) ->
-		{
-			while(l.next())
-			{
-				for(Spec<?> s : l.getAddedSubList())
-				{
-					s.addListener((obsv, oldVal, newVal) -> { if((oldVal == null || !oldVal.equals(newVal)) && !s.getReadOnlyProperty().get()) setDirty(); });
-				}
-				if(l.wasRemoved()) throw new IllegalArgumentException("Removing specs from specs list is not supported!");
-			}
 		});
 		
 		quantity.setCalculateOnDirty(() ->
