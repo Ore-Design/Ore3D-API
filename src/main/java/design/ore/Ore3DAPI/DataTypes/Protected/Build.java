@@ -23,6 +23,7 @@ import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.DataTypes.ChildBuildMenuNode;
 import design.ore.Ore3DAPI.DataTypes.Conflict;
 import design.ore.Ore3DAPI.DataTypes.StoredValue;
 import design.ore.Ore3DAPI.DataTypes.Interfaces.ValueStorageRecord;
@@ -63,7 +64,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.util.Pair;
 import lombok.Getter;
@@ -337,7 +337,7 @@ public abstract class Build extends ValueStorageRecord
 		thisOrChildrenHaveMiscCharges.bind(childrenMiscBinding);
 	}
 	
-	@JsonIgnore @Getter protected final ObservableMap<String, Build> allowedChildBuilds = FXCollections.observableHashMap();
+	@JsonIgnore @Getter protected final ObservableList<ChildBuildMenuNode> allowedChildBuilds = FXCollections.observableArrayList();
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
