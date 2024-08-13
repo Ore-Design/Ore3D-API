@@ -1,6 +1,7 @@
 package design.ore.Ore3DAPI.Extensions;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.pf4j.ExtensionPoint;
 
@@ -31,6 +32,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	UpdatePacket updateTransaction(String navigationID, Transaction transaction);
 	
 	/*
+	 * @deprecated Use {@link #duplicateTransaction(String, Transaction, boolean, Consumer<Transaction>)} instead.
 	 * Creates a copy of the <code>Transaction</code> passed in.
 	 * 
 	 * @param   navigationID   the ID of the UI element calling this function.
@@ -39,7 +41,20 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                    Transaction
 	 */
-	UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean ignoreOriginal);
+	default UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean saveOriginal)
+	{ return duplicateTransaction(navigationID, transaction, saveOriginal, (tran) -> {}); }
+	
+	/*
+	 * Creates a copy of the <code>Transaction</code> passed in.
+	 * 
+	 * @param   navigationID   the ID of the UI element calling this function.
+	 * @param   transaction    the <code>Transaction</code> to be duplicated.
+	 * @param   saveOriginal   true if the original transaction should be saved, otherwise false.
+	 * @param   callback       Should be passed the duplicated transaction once it is created.
+	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
+	 * @see                    Transaction
+	 */
+	UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean saveOriginal, Consumer<Transaction> callback);
 	
 	/*
 	 * Generates work orders for each build UID contained in the <code>Transaction</code>.

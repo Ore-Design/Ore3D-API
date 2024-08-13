@@ -60,7 +60,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -73,11 +72,11 @@ import lombok.Getter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Build extends ValueStorageRecord
 {
-	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
-	{
-		@Override
-		public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal) { if(newVal) { buildIsDirty.setValue(true); } }
-	};
+//	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
+//	{
+//		@Override
+//		public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal) { if(newVal) { buildIsDirty.setValue(true); } }
+//	};
 
 	private final ChangeListener<Boolean> childCatalogListener = (obs, oldVal, newVal) -> runCatalogDetection();
 	
@@ -98,16 +97,16 @@ public abstract class Build extends ValueStorageRecord
 	public final void setDirty()
 	{
 		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
-		if(parentBuildProperty.isNotNull().get()) parentBuildProperty.get().setDirtyFromChild(this);
+		if(parentBuildProperty.isNotNull().get()) parentBuildProperty.get().setDirtyFromChild();
 	}
-	public final void setDirtyFromChild(Build child)
+	public final void setDirtyFromChild()
 	{
-		dirtyFrom = child;
-		if(parentTransactionProperty.isNotNull().get()) buildIsDirty.setValue(true);
+		dirtyFromChild = true;
+		buildIsDirty.setValue(true);
 	}
 	
 	// This is used to prevent infinite looping of marking dirty from children
-	@JsonIgnore private Build dirtyFrom = null;
+	@JsonIgnore private boolean dirtyFromChild = false;
 
 	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
 	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
@@ -126,7 +125,11 @@ public abstract class Build extends ValueStorageRecord
 	
 	@JsonIgnore @Getter protected BooleanBinding descriptionIsOverridenBinding = overridenDescriptionProperty.isNotEqualTo(unoverridenDescriptionProperty);
 	
-	@JsonIgnore public String getDescription() { return overridenDescriptionProperty.get(); }
+	@JsonIgnore public String getDescription()
+	{
+		if(descriptionIsOverridenBinding.get()) return overridenDescriptionProperty.get();
+		else return unoverridenDescriptionProperty.get();
+	}
 	public void resetDescription()
 	{
 		overridenDescriptionProperty.set(unoverridenDescriptionProperty.get());
@@ -240,7 +243,7 @@ public abstract class Build extends ValueStorageRecord
 					
 					cb.parentBuildProperty.setValue(this);
 					cb.parentTransactionProperty.bind(parentTransactionProperty);
-					cb.buildIsDirty.addListener(childUpdateListener);
+//					cb.buildIsDirty.addListener(childUpdateListener);
 					cb.isCatalog.addListener(childCatalogListener);
 					
 					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
@@ -251,7 +254,7 @@ public abstract class Build extends ValueStorageRecord
 					
 					cb.parentBuildProperty.setValue(null);
 					cb.parentTransactionProperty.unbind();
-					cb.buildIsDirty.removeListener(childUpdateListener);
+//					cb.buildIsDirty.removeListener(childUpdateListener);
 					cb.isCatalog.removeListener(childCatalogListener);
 				}
 			}
@@ -272,6 +275,8 @@ public abstract class Build extends ValueStorageRecord
 		{
 			// Refresh must be called AFTER dirty listeners to avoid mismatch data
 			if(newVal) refresh();
+			
+			if(parentBuildProperty.isNotNull().get()) parentBuildProperty.get().setDirtyFromChild();
 			
 			buildIsDirty.setValue(false);
 		});
@@ -407,12 +412,12 @@ public abstract class Build extends ValueStorageRecord
 	}
 	
 	protected void refresh()
-	{	
-		for(Build cb : childBuilds)
+	{
+		if(!dirtyFromChild)
 		{
-			if(dirtyFrom != null && dirtyFrom.getBuildUUID() == cb.getBuildUUID()) dirtyFrom = null;
-			else cb.refresh();
+			for(Build cb : childBuilds) { cb.refresh(); }
 		}
+		else dirtyFromChild = false;
 		
 		Transaction parentTran = parentTransactionProperty.get();
 		if(parentTran != null && !parentTran.isExpired())
