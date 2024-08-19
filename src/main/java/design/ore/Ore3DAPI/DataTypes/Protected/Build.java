@@ -237,25 +237,33 @@ public abstract class Build extends ValueStorageRecord
 		{
 			while(c.next())
 			{
-				for(Build cb : c.getAddedSubList())
+				if(c.wasAdded())
 				{
-					if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
-					
-					cb.parentBuildProperty.setValue(this);
-					cb.parentTransactionProperty.bind(parentTransactionProperty);
-//					cb.buildIsDirty.addListener(childUpdateListener);
-					cb.isCatalog.addListener(childCatalogListener);
-					
-					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
+					for(Build cb : c.getAddedSubList())
+					{
+						if(cb.parentBuildProperty.get() != null) throw new IllegalArgumentException("The child build you are trying to add already has a parent!");
+						
+						cb.parentBuildProperty.setValue(this);
+						cb.getParentTransactionProperty().bind(parentTransactionProperty);
+						cb.getIsCatalog().addListener(childCatalogListener);
+						
+						checkIndex();
+						
+						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
+					}
 				}
-				for(Build cb : c.getRemoved())
+				else if(c.wasRemoved())
 				{
-					if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.REMOVED, cb); // Event should be fire BEFORE parent values are removed
-					
-					cb.parentBuildProperty.setValue(null);
-					cb.parentTransactionProperty.unbind();
-//					cb.buildIsDirty.removeListener(childUpdateListener);
-					cb.isCatalog.removeListener(childCatalogListener);
+					for(Build cb : c.getRemoved())
+					{
+						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.REMOVED, cb); // Event should be fire BEFORE parent values are removed
+						
+						cb.parentBuildProperty.setValue(null);
+						cb.getParentTransactionProperty().unbind();
+						cb.getIsCatalog().removeListener(childCatalogListener);
+						
+						checkIndex();
+					}
 				}
 			}
 			
@@ -306,7 +314,7 @@ public abstract class Build extends ValueStorageRecord
 			checkIndex();
 		});
 		
-		parentBuildProperty.addListener((obs, oldVal, newVal) -> checkIndex());
+		parentBuildProperty.addListener((obs, oldVal, newVal) -> { if(newVal != null) checkIndex(); });
 		
 		rebindMiscListener();
 	}
@@ -314,16 +322,16 @@ public abstract class Build extends ValueStorageRecord
 	ListChangeListener<Build> indexCheckListener = (ListChangeListener.Change<? extends Build> change) -> checkIndex();
 	BiConsumer<BuildChangeType, Build> indexCheckConsumer = (ct, b) -> checkIndex();
 	
-	protected final void checkIndex()
+	public final void checkIndex()
 	{
-		if(getParentBuildProperty().get() != null)
+		if(parentBuildProperty.get() != null)
 		{
-			indexInParentWrapper.set(getParentBuildProperty().get().getChildBuilds().indexOf(this));
+			indexInParentWrapper.set(parentBuildProperty.get().getChildBuilds().indexOf(this));
 			atEndOfParentWrapper.set(indexInParentWrapper.get() == getParentBuildProperty().get().getChildBuilds().size() - 1);
 		}
-		else if(getParentTransactionProperty().get() != null)
+		else if(parentTransactionProperty.get() != null)
 		{
-			indexInParentWrapper.set(getParentTransactionProperty().get().getBuilds().indexOf(this));
+			indexInParentWrapper.set(parentTransactionProperty.get().getBuilds().indexOf(this));
 			atEndOfParentWrapper.set(indexInParentWrapper.get() == getParentTransactionProperty().get().getBuilds().size() - 1);
 		}
 		else 
