@@ -13,14 +13,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.qos.logback.classic.Logger;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
-import design.ore.Ore3DAPI.DataTypes.StoredValue;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomButtonReference;
-import design.ore.Ore3DAPI.DataTypes.Interfaces.CustomSaveCycleReference;
-import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
-import design.ore.Ore3DAPI.DataTypes.Pricing.MiscEntry;
-import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
-import design.ore.Ore3DAPI.DataTypes.Protected.Build;
-import design.ore.Ore3DAPI.DataTypes.Wrappers.CatalogItem;
+import design.ore.Ore3DAPI.data.StoredValue;
+import design.ore.Ore3DAPI.data.core.Build;
+import design.ore.Ore3DAPI.data.interfaces.CustomButtonReference;
+import design.ore.Ore3DAPI.data.interfaces.CustomSaveCycleReference;
+import design.ore.Ore3DAPI.data.pricing.BOMEntry;
+import design.ore.Ore3DAPI.data.pricing.MiscEntry;
+import design.ore.Ore3DAPI.data.pricing.RoutingEntry;
+import design.ore.Ore3DAPI.data.wrappers.CatalogItem;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -62,16 +62,17 @@ public class Registry
 		registeredRoutingEntryStoredValues.put(mapID, value);
 	}
 	
-	@Getter private static final List<CustomButtonReference> registeredCustomEditButtons = new ArrayList<>();
-	public static void registerCustomEditButton(CustomButtonReference button)
+	@Getter private static final Map<String, CustomButtonReference> registeredCustomEditButtons = new HashMap<>();
+	public static void registerCustomEditButton(String editButtonId, CustomButtonReference button)
 	{
-		registeredCustomEditButtons.add(button);
+		if(registeredCustomEditButtons.containsKey(editButtonId)) Log.getLogger().warn("A custom edit button already exists with ID " + editButtonId + "! Overriding...");
+		registeredCustomEditButtons.put(editButtonId, button);
 	}
 	
 	@Getter private static final Map<String, CustomSaveCycleReference> registeredCustomSaveCycles = new HashMap<>();
 	public static void registerCustomSaveCycle(String saveCycleID, CustomSaveCycleReference cycle)
 	{
-		if(registeredCustomSaveCycles.containsKey(saveCycleID)) Log.getLogger().warn("A save cycle already exists with ID " + saveCycleID + "! It will be overridden!");
+		if(registeredCustomSaveCycles.containsKey(saveCycleID)) Log.getLogger().warn("A save cycle already exists with ID " + saveCycleID + "! Overriding...");
 		registeredCustomSaveCycles.put(saveCycleID, cycle);
 	}
 	

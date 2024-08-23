@@ -24,21 +24,34 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import design.ore.Ore3DAPI.DataTypes.Pricing.BOMEntry;
-import design.ore.Ore3DAPI.DataTypes.Pricing.BOMPricing;
-import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingEntry;
-import design.ore.Ore3DAPI.DataTypes.Pricing.RoutingPricing;
-import design.ore.Ore3DAPI.DataTypes.Protected.Build;
-import design.ore.Ore3DAPI.DataTypes.Protected.Transaction;
-import design.ore.Ore3DAPI.UI.PopoutStage;
+import design.ore.Ore3DAPI.data.core.Build;
+import design.ore.Ore3DAPI.data.core.Transaction;
+import design.ore.Ore3DAPI.data.pricing.BOMEntry;
+import design.ore.Ore3DAPI.data.pricing.BOMPricing;
+import design.ore.Ore3DAPI.data.pricing.RoutingEntry;
+import design.ore.Ore3DAPI.data.pricing.RoutingPricing;
+import design.ore.Ore3DAPI.ui.PopoutStage;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.css.CssParser;
+import javafx.css.Declaration;
+import javafx.css.Rule;
+import javafx.css.StyleConverter;
+import javafx.css.Stylesheet;
+import javafx.css.converter.ColorConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.CheckBox;
@@ -59,23 +72,24 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 
 public class Util
 {	
 	public class Colors
 	{
-		@Getter @Setter static Color foreground;
-		@Getter @Setter static Color secondaryForeground;
-		@Getter @Setter static Color tertiaryForeground;
-		@Getter @Setter static Color transparentForeground;
-		@Getter @Setter static Color secondaryTransparentForeground;
-		@Getter @Setter static Color tertiaryTransparentForeground;
-		@Getter @Setter static Color background;
-		@Getter @Setter static Color secondaryBackground;
-		@Getter @Setter static Color transparentBackground;
-		@Getter @Setter static Color dimBackground;
-		@Getter @Setter static Color accent;
+		@Getter private final static SimpleObjectProperty<Color> foregroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> secondaryForegroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> tertiaryForegroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> transparentForegroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> secondaryTransparentForegroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> tertiaryTransparentForegroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> backgroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> secondaryBackgroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> transparentBackgroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> dimBackgroundProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> accentProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> errorProperty = new SimpleObjectProperty<>();
+		@Getter private final static SimpleObjectProperty<Color> warningProperty = new SimpleObjectProperty<>();
 	}
 	
 	public class Auth
@@ -280,6 +294,107 @@ public class Util
 		}
 	}
 	
+	public static class Styling
+	{
+		public static final String DARK_STYLESHEET = "stylesheets/dark.css";
+		public static final String BOW_STYLESHEET = "stylesheets/bow.css";
+		public static final String REYMALA_STYLESHEET = "stylesheets/reymala.css";
+		
+		@Getter private static final ObservableList<String> styleOptions = FXCollections.observableArrayList(DARK_STYLESHEET, BOW_STYLESHEET, REYMALA_STYLESHEET);
+		@Getter private static final Map<String, String> styleDisplayNames = Map.of("Dark", DARK_STYLESHEET, "Black & White", BOW_STYLESHEET, "Reymala", REYMALA_STYLESHEET);
+		
+		@Getter private static final SimpleStringProperty stlysheetProperty;
+		static {
+			stlysheetProperty = new SimpleStringProperty();
+			stlysheetProperty.addListener((obs, oldVal, newVal) -> getColors(newVal));
+			stlysheetProperty.setValue(DARK_STYLESHEET);
+		}
+		
+		public static void bindUIToStylesheet(Object ui)
+		{
+			if(ui instanceof Scene) ((Scene) ui).getStylesheets().add(stlysheetProperty.getValue());
+			else if(ui instanceof Parent) ((Parent) ui).getStylesheets().add(stlysheetProperty.getValue());
+			
+			stlysheetProperty.addListener((obs, oldVal, newVal) ->
+			{
+				if(ui instanceof Scene)
+				{
+					((Scene) ui).getStylesheets().remove(oldVal);
+					((Scene) ui).getStylesheets().add(newVal);
+				}
+				else if(ui instanceof Parent)
+				{
+					((Parent) ui).getStylesheets().remove(oldVal);
+					((Parent) ui).getStylesheets().add(newVal);
+				}
+			});
+		}
+	    
+		@SuppressWarnings("unchecked")
+		private static void getColors(String stylesheet)
+	    {
+	    	Util.Log.getLogger().info("Retrieving colors from stylesheet...");
+	    	
+			CssParser parser = new CssParser();
+			StyleConverter<String, Color> converter = ColorConverter.getInstance();
+			try
+			{
+				Stylesheet css = parser.parse(Styling.class.getClassLoader().getResource(stylesheet).toURI().toURL());
+				final Rule root = css.getRules().get(0);
+				for(Declaration d : root.getDeclarations())
+				{
+					switch(d.getProperty())
+					{
+						case "-foreground":
+							Colors.getForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-foreground-2":
+							Colors.getSecondaryForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-foreground-3":
+							Colors.getTertiaryForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-foreground-transparent":
+							Colors.getTransparentForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-foreground-transparent-2":
+							Colors.getSecondaryTransparentForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-foreground-transparent-3":
+							Colors.getTertiaryTransparentForegroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-background":
+							Colors.getBackgroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-background-2":
+							Colors.getSecondaryBackgroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-background-transparent":
+							Colors.getTransparentBackgroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-background-dim":
+							Colors.getDimBackgroundProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-accent":
+							Colors.getAccentProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-warning-conflict":
+							Colors.getWarningProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						case "-error-conflict":
+							Colors.getErrorProperty().setValue(converter.convert(d.getParsedValue(), null));
+							break;
+						default:
+							Util.Log.getLogger().warn("Unknown color found: " + d.getProperty());
+					}
+				}
+			}
+			catch(Exception e) { Util.Log.getLogger().warn(e.toString()); }
+			
+	    	Util.Log.getLogger().info("Colors retrieved!");
+	    }
+	}
+	
 	public static class UI
 	{
 		public static <T> T runOnApplicationThread(Callable<T> call)
@@ -352,7 +467,7 @@ public class Util
 			confirm.setTitle("Confirm");
 			confirm.setHeaderText(title);
 			confirm.setContentText(message);
-			confirm.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+	        Styling.bindUIToStylesheet(confirm.getDialogPane());
 			confirm.initStyle(StageStyle.UNDECORATED);
 			confirm.setGraphic(null);
 			
@@ -365,7 +480,7 @@ public class Util
 			confirm.setTitle("Confirm");
 			confirm.setHeaderText(title);
 			confirm.setContentText(message);
-			confirm.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+	        Styling.bindUIToStylesheet(confirm.getDialogPane());
 			confirm.initStyle(StageStyle.UNDECORATED);
 			confirm.setGraphic(null);
 			
@@ -379,7 +494,7 @@ public class Util
 			info.setTitle("Confirm");
 			info.setHeaderText(title);
 			info.setContentText(message);
-			info.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+	        Styling.bindUIToStylesheet(info.getDialogPane());
 			info.initStyle(StageStyle.UNDECORATED);
 			info.setGraphic(null);
 			
@@ -393,7 +508,7 @@ public class Util
 			warn.setTitle("Confirm");
 			warn.setHeaderText(title);
 			warn.setContentText(message);
-			warn.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+	        Styling.bindUIToStylesheet(warn.getDialogPane());
 			warn.initStyle(StageStyle.UNDECORATED);
 			warn.setGraphic(null);
 			
@@ -407,14 +522,14 @@ public class Util
 			error.setTitle("Error");
 			error.setHeaderText(title);
 			error.setContentText(message);
-			error.getDialogPane().getStylesheets().add("stylesheets/dark.css");
+	        Styling.bindUIToStylesheet(error.getDialogPane());
 			error.initStyle(StageStyle.UNDECORATED);
 			error.setGraphic(null);
 			
 			return error;
 		}
 		
-		public static ImageView colorize(ImageView img, Color color)
+		public static ImageView colorize(ImageView img, ObjectProperty<Color> color)
 		{
 
 			ImageView checkClip = new ImageView(img.getImage());
@@ -423,10 +538,12 @@ public class Util
 			checkClip.setPreserveRatio(true);
 			checkClip.fitWidthProperty().bind(img.fitWidthProperty());
 			
-			ColorAdjust monochrome = new ColorAdjust();
-	        monochrome.setSaturation(-1.0);
-	        Blend colorify = new Blend(BlendMode.MULTIPLY, monochrome, new ColorInput( 0, 0, img.getImage().getWidth(), img.getImage().getHeight(), color));
-	        img.setEffect(colorify);
+	        img.effectProperty().bind(Bindings.createObjectBinding(() ->
+	        {
+	        	ColorAdjust monochrome = new ColorAdjust();
+	        	monochrome.setSaturation(-1.0);
+	        	return new Blend(BlendMode.MULTIPLY, monochrome, new ColorInput( 0, 0, img.getImage().getWidth(), img.getImage().getHeight(), color.getValue()));
+	        }, color));
 	        
 	        return img;
 		}
