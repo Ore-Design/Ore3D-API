@@ -552,7 +552,9 @@ public abstract class Build extends ValueStorageRecord
 	
 	public NumberBinding getTotalPrice()
 	{
-		NumberBinding binding = price.getUnitPrice().multiply(quantity);
+		if(price.totalPriceOverriddenProperty.get()) return price.totalPrice;
+		
+		NumberBinding binding = price.totalPrice;
 		
 		for(BOMEntry bomEntry : bom)
 		{

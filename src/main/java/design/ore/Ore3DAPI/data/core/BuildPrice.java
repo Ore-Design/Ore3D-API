@@ -18,7 +18,7 @@ public class BuildPrice
 	@Getter final NumberBinding unitPrice;
 	@Getter final NumberBinding unoverriddenTotalPriceProperty;
 	
-	protected final NumberBinding totalPrice;
+	@Getter protected final NumberBinding totalPrice;
 	
 	@Getter final BooleanBinding unitPriceOverriddenProperty;
 	@Getter final BooleanBinding totalPriceOverriddenProperty;
