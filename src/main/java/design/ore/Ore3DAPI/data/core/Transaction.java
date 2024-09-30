@@ -1,6 +1,9 @@
 package design.ore.Ore3DAPI.data.core;
 
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +17,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.data.Conflict;
 import design.ore.Ore3DAPI.data.crm.Customer;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
@@ -51,7 +55,7 @@ public class Transaction extends ValueStorageRecord
 		if(editLog == null) editLog = "\n";
 		else if(!editLog.equals("")) editLog += "\n";
 		
-		editLog += user + " -> " + change;
+		editLog += "[" + new SimpleDateFormat("MM/dd/yyyy HH:mm:ss zzzz").format(Date.from(Instant.now())) + "] " + user + " -> " + change;
 	}
 	
 	protected final List<BiConsumer<BuildChangeType, Build>> buildListChangedListeners = new ArrayList<>();
@@ -207,14 +211,20 @@ public class Transaction extends ValueStorageRecord
 	public final ReadOnlyListProperty<Conflict> getConflictsReadOnly() { return conflicts.getReadOnlyProperty(); }
 	@JsonIgnore protected void addConflict(Conflict conflict)
 	{
-		Optional<Conflict> duplicate = conflicts.stream().filter(cnf -> cnf.equals(conflict)).findFirst();
+		if(conflict == null)
+		{
+			Log.getLogger().warn("Can't add null conflict to transaction!");
+			return;
+		}
+		
+		Optional<Conflict> duplicate = conflicts.stream().filter(cnf -> cnf != null && cnf.equals(conflict)).findFirst();
 		if(duplicate.isPresent()) conflicts.remove(duplicate.get());
 		conflicts.add(conflict);
 	}
 	public void invalidateConflicts() { conflicts.set(conflicts); }
 	protected void removeConflictsForBuild(int uid)
 	{
-		List<Conflict> matching = conflicts.stream().filter(c -> c.getBuildUID() == uid).toList();
+		List<Conflict> matching = conflicts.stream().filter(c -> c != null && c.getBuildUID() == uid).toList();
 		conflicts.removeAll(matching);
 	}
 	public IntegerBinding warningConflictCount() { return Bindings.createIntegerBinding(() -> conflicts.stream().filter(cnf -> cnf.isWarning()).toList().size(), conflicts); }

@@ -610,7 +610,7 @@ public abstract class Build extends ValueStorageRecord
 	
 	public void forceResetCatalog()
 	{
-		catalogPrice.set(catalogPrice.get() > 0 ? -1 : 1);
+		catalogPrice.set(catalogPrice.get() >= 0 ? -1 : 1);
 		runCatalogDetection();
 		unoverridenDescriptionProperty.bind(calculateDefaultDescription());
 	}

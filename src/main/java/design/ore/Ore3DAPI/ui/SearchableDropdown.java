@@ -146,7 +146,26 @@ public class SearchableDropdown<T> extends TextField
 	private void translatePopup()
 	{
 		Bounds posInScene = localToScene(getBoundsInLocal());
-		searchList.setTranslateX(posInScene.getMinX());
-		searchList.setTranslateY(posInScene.getMaxY());
+		
+		if(getScene() == null)
+		{
+			searchList.setTranslateX(posInScene.getMinX());
+			searchList.setTranslateY(posInScene.getMaxY());
+		}
+		else
+		{
+			double heightPoint = getScene().getHeight() - 350.0;
+	
+			if(posInScene.getMaxY() > heightPoint)
+			{
+				searchList.setTranslateX(posInScene.getMinX());
+				searchList.setTranslateY(posInScene.getMinY() - searchList.getHeight());
+			}
+			else
+			{
+				searchList.setTranslateX(posInScene.getMinX());
+				searchList.setTranslateY(posInScene.getMaxY());
+			}
+		}
 	}
 }
