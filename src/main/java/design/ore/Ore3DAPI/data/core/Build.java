@@ -367,7 +367,7 @@ public abstract class Build extends ValueStorageRecord
 			Log.getLogger().debug("Duplicated build JSON: " + original);
 			duplicate = Util.Mapper.getMapper().readValue(original, Build.class);
 		}
-		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + e.getMessage() + "\n" + Util.stackTraceArrayToString(e)); }
+		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + e.getMessage() + "\n" + Util.throwableToString(e)); }
 		
 		duplicate.regenerateBuildUUID();
 		duplicate.workOrder.setValue("");

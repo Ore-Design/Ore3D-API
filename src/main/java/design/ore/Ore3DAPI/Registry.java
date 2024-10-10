@@ -107,7 +107,7 @@ public class Registry
 			try { return bomEntryAccessor.call(); }
 			catch(Exception e)
 			{
-				Log.getLogger().warn("Failed to retrieve BOM Entries because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+				Log.getLogger().warn("Failed to retrieve BOM Entries because " + e.getMessage() + "\n" + Util.throwableToString(e));
 				return new HashMap<>();
 			}
 		}
@@ -131,7 +131,7 @@ public class Registry
 			try { return routingEntryAccessor.call(); }
 			catch(Exception e)
 			{
-				Log.getLogger().warn("Failed to retrieve Routing Entries because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+				Log.getLogger().warn("Failed to retrieve Routing Entries because " + e.getMessage() + "\n" + Util.throwableToString(e));
 				return new HashMap<>();
 			}
 		}

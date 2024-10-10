@@ -114,7 +114,7 @@ public class RoutingEntry extends ValueStorageRecord
 			Registry.handleRoutingDuplicate(newEntry);
 			return newEntry;
 		}
-		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.stackTraceArrayToString(e)); }
+		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.throwableToString(e)); }
 		return null;
 	}
 }

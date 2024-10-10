@@ -74,7 +74,7 @@ public class MiscEntry extends ValueStorageRecord
 		}
 		catch (JsonProcessingException e) 
 		{
-			Log.getLogger().error("Issue duplicating Misc entry!\n" + Util.stackTraceArrayToString(e));
+			Log.getLogger().error("Issue duplicating Misc entry!\n" + Util.throwableToString(e));
 		}
 		
 		return newEntry;

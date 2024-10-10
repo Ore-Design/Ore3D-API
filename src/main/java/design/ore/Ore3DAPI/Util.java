@@ -196,19 +196,22 @@ public class Util
 	    return result;
 	}
 
-	public static String stackTraceArrayToString(Throwable e)
+	public static String throwableToString(Throwable e)
 	{
-		return stackTraceArrayToString(e.getStackTrace());
+		if(e.getCause() != null)
+			return e.getLocalizedMessage() + stackTraceArrayToString(e.getStackTrace()) + "\nCaused by: " +
+			e.getCause().getLocalizedMessage() + stackTraceArrayToString(e.getCause().getStackTrace());
+		return e.getLocalizedMessage() + stackTraceArrayToString(e.getStackTrace());
 	}
 
 	public static String stackTraceArrayToString(StackTraceElement[] e)
 	{
 		StringBuilder str = new StringBuilder();
-		for(StackTraceElement el : e) { str.append(el.toString() + "\n"); }
+		for(StackTraceElement el : e) { str.append("\n\t" + el.toString()); }
 		return str.toString();
 	}
 	
-	public static String formatThrowable(String userDefinedMessage, Throwable e) { return userDefinedMessage + " - " + e.getMessage() + "\n" + stackTraceArrayToString(e); }
+	public static String formatThrowable(String userDefinedMessage, Throwable e) { return userDefinedMessage + " - " + throwableToString(e); }
 	
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
 	{
@@ -288,7 +291,7 @@ public class Util
 			if(loader != null)
 			{
 				try { loader.accept(transactionToLoad); }
-				catch(Exception e) { Log.getLogger().warn("Unable to load transaction with loader ID " + id + " because " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));}
+				catch(Exception e) { Log.getLogger().warn("Unable to load transaction with loader ID " + id + " because " + e.getMessage() + "\n" + Util.throwableToString(e));}
 			}
 			else Log.getLogger().warn("Unable to load transaction, as there is no transaction loader registered with the ID " + id + "!");
 		}
@@ -404,7 +407,7 @@ public class Util
 				try { return call.call(); }
 				catch (Exception e)
 				{
-					Log.getLogger().warn("Error running callable: " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+					Log.getLogger().warn("Error running callable: " + e.getMessage() + "\n" + Util.throwableToString(e));
 					return null;
 				}
 			}
@@ -420,7 +423,7 @@ public class Util
 				try { return task.get(); }
 				catch (InterruptedException | ExecutionException e)
 				{
-					Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e));
+					Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.throwableToString(e));
 					return null;
 				}
 			}
@@ -438,7 +441,7 @@ public class Util
 			if(Platform.isFxApplicationThread())
 			{
 				try { showNotification((Stage) owner.get(), title, message, seconds); }
-				catch (Exception e) { Log.getLogger().warn("Error running notification: " + e.getMessage() + "\n" + Util.stackTraceArrayToString(e)); }
+				catch (Exception e) { Log.getLogger().warn("Error running notification: " + e.getMessage() + "\n" + Util.throwableToString(e)); }
 			}
 			else
 			{
