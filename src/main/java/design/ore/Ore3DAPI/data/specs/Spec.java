@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.data.core.Build;
 import design.ore.Ore3DAPI.data.interfaces.ISpecUI;
+import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -29,7 +30,7 @@ import lombok.Setter;
 @JsonIgnoreProperties(value = {"bound", "name", "bean"}, ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-public abstract class Spec<T> extends SimpleObjectProperty<T>
+public abstract class Spec<T> extends SimpleObjectProperty<T> implements ISummaryOption
 {
 	@Getter @JsonIgnore protected final SimpleBooleanProperty readOnlyProperty = new SimpleBooleanProperty(false);
 	@JsonIgnore public boolean isReadOnly() { return readOnlyProperty.get(); }
@@ -141,11 +142,16 @@ public abstract class Spec<T> extends SimpleObjectProperty<T>
 	}
 	
 	@Override
-	public boolean equals(Object o)
+	public final boolean equals(Object o)
 	{
-		if(o == this || !(o instanceof Spec)) return false;
+		if(o == this) return true;
+		
+		if(!(o instanceof Spec)) return false;
 		
 		Spec<?> compare = (Spec<?>) o;
 		return this.id.equals(compare.id);
 	}
+	
+	@Override public String getSearchName() { return "Spec - " + id; }
+	@Override public Object getSummaryValue() { return this; }
 }

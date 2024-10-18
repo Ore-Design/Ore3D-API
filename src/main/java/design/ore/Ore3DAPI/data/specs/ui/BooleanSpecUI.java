@@ -39,6 +39,7 @@ public class BooleanSpecUI extends HBox implements ISpecUI<Boolean>
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
 		
 		check = new CheckBox();
+		check.getStyleClass().add("spec-check-box");
 		check.setMaxWidth(Double.MAX_VALUE);
 		Util.UI.checkboxMatchSize(check);
 		HBox.setHgrow(check, Priority.ALWAYS);

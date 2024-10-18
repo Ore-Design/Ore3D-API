@@ -9,6 +9,7 @@ import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -21,7 +22,7 @@ import javafx.beans.value.ObservableNumberValue;
 import lombok.Getter;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-public class MiscEntry extends ValueStorageRecord
+public class MiscEntry extends ValueStorageRecord implements ISummaryOption
 {
 	@JsonIgnore @Getter protected final SimpleStringProperty nameProperty;
 	@JsonProperty("n") public String getName() { return nameProperty.get(); }
@@ -79,4 +80,7 @@ public class MiscEntry extends ValueStorageRecord
 		
 		return newEntry;
 	}
+	
+	@Override public String getSearchName() { return "Misc Entry - " + getName(); }
+	@Override public Object getSummaryValue() { return this; }
 }

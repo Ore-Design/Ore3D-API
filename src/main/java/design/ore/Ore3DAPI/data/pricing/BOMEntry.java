@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -27,7 +28,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-public class BOMEntry extends ValueStorageRecord
+public class BOMEntry extends ValueStorageRecord implements ISummaryOption
 {
 	public BOMEntry() { this("", "", "", "", 0, true, 0, 0, false, Util.zeroDoubleBinding()); }
 	
@@ -138,4 +139,7 @@ public class BOMEntry extends ValueStorageRecord
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity, boolean isCustom) { return duplicate(newQuantity, parentQuantity, isCustom, getIgnoreParentQuantity()); }
 	public BOMEntry duplicate(double newQuantity, ObservableNumberValue parentQuantity) { return duplicate(newQuantity, parentQuantity, isCustomEntry()); }
 	public BOMEntry duplicate(ObservableNumberValue parentQuantity) { return duplicate(getQuantity(), parentQuantity); }
+	
+	@Override public String getSearchName() { return "BOM Entry - " + shortName; }
+	@Override public Object getSummaryValue() { return this; }
 }

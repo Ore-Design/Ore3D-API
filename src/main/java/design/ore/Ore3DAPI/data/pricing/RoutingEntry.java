@@ -8,6 +8,7 @@ import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -24,7 +25,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-public class RoutingEntry extends ValueStorageRecord
+public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 {
 	public RoutingEntry() { this("", "", 0, 0, 0, Util.zeroDoubleBinding(), false); }
 	
@@ -117,4 +118,7 @@ public class RoutingEntry extends ValueStorageRecord
 		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.throwableToString(e)); }
 		return null;
 	}
+	
+	@Override public String getSearchName() { return "Routing Entry - " + name; }
+	@Override public Object getSummaryValue() { return this; }
 }

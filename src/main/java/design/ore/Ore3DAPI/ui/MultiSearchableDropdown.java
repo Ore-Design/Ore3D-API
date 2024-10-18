@@ -1,11 +1,12 @@
 package design.ore.Ore3DAPI.ui;
 
 import java.util.Collection;
+import java.util.List;
 
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.EventHandler;
@@ -22,41 +23,38 @@ import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.Setter;
 
-public class SearchableDropdown<T> extends TextField
+public class MultiSearchableDropdown<T> extends TextField
 {
 	@Getter final ObservableList<T> items;
 	final FilteredList<T> filteredItems;
 	public void setItems(Collection<T> items) { this.items.setAll(items); }
 	
-	private final SimpleObjectProperty<T> valueProperty = new SimpleObjectProperty<>();
-	public void setValue(T value) { valueProperty.set(value); }
-	public T getValue() { return valueProperty.get(); }
+	@Getter private final ObservableList<T> selectedValuesProperty = FXCollections.<T>observableArrayList();
+	
 	public void clearSelection() { searchList.getSelectionModel().clearSelection(); }
-	public SimpleObjectProperty<T> valueProperty() { return valueProperty; }
+	
 	private final ChangeListener<Number> resizeListener = (obs, oldVal, newVal) -> translatePopup();
 	private final EventHandler<? super ScrollEvent> scrollEvent = e -> translatePopup();
 	
 	private final BooleanBinding paneVisibleBinding;
+	public boolean paneIsVisible() { return paneVisibleBinding.get(); }
 	
 	@Getter @Setter private StringConverter<T> converter;
 	
-//	private final ScrollPane searchPane;
 	private final ListView<T> searchList;
 	
-	public SearchableDropdown() { this(FXCollections.observableArrayList()); }
+	public MultiSearchableDropdown() { this(FXCollections.observableArrayList()); }
 	
-	private final SearchableDropdown<T> INSTANCE;
-	
-	public SearchableDropdown(ObservableList<T> items)
+	public MultiSearchableDropdown(ObservableList<T> items)
 	{
 		super();
-		INSTANCE = this;
+		
 		this.items = items;
 		
 		filteredItems = this.items.filtered(item -> true);
 		
 		searchList = new ListView<>(filteredItems);
-		searchList.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+		searchList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		searchList.prefWidthProperty().bind(widthProperty());
 		searchList.setMaxWidth(USE_PREF_SIZE);
 		searchList.getStyleClass().add("searchable-dropdown-list");
@@ -65,10 +63,12 @@ public class SearchableDropdown<T> extends TextField
 		paneVisibleBinding = focusedProperty().or(searchList.focusedProperty());
 		searchList.visibleProperty().bind(paneVisibleBinding);
 		
-		valueProperty.addListener((obs, oldVal, newVal) ->
+		selectedValuesProperty.addListener((Change<? extends T> c) ->
 		{
-			if(newVal != null) setText(converter.toString(newVal));
-			else setText("-");
+			while(c.next())
+			{
+				if(paneVisibleBinding.not().get()) handleTextFill(c.getList());
+			}
 		});
 		
 		textProperty().addListener((obs, oldVal, newVal) ->
@@ -113,8 +113,7 @@ public class SearchableDropdown<T> extends TextField
 		{
 			if(newVal == null || !newVal)
 			{
-				if(valueProperty.get() == null) setText("-");
-				else { setText(converter.toString(valueProperty.get())); }
+				handleTextFill(selectedValuesProperty);
 				if(getScene() != null) getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
 			}
 			else if(newVal)
@@ -122,9 +121,19 @@ public class SearchableDropdown<T> extends TextField
 				if(getScene() != null) getScene().addEventFilter(ScrollEvent.ANY, scrollEvent);
 				setText("");
 				translatePopup();
-				searchList.getSelectionModel().select(getValue());
 			}
 		});
+	}
+	
+	private void handleTextFill(List<? extends T> list)
+	{
+		if(list.size() == 0) setText("-");
+		else if(list.size() == 1)
+		{
+			if(converter != null) setText(converter.toString(list.getFirst()));
+			else setText(list.getFirst().toString());
+		}
+		else setText(list.size() + " values...");
 	}
 	
 	public void setCellFactory(Callback<ListView<T>, ListCell<T>> callback)
@@ -134,10 +143,11 @@ public class SearchableDropdown<T> extends TextField
 			ListCell<T> cell = callback.call(listView);
 			cell.prefWidthProperty().bind(searchList.widthProperty());
 			cell.setMaxWidth(USE_PREF_SIZE);
-			cell.setOnMouseClicked(e ->
+			cell.setOnMousePressed(e ->
 			{
-				setValue(cell.getItem());
-				INSTANCE.getParent().requestFocus();
+				if(selectedValuesProperty.size() == 1 && selectedValuesProperty.stream().anyMatch(val -> val != null && val.equals(cell.getItem())))
+				{ selectedValuesProperty.clear(); }
+				else if(!selectedValuesProperty.remove(cell.getItem())) selectedValuesProperty.add(cell.getItem());
 			});
 			return cell;
 		});
