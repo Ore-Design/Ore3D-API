@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import design.ore.Ore3DAPI.Util;
+import design.ore.Ore3DAPI.Util.UI;
 import design.ore.Ore3DAPI.data.interfaces.ISpecUI;
 import design.ore.Ore3DAPI.data.specs.BooleanSpec;
 import design.ore.Ore3DAPI.data.specs.Spec;
@@ -13,11 +13,9 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 
 public class BooleanSpecUI extends HBox implements ISpecUI<Boolean>
 {
@@ -36,18 +34,17 @@ public class BooleanSpecUI extends HBox implements ISpecUI<Boolean>
 		idLabel = new Label(parentSpec.getId());
 		idLabel.getStyleClass().add("spec-label");
 		idLabel.prefWidthProperty().bind(widthProperty().multiply(0.4));
-		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
+		idLabel.setMaxWidth(USE_PREF_SIZE);
 		
 		check = new CheckBox();
 		check.getStyleClass().add("spec-check-box");
-		check.setMaxWidth(Double.MAX_VALUE);
-		Util.UI.checkboxMatchSize(check);
-		HBox.setHgrow(check, Priority.ALWAYS);
+		check.maxHeightProperty().bind(idLabel.heightProperty());
+		UI.checkboxMatchSize(check);
 		
 		getChildren().addAll(idLabel, check);
 		setAlignment(Pos.CENTER_LEFT);
-		setPrefHeight(20);
-		setMaxHeight(Control.USE_PREF_SIZE);
+		setMinHeight(USE_PREF_SIZE);
+		setFillHeight(true);
 		
 		uniqueBehaviorIdentifierListener = (obs, oldVal, newVal) ->
 		{

@@ -92,8 +92,7 @@ public class SearchableMapSpecUI<T, V> extends HBox implements ISpecUI<T>
 		
 		getChildren().addAll(idLabel, dropdown);
 		setAlignment(Pos.CENTER_LEFT);
-		setPrefHeight(20);
-		setMaxHeight(Control.USE_PREF_SIZE);
+		setMinHeight(Control.USE_PREF_SIZE);
 
 		uniqueBehaviorIdentifierListener = (obs, oldVal, newVal) ->
 		{

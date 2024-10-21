@@ -51,10 +51,12 @@ public class DoubleSpecUI extends HBox implements ISpecUI<Number>
 		linkToggleButton = new ToggleIconButton(
 			Util.UI.colorize(new ImageView(Util.getChainIcon()), Colors.getAccentProperty()),
 			Util.UI.colorize(new ImageView(Util.getBrokenChainIcon()), Colors.getAccentProperty()),
-			true);
+			false);
 		linkToggleButton.setOnAction(e -> parentSpec.setLinkIsActive(!parentSpec.linkIsActive()));
-		linkToggleButton.prefWidthProperty().bind(widthProperty().multiply(0.1));
-		linkToggleButton.setMaxWidth(Control.USE_PREF_SIZE);
+		linkToggleButton.prefHeightProperty().bind(heightProperty());
+		linkToggleButton.setMaxWidth(USE_PREF_SIZE);
+		linkToggleButton.maxHeightProperty().bind(linkToggleButton.widthProperty());
+		linkToggleButton.setMinHeight(0);
 
 		inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
@@ -64,8 +66,8 @@ public class DoubleSpecUI extends HBox implements ISpecUI<Number>
 		
 		getChildren().addAll(idLabel, linkToggleButton, inputField);
 		setAlignment(Pos.CENTER_LEFT);
-		setPrefHeight(20);
-		setMaxHeight(Control.USE_PREF_SIZE);
+		setMinHeight(Control.USE_PREF_SIZE);
+		
 
 		uniqueBehaviorIdentifierListener = (obs, oldVal, newVal) ->
 		{
