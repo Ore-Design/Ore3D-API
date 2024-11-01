@@ -1,13 +1,13 @@
 package design.ore.Ore3DAPI.ui;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -29,9 +29,7 @@ public class MultiSearchableDropdown<T> extends TextField
 	final FilteredList<T> filteredItems;
 	public void setItems(Collection<T> items) { this.items.setAll(items); }
 	
-	@Getter private final ObservableList<T> selectedValuesProperty = FXCollections.<T>observableArrayList();
-	
-	public void clearSelection() { searchList.getSelectionModel().clearSelection(); }
+	@Getter final ObservableSet<T> selectedItems;
 	
 	private final ChangeListener<Number> resizeListener = (obs, oldVal, newVal) -> translatePopup();
 	private final EventHandler<? super ScrollEvent> scrollEvent = e -> translatePopup();
@@ -53,6 +51,8 @@ public class MultiSearchableDropdown<T> extends TextField
 		
 		filteredItems = this.items.filtered(item -> true);
 		
+		selectedItems = FXCollections.observableSet(new HashSet<>());
+		
 		searchList = new ListView<>(filteredItems);
 		searchList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		searchList.prefWidthProperty().bind(widthProperty());
@@ -63,25 +63,17 @@ public class MultiSearchableDropdown<T> extends TextField
 		paneVisibleBinding = focusedProperty().or(searchList.focusedProperty());
 		searchList.visibleProperty().bind(paneVisibleBinding);
 		
-		selectedValuesProperty.addListener((Change<? extends T> c) ->
-		{
-			while(c.next())
-			{
-				if(paneVisibleBinding.not().get()) handleTextFill(c.getList());
-			}
-		});
-		
 		textProperty().addListener((obs, oldVal, newVal) ->
 		{
-			if(newVal != null && !newVal.equals(""))
+			if(newVal != null && !newVal.equals("") && paneVisibleBinding.get())
 			{
-				this.filteredItems.setPredicate(item ->
+				filteredItems.setPredicate(item ->
 				{
 					String converted = converter.toString(item);
 					return converted != null && newVal != null && converted.toLowerCase().contains(newVal.toLowerCase());
 				});
 			}
-			else this.filteredItems.setPredicate(item -> true);
+			else filteredItems.setPredicate(item -> true);
 		});
 		
 		setOnKeyPressed(e -> { if(e.getCode() == KeyCode.ESCAPE) getParent().requestFocus(); });
@@ -113,7 +105,7 @@ public class MultiSearchableDropdown<T> extends TextField
 		{
 			if(newVal == null || !newVal)
 			{
-				handleTextFill(selectedValuesProperty);
+				handleTextFill();
 				if(getScene() != null) getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
 			}
 			else if(newVal)
@@ -125,15 +117,18 @@ public class MultiSearchableDropdown<T> extends TextField
 		});
 	}
 	
-	private void handleTextFill(List<? extends T> list)
+	public void handleTextFill()
 	{
-		if(list.size() == 0) setText("-");
-		else if(list.size() == 1)
+		if(selectedItems.size() == 0) setText("-");
+		else if(selectedItems.size() == 1)
 		{
-			if(converter != null) setText(converter.toString(list.getFirst()));
-			else setText(list.getFirst().toString());
+			@SuppressWarnings("unchecked")
+			T first = (T) selectedItems.toArray()[0];
+			
+			if(converter != null) setText(converter.toString(first));
+			else setText(first.toString());
 		}
-		else setText(list.size() + " values...");
+		else setText(selectedItems.size() + " values...");
 	}
 	
 	public void setCellFactory(Callback<ListView<T>, ListCell<T>> callback)
@@ -141,14 +136,8 @@ public class MultiSearchableDropdown<T> extends TextField
 		searchList.setCellFactory(listView ->
 		{
 			ListCell<T> cell = callback.call(listView);
-			cell.prefWidthProperty().bind(searchList.widthProperty());
 			cell.setMaxWidth(USE_PREF_SIZE);
-			cell.setOnMousePressed(e ->
-			{
-				if(selectedValuesProperty.size() == 1 && selectedValuesProperty.stream().anyMatch(val -> val != null && val.equals(cell.getItem())))
-				{ selectedValuesProperty.clear(); }
-				else if(!selectedValuesProperty.remove(cell.getItem())) selectedValuesProperty.add(cell.getItem());
-			});
+			cell.setOnMousePressed(e -> { if(!selectedItems.remove(cell.getItem())) selectedItems.add(cell.getItem()); });
 			return cell;
 		});
 	}

@@ -22,7 +22,8 @@ public class IconButton extends Button
 			icon.fitWidthProperty().bind(heightProperty().multiply(0.65));
 		}
 		
-		setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		setMinSize(0, 0);
+		setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		setGraphic(icon);
 		getStyleClass().add("icon-button");
 	}

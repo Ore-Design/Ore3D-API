@@ -1,5 +1,8 @@
 package design.ore.Ore3DAPI.data.pricing;
 
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,16 +12,18 @@ import design.ore.Ore3DAPI.Registry;
 import design.ore.Ore3DAPI.Util;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.data.core.Build;
 import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableNumberValue;
 import lombok.Getter;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
@@ -46,31 +51,35 @@ public class MiscEntry extends ValueStorageRecord implements ISummaryOption
 	@JsonIgnore @Getter protected SimpleStringProperty unitOfMeasureProperty;
 	@JsonProperty("uom") public String getUnitOfMeasure() { return unitOfMeasureProperty.get(); }
 	@JsonProperty("uom") public void setUnitOfMeasure(String val) { unitOfMeasureProperty.set(val); }
+	
+	@JsonIgnore @Getter protected final ObjectProperty<Build> buildProperty = new SimpleObjectProperty<>();
+	public void setParentBuild(Build build) { buildProperty.set(build); }
+	public Build getParentBuild() { return buildProperty.get(); }
 
-	public MiscEntry() { this("", 0, 1, Util.zeroDoubleBinding()); }
-	public MiscEntry(String name, double cost, double quantity, ObservableNumberValue parentQuantity)
+	public MiscEntry() { this("", 0, 1, null); }
+	public MiscEntry(String name, double cost, double quantity, Build parent)
 	{
+		buildProperty.set(parent);
+		
 		nameProperty = new SimpleStringProperty(name);
 		priceProperty = new SimpleDoubleProperty(cost);
 		quantityProperty = new SimpleDoubleProperty(quantity);
 		unitPriceProperty = quantityProperty.multiply(priceProperty);
 		ignoreParentQuantityProperty = new SimpleBooleanProperty(false);
 		unitOfMeasureProperty = new SimpleStringProperty("");
-		
-		rebind(parentQuantity);
-	}
-	
-	public void rebind(ObservableNumberValue parentQuantity)
-	{ totalPriceProperty.bind(Bindings.when(ignoreParentQuantityProperty).then(unitPriceProperty).otherwise((unitPriceProperty.multiply(parentQuantity)))); }
 
-	public MiscEntry duplicate(ObservableNumberValue newParentQuantity)
+		MonadicBinding<Number> safeParentQtyBinding = EasyBind.select(buildProperty).selectObject(b -> b.getQuantity());
+		totalPriceProperty.bind(Bindings.when(ignoreParentQuantityProperty).then(unitPriceProperty)
+			.otherwise(unitPriceProperty.multiply(Bindings.createDoubleBinding(() -> safeParentQtyBinding.get() == null ? 0 : safeParentQtyBinding.get().doubleValue(), safeParentQtyBinding))));
+	}
+	public MiscEntry duplicate(Build newParent)
 	{
 		MiscEntry newEntry = null;
 		try
 		{
 			String json = Mapper.getMapper().writeValueAsString(this);
 			newEntry = Mapper.getMapper().readValue(json, MiscEntry.class);
-			newEntry.rebind(newParentQuantity);
+			newEntry.setParentBuild(newParent);
 			Registry.handleMiscDuplicate(newEntry);
 		}
 		catch (JsonProcessingException e) 
@@ -81,6 +90,6 @@ public class MiscEntry extends ValueStorageRecord implements ISummaryOption
 		return newEntry;
 	}
 	
-	@Override public String getSearchName() { return "Misc Entry - " + getName(); }
-	@Override public Object getSummaryValue() { return this; }
+	@JsonIgnore @Override public String getSearchName() { return "Misc Entry - " + getName(); }
+	@JsonIgnore @Override public Object getSummaryValue() { return this; }
 }

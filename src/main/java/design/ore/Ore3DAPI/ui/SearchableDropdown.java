@@ -40,7 +40,6 @@ public class SearchableDropdown<T> extends TextField
 	
 	@Getter @Setter private StringConverter<T> converter;
 	
-//	private final ScrollPane searchPane;
 	private final ListView<T> searchList;
 	
 	public SearchableDropdown() { this(FXCollections.observableArrayList()); }
@@ -52,6 +51,8 @@ public class SearchableDropdown<T> extends TextField
 		super();
 		INSTANCE = this;
 		this.items = items;
+		
+		setPromptText("-");
 		
 		filteredItems = this.items.filtered(item -> true);
 		
@@ -68,7 +69,7 @@ public class SearchableDropdown<T> extends TextField
 		valueProperty.addListener((obs, oldVal, newVal) ->
 		{
 			if(newVal != null) setText(converter.toString(newVal));
-			else setText("-");
+			else setText(getPromptText());
 		});
 		
 		textProperty().addListener((obs, oldVal, newVal) ->
@@ -113,7 +114,7 @@ public class SearchableDropdown<T> extends TextField
 		{
 			if(newVal == null || !newVal)
 			{
-				if(valueProperty.get() == null) setText("-");
+				if(valueProperty.get() == null) setText(getPromptText());
 				else { setText(converter.toString(valueProperty.get())); }
 				if(getScene() != null) getScene().removeEventFilter(ScrollEvent.ANY, scrollEvent);
 			}

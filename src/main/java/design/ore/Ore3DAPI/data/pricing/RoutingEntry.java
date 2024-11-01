@@ -1,18 +1,20 @@
 package design.ore.Ore3DAPI.data.pricing;
 
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import design.ore.Ore3DAPI.Registry;
-import design.ore.Ore3DAPI.Util;
-import design.ore.Ore3DAPI.Util.Log;
-import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.data.core.Build;
 import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -20,14 +22,14 @@ import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ObservableNumberValue;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 {
-	public RoutingEntry() { this("", "", 0, 0, 0, Util.zeroDoubleBinding(), false); }
+	public RoutingEntry() { this("", "", 0, 0, 0, null, false); }
 	
 	@Getter @Setter protected String id;
 	@JsonProperty("n") @Getter @Setter protected String name;
@@ -48,8 +50,8 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 	@JsonProperty("ovrq") public void setOverriddenQuantity(double val) { overridenQuantityProperty.set(val); }
 	@JsonIgnore @Getter protected BooleanBinding quantityOverriddenProperty;
 
-	protected final ReadOnlyDoubleWrapper quantityProperty;
-	@JsonIgnore public ReadOnlyDoubleProperty getQuantityProperty() { return quantityProperty.getReadOnlyProperty(); }
+	protected final ReadOnlyDoubleWrapper unitQuantityProperty;
+	@JsonIgnore public ReadOnlyDoubleProperty getQuantityProperty() { return unitQuantityProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyDoubleWrapper totalCostProperty;
 	@JsonIgnore public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyIntegerWrapper marginProperty;
@@ -57,13 +59,23 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 	@JsonProperty("m") public void setMargin(int val) { marginProperty.set(val); }
 	@JsonIgnore public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
 
-	protected final DoubleBinding marginDenominatorProperty;
-	@JsonIgnore @Getter protected final DoubleBinding totalPriceProperty;
-	@JsonIgnore @Getter protected final DoubleBinding unitCostProperty;
-	@JsonIgnore @Getter protected final DoubleBinding unitPriceProperty;
+	@JsonIgnore protected ReadOnlyDoubleWrapper totalQuantityProperty;
+	@JsonIgnore public ReadOnlyDoubleProperty getTotalQuantityProperty() { return totalQuantityProperty.getReadOnlyProperty(); }
+	@JsonIgnore public double getTotalQuantity() { return totalQuantityProperty.get(); }
 	
-	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, ObservableNumberValue parentQuantity, boolean customEntry)
+	protected DoubleBinding marginDenominatorProperty;
+	@JsonIgnore @Getter protected DoubleBinding totalPriceProperty;
+	@JsonIgnore @Getter protected DoubleBinding unitCostProperty;
+	@JsonIgnore @Getter protected DoubleBinding unitPriceProperty;
+	
+	@JsonIgnore @Getter protected final ObjectProperty<Build> buildProperty = new SimpleObjectProperty<>();
+	@JsonIgnore public void setParentBuild(Build build) { buildProperty.set(build); }
+	@JsonIgnore public Build getParentBuild() { return buildProperty.get(); }
+	
+	public RoutingEntry(String id, String name, double costPerQuantity, double quantity, int margin, Build parent, boolean customEntry)
 	{
+		buildProperty.set(parent);
+		
 		this.id = id;
 		this.name = name;
 		this.costPerQuantityProperty = new SimpleDoubleProperty();
@@ -73,15 +85,19 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 		this.overridenQuantityProperty = new SimpleDoubleProperty(-1.0);
 		this.quantityOverriddenProperty = overridenQuantityProperty.greaterThanOrEqualTo(0.0).and(this.customEntry.not()).and(overridenQuantityProperty.isEqualTo(unoverriddenQuantityProperty).not());
 		
-		quantityProperty = new ReadOnlyDoubleWrapper();
-		quantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
+		unitQuantityProperty = new ReadOnlyDoubleWrapper();
+		unitQuantityProperty.bind(Bindings.when(quantityOverriddenProperty).then(overridenQuantityProperty).otherwise(unoverriddenQuantityProperty));
 		
 		this.costPerQuantityProperty.setValue(costPerQuantity);
-		this.unitCostProperty = quantityProperty.multiply(costPerQuantityProperty);
+		this.unitCostProperty = unitQuantityProperty.multiply(costPerQuantityProperty);
 		
 		this.totalCostProperty = new ReadOnlyDoubleWrapper();
-		
-		totalCostProperty.bind(unitCostProperty.multiply(parentQuantity));
+
+		MonadicBinding<Number> safeParentQtyBinding = EasyBind.select(buildProperty).selectObject(b -> b.getQuantity());
+		totalCostProperty.bind(unitCostProperty.multiply(Bindings.createDoubleBinding(() -> safeParentQtyBinding.get() == null ? 0 : safeParentQtyBinding.get().doubleValue(), safeParentQtyBinding)));
+
+		totalQuantityProperty = new ReadOnlyDoubleWrapper();
+		totalQuantityProperty.bind(unitQuantityProperty.multiply(Bindings.createDoubleBinding(() -> safeParentQtyBinding.get() == null ? 0 : safeParentQtyBinding.get().doubleValue(), safeParentQtyBinding)));
 		
 		this.marginProperty = new ReadOnlyIntegerWrapper(margin);
 		
@@ -90,35 +106,26 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 		this.unitPriceProperty = unitCostProperty.divide(marginDenominatorProperty);
 	}
 	
-	public RoutingEntry(String id, String name, double costPerQuantity, int margin, ObservableNumberValue parentQuantity, boolean customEntry)
+	public RoutingEntry(String id, String name, double costPerQuantity, int margin, Build parent, boolean customEntry)
 	{
-		this(id, name, costPerQuantity, 0.0, margin, parentQuantity, customEntry);
-	}
-	
-	public RoutingEntry(String id, String name, double qty, double overriddenQty, int margin, boolean customEntry)
-	{
-		this(id, "", 0, qty, margin, new SimpleDoubleProperty(0), customEntry);
-		this.overridenQuantityProperty.set(overriddenQty);
+		this(id, name, costPerQuantity, 0.0, margin, parent, customEntry);
 	}
 
-	public RoutingEntry duplicate(Double newCostPerQuantity, Double newQuantity, ObservableNumberValue parentQuantity, Boolean isCustom, Double overriddenQuantity)
+	public RoutingEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, int margin, Double overriddenQuantity, boolean isCustom)
 	{
-		try
-		{
-			String json = Mapper.getMapper().writeValueAsString(this);
-			RoutingEntry newEntry = Mapper.getMapper().readValue(json, RoutingEntry.class);
-			if(isCustom != null) newEntry.customEntry.set(isCustom);
-			if(newCostPerQuantity != null) newEntry.setCostPerQuantity(newCostPerQuantity);
-			if(newQuantity != null) newEntry.unoverriddenQuantityProperty.setValue(newQuantity);
-			if(parentQuantity != null) newEntry.totalCostProperty.bind(newEntry.unitCostProperty.multiply(parentQuantity));
-			if(overriddenQuantity != null) newEntry.overridenQuantityProperty.set(overriddenQuantity);
-			Registry.handleRoutingDuplicate(newEntry);
-			return newEntry;
-		}
-		catch (Exception e) { Log.getLogger().error("Error duplicating routing entry:\n" + Util.throwableToString(e)); }
-		return null;
+		RoutingEntry newEntry = new RoutingEntry(id, name, newCostPerQuantity, newQuantity, margin, parent, isCustom);
+		newEntry.putStoredValues(getStoredValues());
+		if(overriddenQuantity != null) newEntry.setOverriddenQuantity(overriddenQuantity);
+		Registry.handleRoutingDuplicate(newEntry);
+		return newEntry;
 	}
+	public RoutingEntry duplicate(double newQuantity, Build parent, Double overriddenQuantity, boolean isCustom) { return duplicate(costPerQuantityProperty.doubleValue(), newQuantity, parent, getMargin(), overriddenQuantity, isCustom); }
+	public RoutingEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, Double overriddenQuantity, boolean isCustom) { return duplicate(newCostPerQuantity, newQuantity, parent, getMargin(), overriddenQuantity, isCustom); }
+	public RoutingEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, boolean isCustom) { return duplicate(newCostPerQuantity, newQuantity, parent, null, isCustom); }
+	public RoutingEntry duplicate(double newQuantity, Build parent, boolean isCustom) { return duplicate(getCostPerQuantity(), newQuantity, parent, isCustom); }
+	public RoutingEntry duplicate(double newQuantity, Build parent) { return duplicate(newQuantity, parent, isCustomEntry()); }
+	public RoutingEntry duplicate(Build parent) { return duplicate(getQuantity(), parent); }
 	
-	@Override public String getSearchName() { return "Routing Entry - " + name; }
-	@Override public Object getSummaryValue() { return this; }
+	@JsonIgnore @Override public String getSearchName() { return "Routing Entry - " + name; }
+	@JsonIgnore @Override public Object getSummaryValue() { return this; }
 }

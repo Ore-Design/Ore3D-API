@@ -1,5 +1,8 @@
 package design.ore.Ore3DAPI.data.crm.employee;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -17,4 +20,7 @@ import lombok.Setter;
 public class EmployeeSettings
 {
 	int autosaveInterval = 60;
+	Map<String, String> serializedBOMSummaryTemplates = new HashMap<>();
+	Map<String, String> serializedRoutingSummaryTemplates = new HashMap<>();
+	Map<String, String> serializedSpecSummaryTemplates = new HashMap<>();
 }

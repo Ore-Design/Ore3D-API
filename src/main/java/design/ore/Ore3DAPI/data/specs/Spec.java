@@ -16,10 +16,12 @@ import design.ore.Ore3DAPI.data.interfaces.ISpecUI;
 import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -63,6 +65,15 @@ public abstract class Spec<T> extends SimpleObjectProperty<T> implements ISummar
 				Parent uiParent = oldVal.getUINode().getParent();
 				if(uiParent instanceof VBox) ((VBox) uiParent).getChildren().remove(oldVal.getUINode());
 				oldVal.unbindUI();
+			}
+		});
+		
+		linkedSpecs.addListener((Change<? extends Spec<T>> c) ->
+		{
+			while(c.next())
+			{
+				c.getAddedSubList().forEach(rem -> linkIsActiveProperty.bindBidirectional(rem.getLinkIsActiveProperty()));
+				c.getRemoved().forEach(rem -> linkIsActiveProperty.unbindBidirectional(rem.getLinkIsActiveProperty()));
 			}
 		});
 	}
@@ -154,4 +165,6 @@ public abstract class Spec<T> extends SimpleObjectProperty<T> implements ISummar
 	
 	@Override public String getSearchName() { return "Spec - " + id; }
 	@Override public Object getSummaryValue() { return this; }
+	
+	@JsonIgnore @Getter private final BooleanProperty selectedProperty = new SimpleBooleanProperty(false);
 }

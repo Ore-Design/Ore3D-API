@@ -248,14 +248,14 @@ public abstract class Build extends ValueStorageRecord
 						
 						checkIndex();
 						
-						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should be fire AFTER parent values are set
+						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.ADDED, cb); // Event should fire AFTER parent values are set
 					}
 				}
 				else if(c.wasRemoved())
 				{
 					for(Build cb : c.getRemoved())
 					{
-						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.REMOVED, cb); // Event should be fire BEFORE parent values are removed
+						if(parentTransactionProperty.get() != null) parentTransactionProperty.get().fireBuildListChangedEvent(BuildChangeType.REMOVED, cb); // Event should fire BEFORE parent values are removed
 						
 						cb.parentBuildProperty.setValue(null);
 						cb.getParentTransactionProperty().unbind();
@@ -274,7 +274,7 @@ public abstract class Build extends ValueStorageRecord
 		{
 			while(c.next())
 			{
-				for(MiscEntry me : c.getAddedSubList()) { me.rebind(quantity); }
+				for(MiscEntry me : c.getAddedSubList()) { me.setParentBuild(this); }
 			}
 		});
 		
