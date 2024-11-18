@@ -42,7 +42,21 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @see                    Transaction
 	 */
 	default UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean saveOriginal)
-	{ return duplicateTransaction(navigationID, transaction, saveOriginal, (tran) -> {}); }
+	{ return duplicateTransaction(navigationID, transaction, false, (tran) -> {}); }
+	
+	/*
+	 * @deprecated Use {@link #duplicateTransaction(String, Transaction, Consumer<Transaction>)} instead.
+	 * Creates a copy of the <code>Transaction</code> passed in.
+	 * 
+	 * @param   navigationID   the ID of the UI element calling this function.
+	 * @param   transaction    the <code>Transaction</code> to be duplicated.
+	 * @param   saveOriginal   true if the original transaction should be saved, otherwise false.
+	 * @param   callback       Should be passed the duplicated transaction once it is created.
+	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
+	 * @see                    Transaction
+	 */
+	default UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean saveOriginal, Consumer<Transaction> callback)
+	{ return duplicateTransaction(navigationID, transaction, (tran) -> {}); }
 	
 	/*
 	 * Creates a copy of the <code>Transaction</code> passed in.
@@ -54,7 +68,7 @@ public interface CRMEndpoint extends ExtensionPoint
 	 * @return                 <code>UpdatePacket</code> containing tasks to perform the action.
 	 * @see                    Transaction
 	 */
-	UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, boolean saveOriginal, Consumer<Transaction> callback);
+	UpdatePacket duplicateTransaction(String navigationID, Transaction transaction, Consumer<Transaction> callback);
 	
 	/*
 	 * Generates work orders for each build UID contained in the <code>Transaction</code>.

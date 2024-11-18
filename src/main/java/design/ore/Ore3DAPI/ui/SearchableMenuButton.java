@@ -16,7 +16,6 @@ public class SearchableMenuButton extends TextField
 	
 	public SearchableMenuButton(String title)
 	{
-		
 		getStyleClass().add("searchable-menu-button");
 		setPromptText("Search Items...");
 		textProperty().addListener((obs, oldVal, newVal) -> filterOptions(newVal));
@@ -74,5 +73,10 @@ public class SearchableMenuButton extends TextField
 			
 		item.setVisible(false);
 		return false;
+	}
+
+	public void unbind()
+	{
+		contextMenu.getItems().clear();
 	}
 }

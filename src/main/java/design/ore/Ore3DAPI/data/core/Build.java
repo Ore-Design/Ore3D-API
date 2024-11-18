@@ -72,12 +72,6 @@ import lombok.Getter;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Build extends ValueStorageRecord
 {
-//	private final ChangeListener<Boolean> childUpdateListener = new ChangeListener<Boolean>()
-//	{
-//		@Override
-//		public void changed(ObservableValue<? extends Boolean> obs, Boolean oldVal, Boolean newVal) { if(newVal) { buildIsDirty.setValue(true); } }
-//	};
-
 	private final ChangeListener<Boolean> childCatalogListener = (obs, oldVal, newVal) -> runCatalogDetection();
 	
 	@Getter protected int buildUUID = new Random().nextInt(111111, 1000000);
@@ -115,6 +109,10 @@ public abstract class Build extends ValueStorageRecord
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
 	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
+	
+	@JsonIgnore protected final ReadOnlyBooleanWrapper titleEditableProperty = new ReadOnlyBooleanWrapper(true);
+	@JsonIgnore public ReadOnlyBooleanProperty getTitleEditableProperty() { return titleEditableProperty.getReadOnlyProperty(); }
+	@JsonIgnore public boolean isTitleEditable() { return titleEditableProperty.get(); }
 	
 	// Description Stuff
 	@JsonIgnore @JsonMerge final protected ReadOnlyStringWrapper unoverridenDescriptionProperty = new ReadOnlyStringWrapper("");
@@ -550,6 +548,7 @@ public abstract class Build extends ValueStorageRecord
 		return (DoubleBinding) Bindings.when(isCatalog).then(binding.add(catalogPrice)).otherwise(binding.add(nonCatalogValues));
 	}
 	
+	// This is what the build's ACTUAL total price is, including parent-ignored BOM and Misc entries.
 	public NumberBinding getTotalPrice()
 	{
 		if(price.totalPriceOverriddenProperty.get()) return price.totalPrice;

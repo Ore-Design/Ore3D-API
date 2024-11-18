@@ -13,8 +13,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.qos.logback.classic.Logger;
 import design.ore.Ore3DAPI.Util.Log;
 import design.ore.Ore3DAPI.Util.Mapper;
+import design.ore.Ore3DAPI.data.PrecheckEvent;
 import design.ore.Ore3DAPI.data.StoredValue;
 import design.ore.Ore3DAPI.data.core.Build;
+import design.ore.Ore3DAPI.data.core.Transaction;
 import design.ore.Ore3DAPI.data.interfaces.CustomButtonReference;
 import design.ore.Ore3DAPI.data.interfaces.CustomSaveCycleReference;
 import design.ore.Ore3DAPI.data.pricing.BOMEntry;
@@ -173,4 +175,23 @@ public class Registry
 		registeredMiscDuplicateHandlers.put(handlerID, handler);
 	}
 	public static void handleMiscDuplicate(MiscEntry entry) { registeredMiscDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
+
+	private static Map<String, Consumer<PrecheckEvent>> registeredSavePrechecks = new HashMap<>();
+	public static void registerSavePrecheck(String id, Consumer<PrecheckEvent> precheck)
+	{
+		if(registeredSavePrechecks.containsKey(id)) Log.getLogger().warn("Save Precheck with ID " + id + " is already registered! Replacing...");
+		registeredSavePrechecks.put(id, precheck);
+	}
+	public static boolean unregisterSavePrecheck(String id) { return registeredSavePrechecks.remove(id) != null; }
+	public static boolean runPrechecks(Transaction tran)
+	{
+		PrecheckEvent event = new PrecheckEvent(tran);
+		for(Consumer<PrecheckEvent> precheck : registeredSavePrechecks.values())
+		{
+			precheck.accept(event);
+			if(event.isInterrupted()) return false;
+		}
+		
+		return true;
+	}
 }

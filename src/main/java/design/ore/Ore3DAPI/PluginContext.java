@@ -1,7 +1,7 @@
 package design.ore.Ore3DAPI;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.pf4j.RuntimeMode;
 
@@ -14,10 +14,9 @@ public class PluginContext
 	@Getter private final Map<String, String> valueMap;
 	@Getter private final boolean sandbox;
 	@Getter private final String ore3DVersion;
-	@Getter private final List<String> permissionFlags;
-	@Getter private final boolean usingServerSideRequestAuth;
+	@Getter private final Set<String> permissionFlags;
 	
-	public PluginContext(RuntimeMode runtimeMode, boolean debug, Map<String, String> valueMap, boolean sandbox, String version, List<String> permissionFlags, boolean usingServerSideRequestAuth)
+	public PluginContext(RuntimeMode runtimeMode, boolean debug, Map<String, String> valueMap, boolean sandbox, String version, Set<String> permissionFlags)
 	{
 		this.runtimeMode = runtimeMode;
 		this.debug = debug;
@@ -25,7 +24,6 @@ public class PluginContext
 		this.sandbox = sandbox;
 		this.ore3DVersion = version;
 		this.permissionFlags = permissionFlags;
-		this.usingServerSideRequestAuth = usingServerSideRequestAuth;
 	}
 	
 	public String getValue(String key) { return valueMap.get(key); }
