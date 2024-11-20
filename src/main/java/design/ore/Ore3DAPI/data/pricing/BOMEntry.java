@@ -9,8 +9,11 @@ import org.fxmisc.easybind.monadic.MonadicBinding;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import design.ore.Ore3DAPI.Registry;
+import design.ore.Ore3DAPI.Util.Log;
+import design.ore.Ore3DAPI.Util.Mapper;
 import design.ore.Ore3DAPI.data.core.Build;
 import design.ore.Ore3DAPI.data.interfaces.ISummaryOption;
 import design.ore.Ore3DAPI.data.interfaces.ValueStorageRecord;
@@ -153,6 +156,20 @@ public class BOMEntry extends ValueStorageRecord implements ISummaryOption
 	{
 		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parent);
 		newEntry.putStoredValues(getStoredValues());
+		
+		try {
+			Log.getLogger().debug("Stored Values for " + longName +":\n" + Mapper.getMapper().writeValueAsString(getStoredValues()));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		try {
+			Log.getLogger().debug("Required Stored Values for " + longName +":\n" + Mapper.getMapper().writeValueAsString(getStoredValuesWithRequiredData()));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Registry.handleBOMDuplicate(newEntry);
 		return newEntry;
 	}

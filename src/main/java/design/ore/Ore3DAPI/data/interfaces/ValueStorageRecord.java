@@ -23,7 +23,7 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class ValueStorageRecord
 {
-	@JsonIgnore @Getter private Map<String, StoredValue> storedValues = new HashMap<String, StoredValue>();
+	@JsonIgnore @Getter private final Map<String, StoredValue> storedValues = new HashMap<String, StoredValue>();
 
 	@JsonIgnore public StoredValue getStoredValue(String key) { return storedValues.get(key); }
 	@JsonIgnore public StoredValue putStoredValue(String key, StoredValue value) { return storedValues.put(key, value); }

@@ -176,7 +176,7 @@ public class Registry
 	}
 	public static void handleMiscDuplicate(MiscEntry entry) { registeredMiscDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
 
-	private static Map<String, Consumer<PrecheckEvent>> registeredSavePrechecks = new HashMap<>();
+	private static final Map<String, Consumer<PrecheckEvent>> registeredSavePrechecks = new HashMap<>();
 	public static void registerSavePrecheck(String id, Consumer<PrecheckEvent> precheck)
 	{
 		if(registeredSavePrechecks.containsKey(id)) Log.getLogger().warn("Save Precheck with ID " + id + " is already registered! Replacing...");

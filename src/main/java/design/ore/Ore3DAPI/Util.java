@@ -252,6 +252,8 @@ public class Util
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
 		if(originalEntry.getMarginOverriddenProperty().get()) newEntry.getOverridenMarginProperty().set(originalEntry.getOverridenMarginProperty().get());
 		
+		newEntry.putStoredValues(originalEntry.getStoredValues());
+		
 		return newEntry;
 	}
 	
