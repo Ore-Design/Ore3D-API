@@ -168,6 +168,7 @@ public class Address
 		Philippines,
 		Poland,
 		Portugal,
+		PuertoRico,
 		Qatar,
 		Romania,
 		Russia,
