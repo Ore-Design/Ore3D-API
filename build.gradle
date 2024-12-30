@@ -38,7 +38,7 @@ publishing {
 }
 
 signing {
-    useInMemoryPgpKeys(signingKey, signingPassword)
+    useInMemoryPgpKeys(findProperty('signingKey'), findProperty('signingPassword'))
     sign configurations.archives
 }
 
