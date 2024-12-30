@@ -17,6 +17,7 @@ publishing {
 			pom {
 		        name = 'Ore3D-API'
 		        description = "API for integrations to Ore Design's Ore3D"
+                url = 'http://c.ore.design'
                 licenses {
                     license {
                         name = 'GNU General Public License, Version 3'
