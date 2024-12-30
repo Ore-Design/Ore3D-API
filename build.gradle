@@ -1,7 +1,10 @@
 plugins {
 	id 'java-library'
+	/*
     id 'maven-publish'
     id 'signing'
+    */
+    id 'io.deepmedia.tools.deployer' version '0.17.0'
 }
 
 java {
@@ -9,6 +12,7 @@ java {
 	withJavadocJar()
 }
 
+/*
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -33,7 +37,7 @@ publishing {
                 }
                 repositories {
 		            maven {
-		                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+		                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 		                credentials {
 		                    username = findProperty('sonatypeUsername')
 		                    password = findProperty('sonatypePassword')
@@ -49,14 +53,31 @@ signing {
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
 }
+*/
+
+deployer {
+
+	auth.user = findProperty('sonatypeUsername')
+    auth.password = findProperty('sonatypePassword')
+	
+    signing.key = findProperty('signingKey')
+    signing.password = findProperty('signingPassword')
+
+	developer("jbatista", "jbatista@ore.design")
+	license("GNU General Public License, Version 3", "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text")
+	
+	centralPortalSpec {}
+}
 
 sourceCompatibility = 21
 targetCompatibility = 21
 
 def packageName = "ore3d"
+name = 'Ore3D-API'
 archivesBaseName = "${packageName}"
 group = "design.ore.api"
 version = "2.5.6-ALPHA"
+description = "API for integrations to Ore Design's Ore3D"
 
 repositories {
     mavenCentral()

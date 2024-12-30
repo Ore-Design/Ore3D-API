@@ -1,1 +1,8 @@
 rootProject.name = 'Ore3D-API'
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
