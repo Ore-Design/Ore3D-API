@@ -46,6 +46,8 @@ publishing {
 }
 
 signing {
+	def signingPassword = getProperty("signingPassword")
+	def signingKey = getProperty("signingKey")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
 }
