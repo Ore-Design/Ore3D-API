@@ -2,7 +2,7 @@ plugins {
 	id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+    id 'tech.yanand.maven-central-publish' version '1.3.0'
 }
 
 java {
@@ -42,13 +42,8 @@ signing {
     sign configurations.archives
 }
 
-nexusPublishing {
-    repositories {
-        sonatype {
-            username = findProperty('sonatypeUsername')
-            password = findProperty('sonatypePassword')
-        }
-    }
+mavenCentral {
+    authToken = (findProperty('sonatypeUsername') + ':' + findProperty('sonatypePassword')).bytes.encodeBase64().toString()
 }
 
 sourceCompatibility = 21
