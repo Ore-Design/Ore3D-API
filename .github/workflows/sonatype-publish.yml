@@ -28,4 +28,4 @@ jobs:
             ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PASSPHRASE }}
             ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
             ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.SONATYPE_USERNAME }}
-        run: ./gradlew deployCentralPortal
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository

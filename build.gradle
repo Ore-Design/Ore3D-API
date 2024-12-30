@@ -1,10 +1,8 @@
 plugins {
 	id 'java-library'
-	/*
     id 'maven-publish'
     id 'signing'
-    */
-    id 'io.deepmedia.tools.deployer' version '0.17.0'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 }
 
 java {
@@ -12,7 +10,6 @@ java {
 	withJavadocJar()
 }
 
-/*
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -35,15 +32,6 @@ publishing {
                         email = 'jbatista@ore.design'
                     }
                 }
-                repositories {
-		            maven {
-		                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-		                credentials {
-		                    username = findProperty('sonatypeUsername')
-		                    password = findProperty('sonatypePassword')
-		                }
-		            }
-		        }
             }
         }
     }
@@ -53,21 +41,14 @@ signing {
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
 }
-*/
 
-deployer {
-	projectInfo {
-		developer("jbatista", "jbatista@ore.design", "Ore Designs Inc", "https://ore.design")
-		license("GNU General Public License, Version 3", "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text")
-	}
-	
-	centralPortalSpec("ore3d") {
-		signing.key = findProperty('signingKey')
-		signing.password = findProperty('signingPassword')
-		
-		auth.password = findProperty('sonatypePassword')
-		auth.user = findProperty('sonatypeUsername')
-	}
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = findProperty('sonatypeUsername')
+            password = findProperty('sonatypePassword')
+        }
+    }
 }
 
 sourceCompatibility = 21
