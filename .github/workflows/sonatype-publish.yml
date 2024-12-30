@@ -29,11 +29,9 @@ jobs:
           echo "::set-output name=key_id::${key_id}"
       - name: Build with Gradle
         env:
-          GPG_KEYNAME: ${{ steps.gpg.outputs.key_id }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: ./gradlew build \
-            "-Psigning.gnupg.keyName=${GPG_KEYNAME}" \
-            "-Psigning.gnupg.passphrase=${GPG_PASSPHRASE}"
+          ORG_GRADLE_PROJECT_signing.gnupg.keyName: ${{ steps.gpg.outputs.key_id }}
+          ORG_GRADLE_PROJECT_signing.gnupg.passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./gradlew build
       - name: Publish to Maven Central via Sonatype
         env:
             ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
