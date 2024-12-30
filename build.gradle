@@ -15,6 +15,8 @@ publishing {
         mavenJava(MavenPublication) {
 			from components.java
 			pom {
+		        name = 'Ore3D-API'
+		        description = "API for integrations to Ore Design's Ore3D"
                 licenses {
                     license {
                         name = 'GNU General Public License, Version 3'
@@ -27,6 +29,11 @@ publishing {
                         name = 'Jacob Batista'
                         email = 'jbatista@ore.design'
                     }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/Ore-Design/Ore3D-API.git'
+                    developerConnection = 'scm:git:ssh://github.com/Ore-Design/Ore3D-API.git'
+                    url = 'http://c.ore.design'
                 }
             }
         }
@@ -49,7 +56,6 @@ def packageName = "ore3d"
 archivesBaseName = "${packageName}"
 group = "design.ore.api"
 version = "2.5.6-alpha"
-description = "API for integrations to Ore Design's Ore3D"
 
 repositories {
     mavenCentral()
