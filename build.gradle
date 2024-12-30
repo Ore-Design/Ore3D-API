@@ -46,7 +46,7 @@ publishing {
 }
 
 signing {
-	useGpgCmd()
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
 }
 
