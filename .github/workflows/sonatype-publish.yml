@@ -13,20 +13,11 @@ jobs:
           java-version: '21.0.4'
           distribution: 'zulu'
           java-package: 'jdk+fx'
-          server-id: central
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Run chmod to make gradlew executable
         run: chmod +x ./gradlew
       - name:  Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -Psonatype_user=${{ secrets.SONATYPE_USERNAME }} -Psonatype_password=${{ secrets.SONATYPE_PASSWORD }} -Psigning.password=${{ secrets.GPG_PASSPHRASE }} -Psigning.key=${{ secrets.GPG_PRIVATE_KEY }}
       - name: Publish to Maven Central via Sonatype
-        run: gradle uploadArchives
-        env:
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./gradlew uploadArchives

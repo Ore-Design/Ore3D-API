@@ -31,14 +31,23 @@ publishing {
                         email = 'jbatista@ore.design'
                     }
                 }
+                repositories {
+		            maven {
+		                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+		                credentials {
+		                    username = findProperty('sonatype_user')
+		                    password = findProperty('sonatype_password')
+		                }
+		            }
+		        }
             }
         }
     }
 }
 
 signing {
-	def signingKey = System.getenv('GPG_PRIVATE_KEY')
-    def signingPassword = System.getenv('GPG_PASSPHRASE')
+	def signingKey = findProperty("signingKey")
+    def signingPassword = findProperty("signingPassword")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign configurations.archives
 }
