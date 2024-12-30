@@ -15,10 +15,6 @@ publishing {
         mavenJava(MavenPublication) {
 			from components.java
 			pom {
-		        name = 'Ore3D-API'
-		        description = "API for integrations to Ore Design's Ore3D"
-		        url = 'https://c.ore.design'
-		        
                 licenses {
                     license {
                         name = 'GNU General Public License, Version 3'
@@ -39,7 +35,7 @@ publishing {
 
 signing {
     useInMemoryPgpKeys(findProperty('signingKey'), findProperty('signingPassword'))
-    sign configurations.archives
+    sign publishing.publications.mavenJava
 }
 
 mavenCentral {
@@ -52,7 +48,7 @@ targetCompatibility = 21
 def packageName = "ore3d"
 archivesBaseName = "${packageName}"
 group = "design.ore.api"
-version = "2.5.6-ALPHA"
+version = "2.5.6-alpha"
 description = "API for integrations to Ore Design's Ore3D"
 
 repositories {
