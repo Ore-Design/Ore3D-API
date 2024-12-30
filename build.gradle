@@ -56,24 +56,24 @@ signing {
 */
 
 deployer {
-
-	auth.user = findProperty('sonatypeUsername')
-    auth.password = findProperty('sonatypePassword')
+	projectInfo {
+		developer("jbatista", "jbatista@ore.design", "Ore Designs Inc", "https://ore.design")
+		license("GNU General Public License, Version 3", "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text")
+	}
 	
-    signing.key = findProperty('signingKey')
-    signing.password = findProperty('signingPassword')
-
-	developer("jbatista", "jbatista@ore.design")
-	license("GNU General Public License, Version 3", "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text")
-	
-	centralPortalSpec {}
+	centralPortalSpec("ore3d") {
+		signing.key = findProperty('signingKey')
+		signing.password = findProperty('signingPassword')
+		
+		auth.password = findProperty('sonatypePassword')
+		auth.user = findProperty('sonatypeUsername')
+	}
 }
 
 sourceCompatibility = 21
 targetCompatibility = 21
 
 def packageName = "ore3d"
-name = 'Ore3D-API'
 archivesBaseName = "${packageName}"
 group = "design.ore.api"
 version = "2.5.6-ALPHA"
