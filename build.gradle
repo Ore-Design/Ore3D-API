@@ -1,6 +1,7 @@
 plugins {
 	id 'java-library'
     id 'maven-publish'
+    id 'signing'
 }
 
 java {
@@ -11,17 +12,60 @@ java {
 publishing {
     publications {
         maven(MavenPublication) {
-		from components.java
+			from components.java
         }
     }
+}
+
+signing {
+	def signingKey = System.getenv('GPG_PRIVATE_KEY')
+    def signingPassword = System.getenv('GPG_PASSPHRASE')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign configurations.archives
+}
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+      repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: System.getenv('SONATYPE_USERNAME'), password: System.getenv('SONATYPE_PASSWORD'))
+      }
+
+      pom.project {
+        name 'Ore3D-API'
+        packaging 'jar'
+		
+        description "API for integrations to Ore Design's Ore3D"
+        url 'https://c.ore.design'
+
+        licenses {
+          license {
+            name 'GNU General Public License, Version 3'
+            url 'https://www.gnu.org/licenses/gpl-3.0.en.html#license-text'
+          }
+        }
+
+        developers {
+          developer {
+            id 'jbatista'
+            name 'Jacob Batista'
+            email 'jbatista@ore.design'
+          }
+        }
+      }
+    }
+  }
 }
 
 sourceCompatibility = 21
 targetCompatibility = 21
 
-def packagename = "Ore3D-API"
-group = "design.ore"
-version = "2.5.5"
+def packageName = "ore3d"
+archivesBaseName = "${packageName}"
+group = "design.ore.api"
+version = "2.5.6-ALPHA"
 
 repositories {
     mavenCentral()

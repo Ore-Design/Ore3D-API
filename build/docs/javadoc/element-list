@@ -1,0 +1,14 @@
+design.ore.api.ore3d
+design.ore.api.ore3d.data
+design.ore.api.ore3d.data.core
+design.ore.api.ore3d.data.crm
+design.ore.api.ore3d.data.crm.employee
+design.ore.api.ore3d.data.interfaces
+design.ore.api.ore3d.data.pricing
+design.ore.api.ore3d.data.specs
+design.ore.api.ore3d.data.specs.ui
+design.ore.api.ore3d.data.wrappers
+design.ore.api.ore3d.extensions
+design.ore.api.ore3d.jackson
+design.ore.api.ore3d.javafx
+design.ore.api.ore3d.ui
