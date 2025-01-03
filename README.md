@@ -1,8 +1,6 @@
 # Ore3D API
 
-[![](https://jitpack.io/v/Ore-Design/Ore3D-API/month.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
-[![](https://jitpack.io/v/Ore-Design/Ore3D-API/week.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
-[![](https://jitpack.io/v/Ore-Design/Ore3D-API.svg)](https://jitpack.io/#Ore-Design/Ore3D-API)
+![Maven Central Version](https://img.shields.io/maven-central/v/design.ore.api/Ore3D-API?style=for-the-badge&labelColor=%23224946&color=%23FF4C00&link=https%3A%2F%2Fcentral.sonatype.com%2Fartifact%2Fdesign.ore.api%2FOre3D-API)
 
 ## Overview
 
@@ -21,18 +19,9 @@ To get started with the Ore3D API, follow these steps:
    ```bash
    repositories {
       mavenCentral()
-      maven { url 'https://jitpack.io' }
    }
    ```
-   Maven:
-   ```bash
-   <repositories>
-		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
-		</repository>
-	</repositories>
-   ```
+   Maven already uses the mavenCentral repository, so no need to manually define it.
 
    Then add the API to your project dependancies.
 
@@ -40,7 +29,7 @@ To get started with the Ore3D API, follow these steps:
    ```bash
    dependencies
    {
-      implementation 'com.github.Ore-Design:Ore3D-API:2.1.1'
+      implementation 'com.github.Ore-Design:Ore3D-API:2.5.5'
    }
    ```
    Maven:
@@ -48,7 +37,7 @@ To get started with the Ore3D API, follow these steps:
    <dependency>
 	    <groupId>com.github.Ore-Design</groupId>
 	    <artifactId>Ore3D-API</artifactId>
-	    <version>2.1.1</version>
+	    <version>2.5.5</version>
 	</dependency>
    ```
 
