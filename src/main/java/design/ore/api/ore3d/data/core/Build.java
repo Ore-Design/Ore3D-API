@@ -549,7 +549,7 @@ public abstract class Build extends ValueStorageRecord
 	}
 	
 	// This is what the build's ACTUAL total price is, including parent-ignored BOM and Misc entries.
-	public NumberBinding getTotalPrice()
+	@JsonIgnore public NumberBinding getTotalPrice()
 	{
 		if(price.totalPriceOverriddenProperty.get()) return price.totalPrice;
 		
