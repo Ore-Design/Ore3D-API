@@ -190,7 +190,12 @@ public class Transaction extends ValueStorageRecord
 	@Getter @Setter String compatibleVersion;
 	@Getter @Setter String id;
 	@Getter @Setter String displayName;
-	@Getter @Setter PricingData pricing;
+	@Setter PricingData pricing;
+    public PricingData getPricing()
+    {
+        if(pricing == null) pricing = Registry.getPricingDataSupplier().get();
+    	return pricing;
+    }
 	@Getter @JsonMerge final BuildList builds;
 	@Getter @Setter Customer customer;
 	@Setter boolean canBeDuplicated;

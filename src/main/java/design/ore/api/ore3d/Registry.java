@@ -1,5 +1,6 @@
 package design.ore.api.ore3d;
 
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,6 +23,7 @@ import design.ore.api.ore3d.data.interfaces.CustomButtonReference;
 import design.ore.api.ore3d.data.interfaces.CustomSaveCycleReference;
 import design.ore.api.ore3d.data.pricing.BOMEntry;
 import design.ore.api.ore3d.data.pricing.MiscEntry;
+import design.ore.api.ore3d.data.pricing.PricingData;
 import design.ore.api.ore3d.data.pricing.RoutingEntry;
 import design.ore.api.ore3d.data.wrappers.CatalogItem;
 import lombok.Getter;
@@ -39,6 +42,13 @@ public class Registry
 		}
 		else { Log.logger.warn("Someone attempted to register a different mapper factory, but it's locked!"); }
 	}
+
+    @Getter private static Supplier<PricingData> pricingDataSupplier = null;
+    public static void registerPricingDataSupplier(Supplier<PricingData> supplier)
+    {
+        if (pricingDataSupplier != null) Log.getLogger().warn("Someone attempted to initialize the pricing data supplier, but it is already initialized! Skipping...");
+        else pricingDataSupplier = supplier;
+    }
 	
 	@Getter private static final List<ClassLoader> registeredClassLoaders = new ArrayList<ClassLoader>();
 	public static void registerClassLoader(ClassLoader cl) { registeredClassLoaders.add(cl); }
