@@ -244,8 +244,12 @@ public class Util
 	{
 		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
 		BOMEntry newEntry = null;
-		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
-			parent, originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
+		if(pricing.isPresent())
+		{
+			Integer margin = pricing.get().getMargin();
+			newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
+				parent, originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get(), margin == null || margin < 0 ? originalEntry.getUnoverriddenMargin() : margin);
+		}
 		else newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent,
 			originalEntry.getCustomEntryProperty().get(), originalEntry.getIgnoreParentQuantityProperty().get());
 		

@@ -149,13 +149,16 @@ public class BOMEntry extends ValueStorageRecord implements ISummaryOption
 		this(id, shortName, longName, unitOfMeasure, costPerQuantity, custom, 0.0, margin, ignoreParentQuantity, parent);
 	}
 
-	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, boolean isCustom, boolean ignoreParentQuantity)
+	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, boolean isCustom, boolean ignoreParentQuantity, int newMargin)
 	{
-		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, unoverriddenMarginProperty.get(), ignoreParentQuantity, parent);
+		BOMEntry newEntry = new BOMEntry(id, shortName, longName, unitOfMeasure, newCostPerQuantity, isCustom, newQuantity, newMargin, ignoreParentQuantity, parent);
 		newEntry.putStoredValues(getStoredValues());
 		Registry.handleBOMDuplicate(newEntry);
 		return newEntry;
 	}
+
+	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, boolean isCustom, boolean ignoreParentQuantity)
+	{ return duplicate(newCostPerQuantity, newQuantity, parent, isCustom, ignoreParentQuantity, unoverriddenMarginProperty.get());}
 	public BOMEntry duplicate(double newCostPerQuantity, double newQuantity, Build parent, boolean isCustom) { return duplicate(newCostPerQuantity, newQuantity, parent, isCustom, getIgnoreParentQuantity()); }
 	public BOMEntry duplicate(double newQuantity, Build parent, boolean isCustom, boolean ignoreParentQuantity) { return duplicate(getCostPerQuantity(), newQuantity, parent, isCustom, ignoreParentQuantity); }
 	public BOMEntry duplicate(double newQuantity, Build parent, boolean isCustom) { return duplicate(newQuantity, parent, isCustom, getIgnoreParentQuantity()); }

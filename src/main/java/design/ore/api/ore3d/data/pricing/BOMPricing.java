@@ -20,4 +20,5 @@ public class BOMPricing
 	@JsonProperty("cpu") double costPerUnit;
 	@JsonProperty("pcpu") double publishedCostPerUnit;
 	@JsonProperty("id") String internalID;
+	@JsonProperty("mgn") Integer margin;
 }

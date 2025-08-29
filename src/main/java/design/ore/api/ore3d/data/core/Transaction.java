@@ -22,6 +22,7 @@ import design.ore.api.ore3d.data.Conflict;
 import design.ore.api.ore3d.data.crm.Customer;
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
 import design.ore.api.ore3d.data.pricing.BOMEntry;
+import design.ore.api.ore3d.data.pricing.MiscEntry;
 import design.ore.api.ore3d.data.pricing.PricingData;
 import design.ore.api.ore3d.data.pricing.RoutingEntry;
 import design.ore.api.ore3d.data.wrappers.BuildList;
@@ -163,22 +164,50 @@ public class Transaction extends ValueStorageRecord
 		if(!b.getParentTransactionProperty().isBound() && !b.getParentTransactionProperty().get().equals(this)) b.getParentTransactionProperty().set(this);
 		
 		List<BOMEntry> bomToAdd = new ArrayList<BOMEntry>();
+		List<BOMEntry> missingBom = new ArrayList<>();
 		for(BOMEntry bom : b.getBom())
 		{
 			BOMEntry match = Registry.getBOMEntries().get(bom.getId());
 			if(match != null) bomToAdd.add(Util.duplicateBOMWithPricing(this, b, match, bom));
-			else { Util.Log.getLogger().warn("Data has changed since this record was last loaded! BOM entry " + bom.getId() + " no longer exists in loaded databases!"); }
+			else
+			{
+				missingBom.add(bom);
+                Log.getLogger().warn("Data has changed since this record was last loaded! BOM entry {} no longer exists in loaded databases!", bom.getId());
+			}
+		}
+
+		if(!missingBom.isEmpty())
+		{
+			String missingStr = String.join("\n", missingBom.stream().map(bom -> bom.getShortName() + " - " + bom.getLongName()).toList());
+			Util.UI.runOnApplicationThread(() -> Util.UI.warn("Missing BOM Components",
+				"The following BOM components\nhave been deactivated and\nwill be replaced with a\nmiscellaneous charge.\n\n" + missingStr, null).showAndWait());
+
+			missingBom.forEach(bom -> b.getMisc().add(new MiscEntry("[DEACTIVATED BOM] - " + bom.getShortName(), bom.getUnitPriceProperty().get(), bom.getQuantity(), b)));
 		}
 		
 		b.getBom().clear();
 		b.getBom().addAll(bomToAdd);
 
 		List<RoutingEntry> routingToAdd = new ArrayList<RoutingEntry>();
+		List<RoutingEntry> missingRouting = new ArrayList<>();
 		for(RoutingEntry r : b.getRoutings())
 		{
 			RoutingEntry match = Registry.getRoutingEntries().get(r.getId());
 			if(match != null) routingToAdd.add(Util.duplicateRoutingWithPricing(this, b, match, r));
-			else { Util.Log.getLogger().warn("Data has changed since this record was last loaded! Routing entry " + r.getId() + " no longer exists in loaded databases!"); }
+			else
+			{
+				missingRouting.add(r);
+                Log.getLogger().warn("Data has changed since this record was last loaded! Routing entry {} no longer exists in loaded databases!", r.getId());
+			}
+		}
+
+		if(!missingRouting.isEmpty())
+		{
+			String missingStr = String.join("\n", missingRouting.stream().map(RoutingEntry::getName).toList());
+			Util.UI.runOnApplicationThread(() -> Util.UI.warn("Missing Routing Components",
+				"The following routing components\nhave been deactivated and\nwill be replaced with a\nmiscellaneous charge.\n\n" + missingStr, null).showAndWait());
+
+			missingRouting.forEach(bom -> b.getMisc().add(new MiscEntry("[DEACTIVATED ROUTING] - " + bom.getName(), bom.getUnitPriceProperty().get(), bom.getQuantity(), b)));
 		}
 		
 		b.getRoutings().clear();
