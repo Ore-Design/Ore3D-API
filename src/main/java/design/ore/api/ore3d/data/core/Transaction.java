@@ -182,7 +182,7 @@ public class Transaction extends ValueStorageRecord
 			Util.UI.runOnApplicationThread(() -> Util.UI.warn("Missing BOM Components",
 				"The following BOM components\nhave been deactivated and\nwill be replaced with a\nmiscellaneous charge.\n\n" + missingStr, null).showAndWait());
 
-			missingBom.forEach(bom -> b.getMisc().add(new MiscEntry("[DEACTIVATED BOM] - " + bom.getShortName(), bom.getUnitPriceProperty().get(), bom.getQuantity(), b)));
+			missingBom.forEach(bom -> b.getMisc().add(new MiscEntry("[DEACTIVATED BOM] - " + bom.getShortName(), bom.getCostPerQuantity(), bom.getQuantity(), b)));
 		}
 		
 		b.getBom().clear();
