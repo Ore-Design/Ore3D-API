@@ -84,7 +84,7 @@ public class MiscEntry extends ValueStorageRecord implements ISummaryOption
 		}
 		catch (JsonProcessingException e) 
 		{
-			Log.getLogger().error("Issue duplicating Misc entry!\n" + Util.throwableToString(e));
+			Log.getLogger().error("Issue duplicating Misc entry!", e);
 		}
 		
 		return newEntry;

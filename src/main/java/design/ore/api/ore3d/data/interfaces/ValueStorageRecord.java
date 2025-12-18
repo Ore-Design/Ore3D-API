@@ -88,10 +88,10 @@ public abstract class ValueStorageRecord
 				catch (Exception e)
 				{
 					try { values.put(entry.getKey(), Mapper.getMapper().readValue("\"" + entry.getValue().getValue() + "\"", JsonNode.class)); }
-					catch (Exception ex) { Log.getLogger().warn(Util.formatThrowable("Error serializing stored value from class type '" + getClass().toString() + "'! Skipping!", e)); }
+					catch (Exception ex) { Log.getLogger().warn("Error serializing stored value from class type '{}'! Skipping!", getClass().toString(), e); }
 				}
 			}
-			else Log.getLogger().warn("Stored value with key " + entry.getKey() + " has null/empty data! Skipping...");
+			else Log.getLogger().warn("Stored value with key {} has null/empty data! Skipping...", entry.getKey());
 		}
 		return values;
 	}

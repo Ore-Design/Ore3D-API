@@ -99,7 +99,7 @@ public class UpdatePacket
 		try { return generateNextUpdatePacket.call(); }
 		catch (Exception e)
 		{
-			Util.Log.getLogger().warn("An error occured while creating the next update packet!");
+			Util.Log.getLogger().warn("An error occurred while creating the next update packet!");
 			return null;
 		}
 	}

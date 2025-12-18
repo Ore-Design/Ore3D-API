@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ch.qos.logback.classic.Logger;
 import design.ore.api.ore3d.Util.Log;
 import design.ore.api.ore3d.Util.Mapper;
 import design.ore.api.ore3d.data.PrecheckEvent;
@@ -31,8 +30,6 @@ import lombok.Setter;
 
 public class Registry
 {
-	public static void registerLogger(Logger log) { if(Log.logger == null) { Log.logger = log; } else { Log.logger.warn("Someone attempted to register a different logger, but it's locked!"); } }
-	
 	public static void registerMapperFactory(Callable<ObjectMapper> mapperFactory)
 	{
 		if(Mapper.mapperFactory == null)
@@ -40,7 +37,7 @@ public class Registry
 			Mapper.mapperFactory = mapperFactory;
 			Mapper.mapper = Mapper.createMapper();
 		}
-		else { Log.logger.warn("Someone attempted to register a different mapper factory, but it's locked!"); }
+		else { Log.getLogger().warn("Someone attempted to register a different mapper factory, but it's locked!"); }
 	}
 
     @Getter private static Supplier<PricingData> pricingDataSupplier = null;
@@ -56,14 +53,14 @@ public class Registry
 	@Getter private static final Map<String, StoredValue> registeredMiscEntryStoredValues = new HashMap<>();
 	public static void registerMiscEntryStoredValues(String mapID, StoredValue value)
 	{
-		if(registeredMiscEntryStoredValues.containsKey(mapID)) Log.getLogger().warn("A misc entry stored value with the ID " + mapID + " has already been registered! Overriding...");
+		if(registeredMiscEntryStoredValues.containsKey(mapID)) Log.getLogger().warn("A misc entry stored value with the ID {} has already been registered! Overriding...", mapID);
 		registeredMiscEntryStoredValues.put(mapID, value);
 	}
 	
 	@Getter private static final Map<String, StoredValue> registeredBOMEntryStoredValues = new HashMap<>();
 	public static void registerBOMEntryStoredValues(String mapID, StoredValue value)
 	{
-		if(registeredBOMEntryStoredValues.containsKey(mapID)) Log.getLogger().warn("A BOM entry stored value with the ID " + mapID + " has already been registered! Overriding...");
+		if(registeredBOMEntryStoredValues.containsKey(mapID)) Log.getLogger().warn("A BOM entry stored value with the ID {} has already been registered! Overriding...", mapID);
 		registeredBOMEntryStoredValues.put(mapID, value);
 	}
 	
@@ -119,7 +116,7 @@ public class Registry
 			try { return bomEntryAccessor.call(); }
 			catch(Exception e)
 			{
-				Log.getLogger().warn("Failed to retrieve BOM Entries because " + e.getMessage() + "\n" + Util.throwableToString(e));
+				Log.getLogger().warn("Failed to retrieve BOM Entries!", e);
 				return new HashMap<>();
 			}
 		}
@@ -143,13 +140,13 @@ public class Registry
 			try { return routingEntryAccessor.call(); }
 			catch(Exception e)
 			{
-				Log.getLogger().warn("Failed to retrieve Routing Entries because " + e.getMessage() + "\n" + Util.throwableToString(e));
+				Log.getLogger().warn("Failed to retrieve Routing Entries!", e);
 				return new HashMap<>();
 			}
 		}
 	}
 	
-	private static Map<String, Consumer<Build>> registeredBuildDuplicateHandlers = new HashMap<>();
+	private static final Map<String, Consumer<Build>> registeredBuildDuplicateHandlers = new HashMap<>();
 	public static void registerBuildDuplicateHandler(String handlerID, Consumer<Build> handler)
 	{
 		if(registeredBuildDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("Build Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
@@ -162,7 +159,7 @@ public class Registry
 		for(Build cb : build.getChildBuilds()) handleBuildDuplicateRecursive(cb);
 	}
 	
-	private static Map<String, Consumer<BOMEntry>> registeredBOMDuplicateHandlers = new HashMap<>();
+	private static final Map<String, Consumer<BOMEntry>> registeredBOMDuplicateHandlers = new HashMap<>();
 	public static void registerBOMDuplicateHandler(String handlerID, Consumer<BOMEntry> handler)
 	{
 		if(registeredBOMDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("BOMEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
@@ -170,7 +167,7 @@ public class Registry
 	}
 	public static void handleBOMDuplicate(BOMEntry entry) { registeredBOMDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
 	
-	private static Map<String, Consumer<RoutingEntry>> registeredRoutingDuplicateHandlers = new HashMap<>();
+	private static final Map<String, Consumer<RoutingEntry>> registeredRoutingDuplicateHandlers = new HashMap<>();
 	public static void registerRoutingDuplicateHandler(String handlerID, Consumer<RoutingEntry> handler)
 	{
 		if(registeredRoutingDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("RoutingEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");
@@ -178,7 +175,7 @@ public class Registry
 	}
 	public static void handleRoutingDuplicate(RoutingEntry entry) { registeredRoutingDuplicateHandlers.values().forEach(handler -> handler.accept(entry)); }
 	
-	private static Map<String, Consumer<MiscEntry>> registeredMiscDuplicateHandlers = new HashMap<>();
+	private static final Map<String, Consumer<MiscEntry>> registeredMiscDuplicateHandlers = new HashMap<>();
 	public static void registerMiscDuplicateHandler(String handlerID, Consumer<MiscEntry> handler)
 	{
 		if(registeredMiscDuplicateHandlers.containsKey(handlerID)) Log.getLogger().warn("MiscEntry Duplicate Handler with ID " + handlerID + " is already registered! Replacing...");

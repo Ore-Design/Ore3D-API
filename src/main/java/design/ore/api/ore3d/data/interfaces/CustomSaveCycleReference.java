@@ -21,7 +21,7 @@ public abstract class CustomSaveCycleReference
 		for(Consumer<CustomSaveCycleReference> call : listeners)
 		{
 			try { call.accept(this); }
-			catch(Exception e) { Log.getLogger().warn("An error occured while running listener for custom save cycle reference " + name + ": " + e.getMessage() + "\n" + Util.throwableToString(e)); }
+			catch(Exception e) { Log.getLogger().warn("An error occurred while running listener for custom save cycle reference {}!", name, e); }
 		}
 	}
 

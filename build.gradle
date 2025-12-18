@@ -2,6 +2,7 @@ plugins {
 	id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id 'com.github.gmazzo.buildconfig' version '5.6.7'
     id 'tech.yanand.maven-central-publish' version '1.3.0'
 }
 
@@ -50,31 +51,53 @@ mavenCentral {
     authToken = (findProperty('sonatypeUsername') + ':' + findProperty('sonatypePassword')).bytes.encodeBase64().toString()
 }
 
+tasks.register('updateReadmeVersion') {
+    def templateFile = file("$projectDir/TEMPLATE.md")
+    def readmeFile = file("$projectDir/README.md")
+    inputs.file(templateFile)
+    outputs.file(readmeFile)
+
+    def versionStr = project.version.toString()
+    def readmeText = templateFile.getText('UTF-8')
+
+    def updatedText = readmeText.replace("{{VERSION}}", versionStr)
+
+    readmeFile.setText(updatedText, 'UTF-8')
+}
+
 sourceCompatibility = 21
 targetCompatibility = 21
 
-def packageName = "ore3d"
-archivesBaseName = "${packageName}"
-group = "design.ore.api"
-version = "2.5.10"
+archivesBaseName = "ore3dapi"
+group = "design.ore.api.ore3d"
+version = "2.6.0"
 
 repositories {
     mavenCentral()
 }
 
+buildConfig {
+    className("ApiConstants")
+    packageName("design.ore.api.ore3d")
+    useJavaOutput()
+    buildConfigField(String, 'VERSION', version)
+}
+
 dependencies {
-	implementation 'org.pf4j:pf4j:3.9.0'
-    implementation "org.projectlombok:lombok:1.18.32"
     annotationProcessor "org.projectlombok:lombok:1.18.32"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.17.0"
-    implementation "com.fasterxml.jackson.core:jackson-annotations:2.17.0"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0"
-	implementation 'com.jfoenix:jfoenix:9.0.10'
-	implementation 'org.controlsfx:controlsfx:11.2.0'
-	implementation 'ch.qos.logback:logback-classic:1.4.11'
-	implementation 'ch.qos.logback:logback-core:1.4.11'
-    implementation "org.apache.httpcomponents:httpcore:4.4.16"
-    implementation "org.apache.httpcomponents:httpclient:4.5.14"
-	implementation 'org.apache.httpcomponents:httpmime:4.5.14'
-    implementation 'org.fxmisc.easybind:easybind:1.0.3'
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+
+    api "org.projectlombok:lombok:1.18.32"
+    api "com.fasterxml.jackson.core:jackson-databind:2.17.0"
+    api "com.fasterxml.jackson.core:jackson-annotations:2.17.0"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0"
+	api 'com.jfoenix:jfoenix:9.0.10'
+	api 'org.controlsfx:controlsfx:11.2.0'
+	api 'ch.qos.logback:logback-classic:1.5.19'
+	api 'ch.qos.logback:logback-core:1.5.19'
+    api 'com.google.auto.service:auto-service:1.1.1'
+    api "org.apache.httpcomponents:httpcore:4.5.14"
+    api "org.apache.httpcomponents:httpclient:4.5.14"
+	api 'org.apache.httpcomponents:httpmime:4.5.14'
+    api 'org.fxmisc.easybind:easybind:1.0.3'
 }

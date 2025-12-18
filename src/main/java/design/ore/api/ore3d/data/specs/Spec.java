@@ -119,7 +119,7 @@ public abstract class Spec<T> extends SimpleObjectProperty<T> implements ISummar
 				T calledValue = calculateOnDirty.call();
 				if(calledValue != null) setValue(calledValue);
 			}
-			catch (Exception e) { Util.Log.getLogger().warn(Util.formatThrowable("Error assigning value from Callable to property!", e)); }
+			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!", e); }
 		}
 	}
 	
