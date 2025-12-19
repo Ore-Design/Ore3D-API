@@ -1,9 +1,9 @@
 package design.ore.api.ore3d.javafx;
 
-import java.util.function.UnaryOperator;
-
 import javafx.scene.control.TextFormatter;
 import javafx.util.converter.IntegerStringConverter;
+
+import java.util.function.UnaryOperator;
 
 public class PositiveIntegerTextFormatter extends TextFormatter<Integer>
 {

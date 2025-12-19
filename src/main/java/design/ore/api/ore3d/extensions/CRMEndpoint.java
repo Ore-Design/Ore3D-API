@@ -1,12 +1,12 @@
 package design.ore.api.ore3d.extensions;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import design.ore.api.ore3d.data.core.Transaction;
 import design.ore.api.ore3d.data.crm.Customer;
 import design.ore.api.ore3d.data.crm.employee.Employee;
 import design.ore.api.ore3d.data.wrappers.UpdatePacket;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 public interface CRMEndpoint
 {	

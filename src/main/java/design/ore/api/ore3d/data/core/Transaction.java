@@ -1,20 +1,9 @@
 package design.ore.api.ore3d.data.core;
 
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import design.ore.api.ore3d.Registry;
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Log;
@@ -37,6 +26,11 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 public class Transaction extends ValueStorageRecord
 {

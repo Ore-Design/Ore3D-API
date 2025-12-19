@@ -11,5 +11,5 @@ import lombok.Setter;
 @Setter
 public class Ore3DPluginManifest
 {
-    String pluginId, pluginVersion, pluginCompatibleVersion, pluginEntryPoint, latestVersionUrl, latestDownloadUrl;
+    String pluginId, pluginVersion, pluginCompatibleVersion, pluginEntryPoint, versionCheckUrl, pluginDownloadUrl;
 }

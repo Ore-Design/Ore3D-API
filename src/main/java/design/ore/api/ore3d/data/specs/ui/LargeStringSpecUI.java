@@ -1,9 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Colors;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
@@ -14,15 +11,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.Control;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+
+import java.util.List;
 
 public class LargeStringSpecUI extends HBox implements ISpecUI<String>
 {

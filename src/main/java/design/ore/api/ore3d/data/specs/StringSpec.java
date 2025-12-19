@@ -1,10 +1,10 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.concurrent.Callable;
-
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.ui.StringSpecUI;
+
+import java.util.concurrent.Callable;
 
 public class StringSpec extends Spec<String>
 {

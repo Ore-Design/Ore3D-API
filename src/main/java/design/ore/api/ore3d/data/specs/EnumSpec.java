@@ -1,16 +1,15 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.concurrent.Callable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import design.ore.api.ore3d.Util.Mapper;
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.ui.EnumSpecUI;
 import lombok.Getter;
+
+import java.util.concurrent.Callable;
 
 public class EnumSpec<E extends Enum<E>> extends Spec<E>
 {

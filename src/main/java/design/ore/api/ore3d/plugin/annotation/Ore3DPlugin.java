@@ -11,6 +11,6 @@ public @interface Ore3DPlugin
 {
     String value();
     String version();
-    String latestVersionUrl();
-    String latestDownloadUrl();
+    String downloadUrl();
+    String versionCheckUrl();
 }

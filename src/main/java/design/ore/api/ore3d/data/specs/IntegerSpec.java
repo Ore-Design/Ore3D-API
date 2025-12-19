@@ -1,14 +1,13 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.concurrent.Callable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.ui.IntegerSpecUI;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.Getter;
+
+import java.util.concurrent.Callable;
 
 public class IntegerSpec extends NumberSpec<Integer>
 {

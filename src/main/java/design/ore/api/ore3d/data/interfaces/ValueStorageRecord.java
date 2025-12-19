@@ -1,24 +1,18 @@
 package design.ore.api.ore3d.data.interfaces;
 
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.databind.JsonNode;
+import design.ore.api.ore3d.Util.Log;
+import design.ore.api.ore3d.Util.Mapper;
+import design.ore.api.ore3d.data.StoredValue;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
-import com.fasterxml.jackson.databind.JsonNode;
-
-import design.ore.api.ore3d.Util;
-import design.ore.api.ore3d.Util.Log;
-import design.ore.api.ore3d.Util.Mapper;
-import design.ore.api.ore3d.data.StoredValue;
-import lombok.Getter;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public abstract class ValueStorageRecord

@@ -1,12 +1,12 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.Map;
-import java.util.concurrent.Callable;
-
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.ui.SearchableMapSpecUI;
 import javafx.beans.property.SimpleObjectProperty;
+
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class SearchableMapSpec<T, V> extends MapSpec<T, V>
 {

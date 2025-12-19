@@ -1,9 +1,9 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.concurrent.Callable;
-
 import design.ore.api.ore3d.data.core.Build;
 import javafx.beans.value.ObservableNumberValue;
+
+import java.util.concurrent.Callable;
 
 public abstract class NumberSpec<T extends Number> extends Spec<Number> implements ObservableNumberValue
 {

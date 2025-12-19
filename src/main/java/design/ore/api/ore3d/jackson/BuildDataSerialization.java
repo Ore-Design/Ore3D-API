@@ -1,7 +1,5 @@
 package design.ore.api.ore3d.jackson;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -10,8 +8,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import design.ore.api.ore3d.data.core.BuildPrice;
+
+import java.io.IOException;
 
 public class BuildDataSerialization
 {

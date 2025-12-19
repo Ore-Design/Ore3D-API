@@ -1,17 +1,6 @@
 package design.ore.api.ore3d;
 
-import java.security.Provider;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import design.ore.api.ore3d.Util.Log;
 import design.ore.api.ore3d.Util.Mapper;
 import design.ore.api.ore3d.data.PrecheckEvent;
@@ -27,6 +16,11 @@ import design.ore.api.ore3d.data.pricing.RoutingEntry;
 import design.ore.api.ore3d.data.wrappers.CatalogItem;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class Registry
 {

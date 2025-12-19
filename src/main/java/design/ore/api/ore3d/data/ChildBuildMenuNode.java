@@ -1,10 +1,10 @@
 package design.ore.api.ore3d.data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import design.ore.api.ore3d.data.core.Build;
 import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChildBuildMenuNode
 {

@@ -1,7 +1,6 @@
 package design.ore.api.ore3d.data.interfaces;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.data.core.Build;
 
 public interface ISummaryOption

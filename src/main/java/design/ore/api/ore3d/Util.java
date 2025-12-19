@@ -1,29 +1,8 @@
 package design.ore.api.ore3d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
-
-import org.apache.http.client.methods.HttpRequestBase;
-import org.controlsfx.control.Notifications;
-
+import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.core.Transaction;
 import design.ore.api.ore3d.data.pricing.BOMEntry;
@@ -42,11 +21,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.CssParser;
-import javafx.css.Declaration;
-import javafx.css.Rule;
-import javafx.css.StyleConverter;
-import javafx.css.Stylesheet;
+import javafx.css.*;
 import javafx.css.converter.ColorConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -72,7 +47,19 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.controlsfx.control.Notifications;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 public class Util
 {

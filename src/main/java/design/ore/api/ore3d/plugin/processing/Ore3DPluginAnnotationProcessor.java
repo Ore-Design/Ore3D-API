@@ -1,28 +1,23 @@
 package design.ore.api.ore3d.plugin.processing;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Map;
-import java.util.Set;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.auto.service.AutoService;
+import com.google.common.base.Strings;
+import design.ore.api.ore3d.ApiConstants;
+import design.ore.api.ore3d.plugin.IOre3DPlugin;
+import design.ore.api.ore3d.plugin.annotation.Ore3DPlugin;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.auto.service.AutoService;
-import com.google.common.base.Strings;
-import design.ore.api.ore3d.ApiConstants;
-import design.ore.api.ore3d.plugin.annotation.Ore3DPlugin;
-import design.ore.api.ore3d.plugin.IOre3DPlugin;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Map;
+import java.util.Set;
 
 @SupportedAnnotationTypes({"design.ore.api.ore3d.plugin.annotation.Ore3DPlugin"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
@@ -58,8 +53,8 @@ public class Ore3DPluginAnnotationProcessor extends AbstractProcessor
 
                         manifest.setPluginId(getPluginAnnotationValue(classElement, "value"));
                         manifest.setPluginVersion(getPluginAnnotationValue(classElement, "version"));
-                        manifest.setLatestVersionUrl(getPluginAnnotationValue(classElement, "latestVersionUrl"));
-                        manifest.setLatestDownloadUrl(getPluginAnnotationValue(classElement, "latestDownloadUrl"));
+                        manifest.setVersionCheckUrl(getPluginAnnotationValue(classElement, "versionCheckUrl"));
+                        manifest.setPluginDownloadUrl(getPluginAnnotationValue(classElement, "downloadUrl"));
                         manifest.setPluginCompatibleVersion(ApiConstants.VERSION);
                         manifest.setPluginEntryPoint(fullClassName);
                     }

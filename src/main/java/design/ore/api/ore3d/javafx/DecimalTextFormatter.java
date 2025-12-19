@@ -1,13 +1,13 @@
 package design.ore.api.ore3d.javafx;
 
+import javafx.scene.control.TextFormatter;
+import javafx.util.StringConverter;
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.function.UnaryOperator;
-
-import javafx.scene.control.TextFormatter;
-import javafx.util.StringConverter;
 
 public class DecimalTextFormatter extends TextFormatter<Double>
 {

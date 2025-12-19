@@ -1,9 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.IntegerSpec;
@@ -14,12 +11,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Control;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+
+import java.util.List;
 
 public class IntegerSpecUI extends HBox implements ISpecUI<Number>
 {
