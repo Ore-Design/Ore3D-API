@@ -1,9 +1,9 @@
 package design.ore.api.ore3d.data.interfaces;
 
-import java.util.List;
-
 import design.ore.api.ore3d.data.specs.Spec;
 import javafx.scene.Node;
+
+import java.util.List;
 
 public interface ISpecUI<T>
 {

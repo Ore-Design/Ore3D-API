@@ -1,14 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Predicate;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.MapSpec;
 import design.ore.api.ore3d.data.specs.Spec;
@@ -22,6 +14,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
 
 public class MapSpecUI<T, V> extends HBox implements ISpecUI<T>
 {

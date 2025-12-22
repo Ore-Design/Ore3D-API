@@ -1,13 +1,12 @@
 package design.ore.api.ore3d.data.interfaces;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
-import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Log;
 import design.ore.api.ore3d.data.core.Transaction;
 import design.ore.api.ore3d.data.wrappers.UpdatePacket;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class CustomSaveCycleReference
 {
@@ -21,7 +20,7 @@ public abstract class CustomSaveCycleReference
 		for(Consumer<CustomSaveCycleReference> call : listeners)
 		{
 			try { call.accept(this); }
-			catch(Exception e) { Log.getLogger().warn("An error occured while running listener for custom save cycle reference " + name + ": " + e.getMessage() + "\n" + Util.throwableToString(e)); }
+			catch(Exception e) { Log.getLogger().warn("An error occurred while running listener for custom save cycle reference {}!", name, e); }
 		}
 	}
 

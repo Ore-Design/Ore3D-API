@@ -1,11 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Colors;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
@@ -23,6 +18,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 public class DoubleSpecUI extends HBox implements ISpecUI<Number>
 {

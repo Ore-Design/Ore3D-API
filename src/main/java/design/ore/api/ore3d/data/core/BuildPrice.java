@@ -1,8 +1,5 @@
 package design.ore.api.ore3d.data.core;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -12,6 +9,9 @@ import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import lombok.Getter;
 import lombok.NonNull;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class BuildPrice
 {

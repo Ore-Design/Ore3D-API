@@ -1,8 +1,5 @@
 package design.ore.api.ore3d.jackson;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -14,10 +11,12 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import design.ore.api.ore3d.data.core.Tag;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class ObservableSetSerialization
 {

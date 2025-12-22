@@ -1,29 +1,8 @@
 package design.ore.api.ore3d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
-
-import org.apache.http.client.methods.HttpRequestBase;
-import org.controlsfx.control.Notifications;
-
+import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.core.Transaction;
 import design.ore.api.ore3d.data.pricing.BOMEntry;
@@ -42,11 +21,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.css.CssParser;
-import javafx.css.Declaration;
-import javafx.css.Rule;
-import javafx.css.StyleConverter;
-import javafx.css.Stylesheet;
+import javafx.css.*;
 import javafx.css.converter.ColorConverter;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -72,10 +47,30 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.controlsfx.control.Notifications;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 public class Util
-{	
-	public class Colors
+{
+
+	public static class Log
+	{
+		@Getter private static final Logger logger;
+		static { logger = (Logger) LoggerFactory.getLogger(Util.class); }
+	}
+
+	public static class Colors
 	{
 		@Getter private final static SimpleObjectProperty<Color> foregroundProperty = new SimpleObjectProperty<>();
 		@Getter private final static SimpleObjectProperty<Color> secondaryForegroundProperty = new SimpleObjectProperty<>();
@@ -92,14 +87,14 @@ public class Util
 		@Getter private final static SimpleObjectProperty<Color> warningProperty = new SimpleObjectProperty<>();
 	}
 	
-	public class Auth
+	public static class Auth
 	{
 		private static Function<HttpRequestBase, HttpRequestBase> registeredAuthSigner;
 		public static void registerAuthSigner(Function<HttpRequestBase, HttpRequestBase> authSigner)
 		{
 			if(registeredAuthSigner != null)
 			{
-				Log.getLogger().warn("A second auth signer was attempted to be registered! Ignoring...");
+				Log.logger.warn("A second auth signer was attempted to be registered! Ignoring...");
 				return;
 			}
 			registeredAuthSigner = authSigner;
@@ -108,62 +103,60 @@ public class Util
 		{
 			if(registeredAuthSigner == null)
 			{
-				Log.getLogger().warn("Auth Signer is not yet registered! Cannot sign!");
+				Log.logger.warn("Auth Signer is not yet registered! Cannot sign!");
 				return request;
 			}
 			return registeredAuthSigner.apply(request);
 		}
 	}
 	
-	public class Log
-	{
-		@Getter protected static Logger logger = null;
-		public static Appender<ILoggingEvent> getAppender(String name) { if(logger != null) { return logger.getAppender(name); } else return null; }
-	}
-	
-	public class Mapper
+	public static class Mapper
 	{
 		@Getter protected static ObjectMapper mapper = null;
 		protected static Callable<ObjectMapper> mapperFactory = null;
+
 		public static ObjectMapper createMapper()
 		{
 			if(mapperFactory != null)
 			{
 				try { return mapperFactory.call(); }
-				catch (Exception e) { Log.getLogger().warn(Util.formatThrowable("Error creating new mapper!", e)); }
+				catch (Exception e) { Log.logger.warn("Error creating new mapper!", e); }
 			}
-			else Log.getLogger().warn("Mapper Creator has not yet been registered!");
+			else Log.logger.warn("Mapper Creator has not yet been registered!");
 			
 			return null;
 		}
+
 		public static <T> T quickClone(@NonNull T toClone, Class<? extends T> clazz)
 		{
 			try
 			{
 				String serialized = mapper.writeValueAsString(toClone);
-//				Log.getLogger().debug("Running quick clone, JSON is\n" + serialized);
+//				Log.logger.debug("Running quick clone, JSON is\n" + serialized);
 				return mapper.readValue(serialized, clazz);
 			}
 			catch (Exception e)
 			{
-				Log.getLogger().warn(Util.formatThrowable("Error quick cloning object " + toClone, e));
+                Log.logger.warn("Error quick cloning object {}", toClone, e);
 				return null;
 			}
 		}
+
 		public static <T> T quickClone(@NonNull T toClone, TypeReference<? extends T> type)
 		{
 			try { return mapper.readValue(mapper.writeValueAsString(toClone), type); }
 			catch (Exception e)
 			{
-				Log.getLogger().warn(Util.formatThrowable("Error quick cloning object " + toClone, e));
+                Log.logger.warn("Error quick cloning object {}", toClone, e);
 				return null;
 			}
 		}
 		
 		public static void printItem(String name, Object obj)
 		{
-			try { Log.getLogger().info(name + ": " + mapper.writeValueAsString(obj)); }
-			catch(Exception e) { Log.getLogger().warn(Util.formatThrowable("Failed to print item " + name + "!", e)); }
+			try {
+                Log.logger.info("{}: {}", name, mapper.writeValueAsString(obj)); }
+			catch(Exception e) { Log.logger.warn("Failed to print item {}!", name, e); }
 		}
 	}
 	
@@ -178,7 +171,7 @@ public class Util
 			chainIcon = new Image("ui/icons/ChainIcon.png");
 			xIcon = new Image("ui/icons/XIcon.png");
 		}
-		catch(Exception e) { Log.getLogger().warn(Util.formatThrowable("Failed to initialize UI elements!", e)); }
+		catch(Exception e) { Log.logger.warn("Failed to initialize UI elements!", e); }
 	}
 	
 	public static DoubleBinding zeroDoubleBinding() { return Bindings.createDoubleBinding(() -> 0.0); }
@@ -195,23 +188,6 @@ public class Util
 	
 	    return result;
 	}
-
-	public static String throwableToString(Throwable e)
-	{
-		if(e.getCause() != null)
-			return e.getLocalizedMessage() + stackTraceArrayToString(e.getStackTrace()) + "\nCaused by: " +
-			e.getCause().getLocalizedMessage() + stackTraceArrayToString(e.getCause().getStackTrace());
-		return e.getLocalizedMessage() + stackTraceArrayToString(e.getStackTrace());
-	}
-
-	public static String stackTraceArrayToString(StackTraceElement[] e)
-	{
-		StringBuilder str = new StringBuilder();
-		for(StackTraceElement el : e) { str.append("\n\t" + el.toString()); }
-		return str.toString();
-	}
-	
-	public static String formatThrowable(String userDefinedMessage, Throwable e) { return userDefinedMessage + " - " + throwableToString(e); }
 	
 	public static TextFormatter<?> getDecimalFormatter(int decimalPlaces)
 	{
@@ -287,7 +263,7 @@ public class Util
 		private static final Map<String, Consumer<Transaction>> registeredTransactionLoaders = new HashMap<>();
 		public static void registerOrderLoader(String id, Consumer<Transaction> loader)
 		{
-			if(registeredTransactionLoaders.containsKey(id)) Log.getLogger().warn("There is already a registered transaction loader with ID " + id + "! Overriding...");
+			if(registeredTransactionLoaders.containsKey(id)) Log.logger.warn("There is already a registered transaction loader with ID " + id + "! Overriding...");
 			registeredTransactionLoaders.put(id, loader);
 		}
 		public static void loadTransaction(String id, Transaction transactionToLoad)
@@ -296,9 +272,10 @@ public class Util
 			if(loader != null)
 			{
 				try { loader.accept(transactionToLoad); }
-				catch(Exception e) { Log.getLogger().warn("Unable to load transaction with loader ID " + id + " because " + e.getMessage() + "\n" + Util.throwableToString(e));}
+				catch(Exception e) { Log.logger.warn("Unable to load transaction with loader ID {}", id, e);}
 			}
-			else Log.getLogger().warn("Unable to load transaction, as there is no transaction loader registered with the ID " + id + "!");
+			else
+                Log.logger.warn("Unable to load transaction, as there is no transaction loader registered with the ID {}!", id);
 		}
 	}
 	
@@ -341,14 +318,14 @@ public class Util
 		@SuppressWarnings("unchecked")
 		private static void getColors(String stylesheet)
 	    {
-	    	Util.Log.getLogger().info("Retrieving colors from stylesheet...");
+	    	Util.Log.logger.info("Retrieving colors from stylesheet...");
 	    	
 			CssParser parser = new CssParser();
 			StyleConverter<String, Color> converter = ColorConverter.getInstance();
 			try
 			{
 				Stylesheet css = parser.parse(Styling.class.getClassLoader().getResource(stylesheet).toURI().toURL());
-				final Rule root = css.getRules().get(0);
+				final Rule root = css.getRules().getFirst();
 				for(Declaration d : root.getDeclarations())
 				{
 					switch(d.getProperty())
@@ -393,13 +370,13 @@ public class Util
 							Colors.getErrorProperty().setValue(converter.convert(d.getParsedValue(), null));
 							break;
 						default:
-							Util.Log.getLogger().warn("Unknown color found: " + d.getProperty());
+							Util.Log.logger.warn("Unknown color found: " + d.getProperty());
 					}
 				}
 			}
-			catch(Exception e) { Util.Log.getLogger().warn(e.toString()); }
+			catch(Exception e) { Util.Log.logger.warn(e.toString()); }
 			
-	    	Util.Log.getLogger().info("Colors retrieved!");
+	    	Util.Log.logger.info("Colors retrieved!");
 	    }
 	}
 	
@@ -412,7 +389,7 @@ public class Util
 				try { return call.call(); }
 				catch (Exception e)
 				{
-					Log.getLogger().warn("Error running callable: " + e.getMessage() + "\n" + Util.throwableToString(e));
+					Log.logger.warn("Error running callable!", e);
 					return null;
 				}
 			}
@@ -428,7 +405,7 @@ public class Util
 				try { return task.get(); }
 				catch (InterruptedException | ExecutionException e)
 				{
-					Log.getLogger().warn("Error running alert! " + e.getMessage() + "\n" + Util.throwableToString(e));
+					Log.logger.warn("Error running alert!", e);
 					return null;
 				}
 			}
@@ -439,14 +416,14 @@ public class Util
 			Optional<Window> owner = Stage.getWindows().stream().filter(s -> s.isFocused() && s instanceof Stage).findFirst();
 			if(owner.isEmpty())
 			{
-				Log.getLogger().warn("Cant show notification, as there is no currently focused window!");
+				Log.logger.warn("Cant show notification, as there is no currently focused window!");
 				return;
 			}
 			
 			if(Platform.isFxApplicationThread())
 			{
 				try { showNotification((Stage) owner.get(), title, message, seconds); }
-				catch (Exception e) { Log.getLogger().warn("Error running notification: " + e.getMessage() + "\n" + Util.throwableToString(e)); }
+				catch (Exception e) { Log.logger.warn("Error running notification!", e); }
 			}
 			else
 			{
@@ -572,13 +549,13 @@ public class Util
 		{
 			if(!popoutAreas.containsKey(navigationID))
 			{
-				Log.getLogger().warn("No popout area has been registered with ID " + navigationID + " yet!");
+				Log.logger.warn("No popout area has been registered with ID " + navigationID + " yet!");
 				return null;
 			}
 			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
 				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(navigationID))))
 			{
-				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
+				Log.logger.debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
 				return null;
 			}
 			
@@ -592,13 +569,13 @@ public class Util
 		{
 			if(!popoutAreas.containsKey(navigationID))
 			{
-				Log.getLogger().warn("No popout area has been registered with ID " + navigationID + " yet!");
+				Log.logger.warn("No popout area has been registered with ID " + navigationID + " yet!");
 				return;
 			}
 			else if(Stage.getWindows().stream().anyMatch(s -> s instanceof Stage && s.isShowing() &&
 				((Stage) s).getTitle().equals(title) && ((Stage) s).getOwner().equals(popoutAreas.get(navigationID))))
 			{
-				Log.getLogger().debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
+				Log.logger.debug("A stage already exists with title " + title + " in registered ID " + navigationID + "!");
 				return;
 			}
 			
@@ -623,6 +600,6 @@ public class Util
 	public static void setPersistentPluginDataDir(String dir)
 	{
 		if(persistentPluginDataDir == null) persistentPluginDataDir = dir;
-		else Log.getLogger().warn("Cannot set Appdata Dir as it is already set!");
+		else Log.logger.warn("Cannot set Appdata Dir as it is already set!");
 	}
 }

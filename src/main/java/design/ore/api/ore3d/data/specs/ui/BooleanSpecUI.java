@@ -1,9 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.Util.UI;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.BooleanSpec;
@@ -16,6 +13,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
+
+import java.util.List;
 
 public class BooleanSpecUI extends HBox implements ISpecUI<Boolean>
 {

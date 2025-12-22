@@ -1,7 +1,5 @@
 package design.ore.api.ore3d.ui;
 
-import java.util.Collection;
-
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -21,6 +19,8 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Collection;
 
 public class SearchableDropdown<T> extends TextField
 {

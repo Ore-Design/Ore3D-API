@@ -1,19 +1,18 @@
 package design.ore.api.ore3d.data.wrappers;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.jackson.ObservableListSerialization;
 import javafx.beans.InvalidationListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 @JsonDeserialize(using = ObservableListSerialization.BuildList.Deserializer.class)
 @JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)

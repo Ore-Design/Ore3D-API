@@ -1,15 +1,10 @@
 package design.ore.api.ore3d.data.pricing;
 
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.monadic.MonadicBinding;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import design.ore.api.ore3d.Registry;
-import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Log;
 import design.ore.api.ore3d.Util.Mapper;
 import design.ore.api.ore3d.data.core.Build;
@@ -17,14 +12,10 @@ import design.ore.api.ore3d.data.interfaces.ISummaryOption;
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import lombok.Getter;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.monadic.MonadicBinding;
 
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
 public class MiscEntry extends ValueStorageRecord implements ISummaryOption
@@ -84,7 +75,7 @@ public class MiscEntry extends ValueStorageRecord implements ISummaryOption
 		}
 		catch (JsonProcessingException e) 
 		{
-			Log.getLogger().error("Issue duplicating Misc entry!\n" + Util.throwableToString(e));
+			Log.getLogger().error("Issue duplicating Misc entry!", e);
 		}
 		
 		return newEntry;

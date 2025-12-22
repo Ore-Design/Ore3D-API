@@ -1,16 +1,15 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.function.Predicate;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.ui.MapSpecUI;
 import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
+
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.function.Predicate;
 
 public class MapSpec<T, V> extends Spec<T>
 {

@@ -1,7 +1,6 @@
 package design.ore.api.ore3d.data.crm;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

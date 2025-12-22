@@ -1,9 +1,6 @@
 package design.ore.api.ore3d.data.specs.ui;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
 import design.ore.api.ore3d.data.specs.EnumSpec;
 import design.ore.api.ore3d.data.specs.Spec;
@@ -17,6 +14,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
+
+import java.util.List;
 
 public class EnumSpecUI<T extends Enum<T>> extends HBox implements ISpecUI<T>
 {

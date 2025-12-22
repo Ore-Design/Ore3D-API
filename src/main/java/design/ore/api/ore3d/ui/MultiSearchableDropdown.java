@@ -1,8 +1,5 @@
 package design.ore.api.ore3d.ui;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -22,6 +19,9 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 public class MultiSearchableDropdown<T> extends TextField
 {

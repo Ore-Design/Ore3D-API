@@ -1,16 +1,14 @@
 package design.ore.api.ore3d.extensions;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import org.pf4j.ExtensionPoint;
-
 import design.ore.api.ore3d.data.core.Transaction;
 import design.ore.api.ore3d.data.crm.Customer;
 import design.ore.api.ore3d.data.crm.employee.Employee;
 import design.ore.api.ore3d.data.wrappers.UpdatePacket;
 
-public interface CRMEndpoint extends ExtensionPoint
+import java.util.List;
+import java.util.function.Consumer;
+
+public interface CRMEndpoint
 {	
 	/*
 	 * Retrieves the <code>Transaction</code> stored under a given <code>id</code>.

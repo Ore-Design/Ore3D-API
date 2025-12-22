@@ -1,15 +1,6 @@
 package design.ore.api.ore3d.data.specs;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import com.fasterxml.jackson.annotation.*;
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISpecUI;
@@ -28,6 +19,10 @@ import javafx.scene.Parent;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 @JsonIgnoreProperties(value = {"bound", "name", "bean"}, ignoreUnknown = true)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
@@ -119,7 +114,7 @@ public abstract class Spec<T> extends SimpleObjectProperty<T> implements ISummar
 				T calledValue = calculateOnDirty.call();
 				if(calledValue != null) setValue(calledValue);
 			}
-			catch (Exception e) { Util.Log.getLogger().warn(Util.formatThrowable("Error assigning value from Callable to property!", e)); }
+			catch (Exception e) { Util.Log.getLogger().warn("Error assigning value from Callable to property!", e); }
 		}
 	}
 	

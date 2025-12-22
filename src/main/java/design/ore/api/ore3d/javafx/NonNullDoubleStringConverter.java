@@ -1,9 +1,9 @@
 package design.ore.api.ore3d.javafx;
 
+import javafx.util.StringConverter;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
-import javafx.util.StringConverter;
 
 public class NonNullDoubleStringConverter extends StringConverter<Number>
 {

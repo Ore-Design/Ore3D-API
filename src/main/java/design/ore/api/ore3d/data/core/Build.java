@@ -1,24 +1,10 @@
 package design.ore.api.ore3d.data.core;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.BiConsumer;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonMerge;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import design.ore.api.ore3d.Registry;
 import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.Util.Log;
@@ -40,25 +26,8 @@ import design.ore.api.ore3d.jackson.BuildDataSerialization;
 import design.ore.api.ore3d.jackson.ObservableListSerialization;
 import design.ore.api.ore3d.jackson.ObservableSetSerialization;
 import design.ore.api.ore3d.jackson.PropertySerialization;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.DoubleBinding;
-import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.NumberBinding;
-import javafx.beans.binding.StringExpression;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyDoubleWrapper;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.binding.*;
+import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -66,6 +35,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
 import javafx.util.Pair;
 import lombok.Getter;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.BiConsumer;
 
 @JsonInclude(Include.NON_NULL)
 @JsonFormat(with = JsonFormat.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
@@ -365,7 +338,7 @@ public abstract class Build extends ValueStorageRecord
 			Log.getLogger().debug("Duplicated build JSON: " + original);
 			duplicate = Util.Mapper.getMapper().readValue(original, Build.class);
 		}
-		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occured while duplicating build!\n" + e.getMessage() + "\n" + Util.throwableToString(e)); }
+		catch (JsonProcessingException e) { Util.Log.getLogger().error("An error has occurred while duplicating build!", e); }
 		
 		duplicate.regenerateBuildUUID();
 		duplicate.workOrder.setValue("");
