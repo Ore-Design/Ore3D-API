@@ -18,4 +18,5 @@ public class RoutingPricing
 {
 	String id;
 	@JsonProperty("cpm") double costPerMinute;
+	@JsonProperty("m") int margin = 55;
 }

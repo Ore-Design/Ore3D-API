@@ -76,7 +76,7 @@ targetCompatibility = 21
 
 archivesBaseName = "ore3dapi"
 group = "design.ore.api.ore3d"
-version = "2.6.0"
+version = "2.6.1"
 
 repositories {
     mavenCentral()

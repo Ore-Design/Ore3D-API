@@ -10,10 +10,7 @@ import design.ore.api.ore3d.Util.Log;
 import design.ore.api.ore3d.data.Conflict;
 import design.ore.api.ore3d.data.crm.Customer;
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
-import design.ore.api.ore3d.data.pricing.BOMEntry;
-import design.ore.api.ore3d.data.pricing.MiscEntry;
-import design.ore.api.ore3d.data.pricing.PricingData;
-import design.ore.api.ore3d.data.pricing.RoutingEntry;
+import design.ore.api.ore3d.data.pricing.*;
 import design.ore.api.ore3d.data.wrappers.BuildList;
 import design.ore.api.ore3d.jackson.ObservableListSerialization;
 import javafx.beans.binding.Bindings;
@@ -180,7 +177,7 @@ public class Transaction extends ValueStorageRecord
 		}
 		
 		b.getBom().clear();
-		b.getBom().addAll(bomToAdd);
+		bomToAdd.forEach(b::addBom);
 
 		List<RoutingEntry> routingToAdd = new ArrayList<RoutingEntry>();
 		List<RoutingEntry> missingRouting = new ArrayList<>();
@@ -205,7 +202,7 @@ public class Transaction extends ValueStorageRecord
 		}
 		
 		b.getRoutings().clear();
-		b.getRoutings().addAll(routingToAdd);
+		routingToAdd.forEach(b::addRouting);
 		
 		b.setDirty();
 	}

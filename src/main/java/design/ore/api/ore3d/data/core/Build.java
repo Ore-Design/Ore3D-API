@@ -14,9 +14,7 @@ import design.ore.api.ore3d.data.Conflict;
 import design.ore.api.ore3d.data.StoredValue;
 import design.ore.api.ore3d.data.core.Transaction.BuildChangeType;
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
-import design.ore.api.ore3d.data.pricing.BOMEntry;
-import design.ore.api.ore3d.data.pricing.MiscEntry;
-import design.ore.api.ore3d.data.pricing.RoutingEntry;
+import design.ore.api.ore3d.data.pricing.*;
 import design.ore.api.ore3d.data.specs.IntegerSpec;
 import design.ore.api.ore3d.data.specs.Spec;
 import design.ore.api.ore3d.data.specs.StringSpec;
@@ -178,6 +176,22 @@ public abstract class Build extends ValueStorageRecord
 	
 	@JsonIgnore @Getter private IntegerBinding childDepth = Bindings.createIntegerBinding(() ->
 		parentBuildProperty.getValue() == null ? 0 : parentBuildProperty.get().getChildDepth().get() + 1, parentBuildProperty);
+
+	public void addBom(BOMEntry bomEntry)
+	{
+		List<BOMPricing> bomPricing = parentTransactionProperty.isNotNull().get() ? parentTransactionProperty.get().pricing.getBom() : List.of();
+		Optional<BOMPricing> matchingPricingOpt = bomPricing.stream().filter(rp -> rp.getInternalID().equals(bomEntry.getId())).findFirst();
+		matchingPricingOpt.ifPresent(pricing -> bomEntry.setUnoverriddenMargin(pricing.getMargin()));
+		bom.add(bomEntry);
+	}
+
+	public void addRouting(RoutingEntry routingEntry)
+	{
+		List<RoutingPricing> bomPricing = parentTransactionProperty.isNotNull().get() ? parentTransactionProperty.get().pricing.getRoutings() : List.of();
+		Optional<RoutingPricing> matchingPricingOpt = bomPricing.stream().filter(rp -> rp.getId().equals(routingEntry.getId())).findFirst();
+		matchingPricingOpt.ifPresent(pricing -> routingEntry.setMargin(pricing.getMargin()));
+		routings.add(routingEntry);
+	}
 	
 	public Build()
 	{
@@ -444,7 +458,8 @@ public abstract class Build extends ValueStorageRecord
 			
 			bom.removeAll(bomToRemove);
 			routings.removeAll(routingToRemove);
-			
+
+			List<BOMPricing> bomPricing = parentTransactionProperty.isNotNull().get() ? parentTransactionProperty.get().pricing.getBom() : List.of();
 			for(BOMEntry e : calculateStandardBOMs())
 			{
 				if(e == null) continue;
@@ -466,13 +481,23 @@ public abstract class Build extends ValueStorageRecord
 					if(qtyOverride != null) newBOM.getOverridenQuantityProperty().set(qtyOverride);
 					if(marginOverride != null) newBOM.getOverridenMarginProperty().set(marginOverride);
 				}
+
+				Optional<BOMPricing> matchingPricingOpt = bomPricing.stream().filter(rp -> rp.getInternalID().equals(e.getId())).findFirst();
+
+				matchingPricingOpt.ifPresent(pricing -> e.setUnoverriddenMargin(pricing.getMargin()));
 				
 				for(Entry<String, StoredValue> entry : Registry.getRegisteredBOMEntryStoredValues().entrySet()) { newBOM.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
 				bom.add(newBOM);
 			}
+
+			List<RoutingPricing> routingPricing = parentTransactionProperty.isNotNull().get() ? parentTransactionProperty.get().pricing.getRoutings() : List.of();
 			
 			for(RoutingEntry r : calculateRoutings())
 			{
+				Optional<RoutingPricing> matchingPricingOpt = routingPricing.stream().filter(rp -> rp.getId().equals(r.getId())).findFirst();
+
+                matchingPricingOpt.ifPresent(pricing -> r.setMargin(pricing.getMargin()));
+
 				if(overriddenRoutings.containsKey(r.getId()))
 				{
 					Double overrides = overriddenRoutings.get(r.getId());
@@ -480,7 +505,8 @@ public abstract class Build extends ValueStorageRecord
 				}
 	
 				for(Entry<String, StoredValue> entry : Registry.getRegisteredRoutingEntryStoredValues().entrySet()) { r.putStoredValue(entry.getKey(), entry.getValue().duplicate()); }
-				routings.add(r);
+
+				addRouting(r);
 			}
 
 			detectConflicts();
