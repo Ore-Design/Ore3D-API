@@ -576,7 +576,7 @@ public abstract class Build extends ValueStorageRecord
 		if(parentTransactionProperty.get() != null) parentTransactionProperty.get().addConflict(conflict);
 	}
 	
-	private final void runCatalogDetection()
+	private void runCatalogDetection()
 	{
 		for(Build cb : getChildBuilds()) { cb.runCatalogDetection(); }
 		

@@ -522,7 +522,9 @@ public class Util
 			img.setPreserveRatio(true);
 			checkClip.setPreserveRatio(true);
 			checkClip.fitWidthProperty().bind(img.fitWidthProperty());
-			
+
+			if(img.getImage() == null) return img;
+
 	        img.effectProperty().bind(Bindings.createObjectBinding(() ->
 	        {
 	        	ColorAdjust monochrome = new ColorAdjust();
