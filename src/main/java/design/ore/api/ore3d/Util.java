@@ -51,6 +51,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.controlsfx.control.Notifications;
 import org.slf4j.LoggerFactory;
 
+import java.security.Provider;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Callable;
@@ -58,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -247,11 +249,18 @@ public class Util
 	
 	public static RoutingEntry duplicateRoutingWithPricing(Transaction transaction, Build parent, RoutingEntry entry, RoutingEntry originalEntry)
 	{
-		Optional<BOMPricing> pricing = transaction.getPricing().getBom().stream().filter(bp -> bp.getInternalID().equals(entry.getId())).findFirst();
+		Optional<RoutingPricing> pricing = transaction.getPricing().getRoutings().stream().filter(rp -> rp.getId().equals(entry.getId())).findFirst();
 		RoutingEntry newEntry = null;
-		if(pricing.isPresent()) newEntry = entry.duplicate(pricing.get().getCostPerUnit(), originalEntry.getUnoverriddenQuantityProperty().get(),
-			parent, originalEntry.getCustomEntryProperty().get());
-		else newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent, originalEntry.getCustomEntryProperty().get());
+		if(pricing.isPresent())
+		{
+			newEntry = entry.duplicate(pricing.get().getCostPerMinute(), originalEntry.getUnoverriddenQuantityProperty().get(), parent, originalEntry.getCustomEntryProperty().get());
+			newEntry.setMargin(pricing.get().getMargin());
+		}
+		else
+		{
+			newEntry = entry.duplicate(originalEntry.getUnoverriddenQuantityProperty().get(), parent, originalEntry.getCustomEntryProperty().get());
+			newEntry.setMargin(originalEntry.getMargin());
+		}
 		
 		if(originalEntry.getQuantityOverriddenProperty().get()) newEntry.getOverridenQuantityProperty().set(originalEntry.getOverridenQuantityProperty().get());
 		
@@ -382,6 +391,18 @@ public class Util
 	
 	public static class UI
 	{
+		private static Supplier<String> currentMenuIdSupplier = null;
+		public static void setCurrentMenuIdSupplier(Supplier<String> supplier)
+		{
+			if(currentMenuIdSupplier == null) currentMenuIdSupplier = supplier;
+		}
+		public static String getCurrentMenuId()
+		{
+			if(currentMenuIdSupplier == null) return "";
+
+			return currentMenuIdSupplier.get();
+		}
+
 		public static <T> T runOnApplicationThread(Callable<T> call)
 		{
 			if(Platform.isFxApplicationThread())

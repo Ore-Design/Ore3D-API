@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import design.ore.api.ore3d.Registry;
+import design.ore.api.ore3d.Util;
 import design.ore.api.ore3d.data.core.Build;
 import design.ore.api.ore3d.data.interfaces.ISummaryOption;
 import design.ore.api.ore3d.data.interfaces.ValueStorageRecord;
@@ -46,7 +47,14 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 	@JsonIgnore public ReadOnlyDoubleProperty getTotalCostProperty() { return totalCostProperty.getReadOnlyProperty(); }
 	protected final ReadOnlyIntegerWrapper marginProperty;
 	@JsonProperty("m") public int getMargin() { return marginProperty.get(); }
-	@JsonProperty("m") public void setMargin(int val) { marginProperty.set(val); }
+	@JsonProperty("m") public void setMargin(int val)
+	{
+		if(name.equalsIgnoreCase("Fab") && val == 56)
+		{
+			Util.Log.getLogger().info("Margin on routing {} of build {} set to {}!", name, (getParentBuild() == null ? "UNKNOWN" : getParentBuild().getTitleProperty().get()), val, new Exception("Stack trace"));
+		}
+		marginProperty.set(val);
+	}
 	@JsonIgnore public ReadOnlyIntegerProperty getMarginProperty() { return marginProperty.getReadOnlyProperty(); }
 
 	@JsonIgnore protected ReadOnlyDoubleWrapper totalQuantityProperty;
