@@ -38,11 +38,9 @@ public class StringSpecUI extends HBox implements ISpecUI<String>
 		idLabel.getStyleClass().add("spec-label");
 		idLabel.prefWidthProperty().bind(widthProperty().multiply(0.4));
 		idLabel.setMaxWidth(Control.USE_PREF_SIZE);
-		
 
 		inputField = new TextField();
 		inputField.getStyleClass().add("spec-text-field");
-		inputField.setTextFormatter(Util.getDecimalFormatter(2));
 		inputField.prefWidthProperty().bind(widthProperty().multiply(0.6));
 		inputField.setMaxWidth(Control.USE_PREF_SIZE);
 		

@@ -51,7 +51,7 @@ public class RoutingEntry extends ValueStorageRecord implements ISummaryOption
 	{
 		if(name.equalsIgnoreCase("Fab") && val == 56)
 		{
-			Util.Log.getLogger().info("Margin on routing {} of build {} set to {}!", name, (getParentBuild() == null ? "UNKNOWN" : getParentBuild().getTitleProperty().get()), val, new Exception("Stack trace"));
+			Util.Log.getLogger().info("Margin on routing {} of build {} set to {}!", name, (getParentBuild() == null ? "UNKNOWN" : getParentBuild().getTitleProperty().get()), val);
 		}
 		marginProperty.set(val);
 	}
