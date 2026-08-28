@@ -403,7 +403,7 @@ public abstract class Build extends ValueStorageRecord
 		return true;
 	}
 	
-	protected void refresh()
+	public void refresh()
 	{
 		if(!dirtyFromChild)
 		{

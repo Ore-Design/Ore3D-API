@@ -71,12 +71,15 @@ tasks.register('updateReadmeVersion') {
     readmeFile.setText(updatedText, 'UTF-8')
 }
 
-sourceCompatibility = 21
-targetCompatibility = 21
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
 archivesBaseName = "ore3dapi"
 group = "design.ore.api.ore3d"
-version = "2.6.3"
+version = "2.6.4"
 
 repositories {
     mavenCentral()
