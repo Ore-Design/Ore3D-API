@@ -73,6 +73,12 @@ public abstract class Build extends ValueStorageRecord
 	// This is used to prevent infinite looping of marking dirty from children
 	@JsonIgnore private boolean dirtyFromChild = false;
 
+	// These are stable, long-lived properties that refresh() updates imperatively via calculateUnitPrice()/recalculateTotalPrice().
+	// They intentionally are NOT reactive JavaFX Bindings rebuilt on every recalculation - that pattern was leaking WeakReference-wrapped
+	// listener registrations onto isCatalog/catalogPrice on every refresh() (see getUnitPrice()/getTotalPrice() below).
+	@JsonIgnore private final ReadOnlyDoubleWrapper unitPriceWrapper = new ReadOnlyDoubleWrapper(0);
+	@JsonIgnore private final ReadOnlyDoubleWrapper totalPriceWrapper = new ReadOnlyDoubleWrapper(0);
+
 	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
 	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
 	@JsonMerge @Getter protected final BuildPrice price;
@@ -339,7 +345,7 @@ public abstract class Build extends ValueStorageRecord
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
 	public abstract StringExpression calculateDefaultDescription();
-	protected abstract DoubleBinding getAdditionalPriceModifiers();
+	protected abstract double getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	public abstract BooleanBinding allowWorkOrders();
 	
@@ -511,64 +517,68 @@ public abstract class Build extends ValueStorageRecord
 
 			detectConflicts();
 		}
-		
+
 		price.rebindPricing(this);
+		unitPriceWrapper.set(calculateUnitPrice());
+		recalculateTotalPrice();
 	}
-	
-	protected DoubleBinding getUnitPrice()
+
+	// Extension point for subclasses (e.g. OreBuild) to layer additional pricing logic on top of the base
+	// calculation. Called once per refresh() - do not wrap this in a fresh JavaFX Binding tree, just do plain math.
+	protected double calculateUnitPrice()
 	{
-		DoubleBinding binding = new SimpleDoubleProperty(0).add(0);
-		
-		DoubleBinding additionalMods = getAdditionalPriceModifiers();
-		if(additionalMods != null) binding = binding.add(additionalMods);
-		
-		// This binding is used to separate values that are used to add value only when the build is non-catalog
-		DoubleBinding nonCatalogValues = new SimpleDoubleProperty(0).add(0);
+		double bindingTotal = getAdditionalPriceModifiers();
+
+		// This accumulator is used to separate values that are used to add value only when the build is non-catalog
+		double nonCatalogValues = 0;
 		for(BOMEntry bomEntry : bom)
 		{
-			DoubleBinding bomBinding = (DoubleBinding) Bindings.when(bomEntry.getIgnoreParentQuantityProperty()).then(new SimpleDoubleProperty(0).add(0)).otherwise(bomEntry.getUnitPriceProperty());
-			if(bomEntry.getCustomEntryProperty().get()) { binding = binding.add(bomBinding); }
-			else { nonCatalogValues = nonCatalogValues.add(bomBinding); }
+			double bomValue = bomEntry.getIgnoreParentQuantityProperty().get() ? 0 : bomEntry.getUnitPriceProperty().get();
+			if(bomEntry.getCustomEntryProperty().get()) bindingTotal += bomValue;
+			else nonCatalogValues += bomValue;
 		}
 		for(RoutingEntry routingEntry : routings)
 		{
-			if(routingEntry.getCustomEntryProperty().get()) binding = binding.add(routingEntry.getUnitPriceProperty());
-			else { nonCatalogValues = nonCatalogValues.add(routingEntry.getUnitPriceProperty()); }
+			double routingValue = routingEntry.getUnitPriceProperty().get();
+			if(routingEntry.getCustomEntryProperty().get()) bindingTotal += routingValue;
+			else nonCatalogValues += routingValue;
 		}
 		for(MiscEntry miscEntry : misc)
 		{
-			binding = binding.add(Bindings.when(miscEntry.getIgnoreParentQuantityProperty()).then(new SimpleDoubleProperty(0).add(0)).otherwise(miscEntry.getUnitPriceProperty()));
+			bindingTotal += miscEntry.getIgnoreParentQuantityProperty().get() ? 0 : miscEntry.getUnitPriceProperty().get();
 		}
 		for(Build childBuild : childBuilds)
 		{
-			binding = binding.add(childBuild.getTotalPrice());
+			bindingTotal += childBuild.getTotalPrice().get();
 		}
-		
-		return (DoubleBinding) Bindings.when(isCatalog).then(binding.add(catalogPrice)).otherwise(binding.add(nonCatalogValues));
+
+		return isCatalog.get() ? bindingTotal + catalogPrice.get() : bindingTotal + nonCatalogValues;
 	}
-	
+
+	// Stable, long-lived property - safe to bind UI to. Value is refreshed by refresh() via calculateUnitPrice().
+	protected final ReadOnlyDoubleProperty getUnitPrice() { return unitPriceWrapper.getReadOnlyProperty(); }
+
 	// This is what the build's ACTUAL total price is, including parent-ignored BOM and Misc entries.
-	@JsonIgnore public NumberBinding getTotalPrice()
+	// Computed imperatively by refresh() via recalculateTotalPrice() - stable, long-lived property, safe to bind UI to.
+	@JsonIgnore public final ReadOnlyDoubleProperty getTotalPrice() { return totalPriceWrapper.getReadOnlyProperty(); }
+
+	private void recalculateTotalPrice()
 	{
-		if(price.totalPriceOverriddenProperty.get()) return price.totalPrice;
-		
-		NumberBinding binding = price.totalPrice;
-		
+		if(price.totalPriceOverriddenProperty.get()) { totalPriceWrapper.set(price.totalPrice.doubleValue()); return; }
+
+		double total = price.totalPrice.doubleValue();
+
 		for(BOMEntry bomEntry : bom)
 		{
-			DoubleBinding bomBinding = (DoubleBinding) Bindings.when(bomEntry.getIgnoreParentQuantityProperty().not()).then(new SimpleDoubleProperty(0).add(0)).otherwise(bomEntry.getTotalPriceProperty());
-			if(binding == null) binding = bomBinding;
-			else binding = binding.add(bomBinding);
+			if(bomEntry.getIgnoreParentQuantityProperty().get()) total += bomEntry.getTotalPriceProperty().get();
 		}
-		
+
 		for(MiscEntry miscEntry : misc)
 		{
-			DoubleBinding bomBinding = (DoubleBinding) Bindings.when(miscEntry.getIgnoreParentQuantityProperty().not()).then(new SimpleDoubleProperty(0).add(0)).otherwise(miscEntry.getTotalPriceProperty());
-			if(binding == null) binding = bomBinding;
-			else binding = binding.add(bomBinding);
+			if(miscEntry.getIgnoreParentQuantityProperty().get()) total += miscEntry.getTotalPriceProperty().get();
 		}
-		
-		return binding == null ? new ReadOnlyDoubleWrapper(0).add(0) : binding;
+
+		totalPriceWrapper.set(total);
 	}
 
 	public void addConflict(Conflict conflict)
