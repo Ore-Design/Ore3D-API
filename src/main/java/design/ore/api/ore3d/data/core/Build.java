@@ -24,6 +24,7 @@ import design.ore.api.ore3d.jackson.BuildDataSerialization;
 import design.ore.api.ore3d.jackson.ObservableListSerialization;
 import design.ore.api.ore3d.jackson.ObservableSetSerialization;
 import design.ore.api.ore3d.jackson.PropertySerialization;
+import javafx.beans.Observable;
 import javafx.beans.binding.*;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -74,18 +75,27 @@ public abstract class Build extends ValueStorageRecord
 	@JsonIgnore private boolean dirtyFromChild = false;
 
 	// These are stable, long-lived DoubleBindings, built exactly once per Build instance and never rebuilt.
-	// refresh() marks them dirty via markDirty() (a manual invalidate() - no dependencies are registered on them,
-	// so they never attach listeners to isCatalog/catalogPrice/entry properties, and they stay lazy/pull-based:
-	// computeValue() only runs when something actually reads the value, same as before the leak fix.
-	// Rebuilding a fresh Binding tree every refresh() was leaking WeakReference-wrapped listener registrations onto
-	// isCatalog/catalogPrice; eagerly computing+setting a plain value on every refresh() (an earlier attempt at this
-	// fix) was leak-free but forced a full eager price recompute of the entire build tree on every spec edit, which
-	// is far more expensive than the old lazy/pull-based evaluation - this DoubleBinding approach avoids both.
+	// Real dependencies are registered ONCE (via bindDependencies(), called from the constructor below) using
+	// the standard protected bind(Observable...) mechanism, so they invalidate automatically - and lazily/pull-
+	// style, i.e. computeValue() only runs when something actually reads the value - whenever isCatalog,
+	// catalogPrice, or the bom/routings/misc lists (or a tracked property on one of their current elements, via
+	// their extractors) change, or a child is added/removed. Each child's own totalPrice is bound/unbound
+	// individually as children come and go (see the childBuilds listener in the constructor) rather than via an
+	// extractor on childBuilds itself - childBuilds already has a structural-change listener with non-idempotent
+	// side effects, and an extractor there would turn every child price recalculation into a structural-change
+	// notification and re-enter it. refresh() additionally calls markDirty() for things these dependencies can't
+	// cover (e.g. a subclass's imperative, non-reactive price modifier lookups).
+	// Rebuilding a fresh Binding tree every refresh() (the original design) leaked WeakReference-wrapped listener
+	// registrations onto isCatalog/catalogPrice on every recalculation. Recomputing eagerly on every refresh()
+	// (an earlier attempt at this fix) was leak-free but forced a full eager price recompute of the entire build
+	// tree on every spec edit. Binding dependencies once, like this, avoids both problems.
 	private class RecalculatedDoubleBinding extends DoubleBinding
 	{
 		private final java.util.function.DoubleSupplier supplier;
 		private RecalculatedDoubleBinding(java.util.function.DoubleSupplier supplier) { this.supplier = supplier; }
 		@Override protected double computeValue() { return supplier.getAsDouble(); }
+		private void bindDependencies(Observable... dependencies) { bind(dependencies); }
+		private void unbindDependencies(Observable... dependencies) { unbind(dependencies); }
 		private void markDirty() { invalidate(); }
 	}
 
@@ -170,20 +180,26 @@ public abstract class Build extends ValueStorageRecord
 	public boolean addQueryableValue(String val) { return queryableValues.add(val); }
 	public boolean removeQueryableValue(String val) { return queryableValues.remove(val); }
 	
+	// Extractors let the list itself fire an update event when a tracked property on one of its current elements
+	// changes (a margin/quantity override, say) - not just on add/remove - so the price bindings below (which
+	// depend on these lists) invalidate correctly without needing every such edit funneled through refresh().
 	@JsonDeserialize(using = ObservableListSerialization.BOMEntryList.Deserializer.class)
 	@JsonSerialize(using = ObservableListSerialization.BOMEntryList.Serializer.class)
 	@Getter @JsonMerge
-	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList();
-	
+	protected ObservableList<BOMEntry> bom = FXCollections.observableArrayList(e ->
+		new Observable[] { e.getCustomEntryProperty(), e.getIgnoreParentQuantityProperty(), e.getUnitPriceProperty(), e.getTotalPriceProperty() });
+
 	@JsonDeserialize(using = ObservableListSerialization.RoutingEntryList.Deserializer.class)
 	@JsonSerialize(using = ObservableListSerialization.RoutingEntryList.Serializer.class)
 	@Getter @JsonMerge
-	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList();
+	protected ObservableList<RoutingEntry> routings = FXCollections.observableArrayList(e ->
+		new Observable[] { e.getCustomEntryProperty(), e.getUnitPriceProperty() });
 
 	@JsonDeserialize(using = ObservableListSerialization.MiscEntryList.Deserializer.class)
 	@JsonSerialize(using = ObservableListSerialization.MiscEntryList.Serializer.class)
 	@Getter @JsonMerge
-	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList();
+	protected ObservableList<MiscEntry> misc = FXCollections.observableArrayList(e ->
+		new Observable[] { e.getIgnoreParentQuantityProperty(), e.getUnitPriceProperty(), e.getTotalPriceProperty() });
 	
 	ChangeListener<Object> specChangeListener = (obs, oldVal, newVal) -> { if(oldVal == null || !oldVal.equals(newVal)) setDirty(); };
 	
@@ -227,7 +243,24 @@ public abstract class Build extends ValueStorageRecord
 		});
 		
 		this.price = new BuildPrice(this);
-		
+
+		unitPriceBinding.bindDependencies(bom, routings, misc, childBuilds, isCatalog, catalogPrice);
+		totalPriceBinding.bindDependencies(price.totalPriceOverriddenProperty, price.totalPrice, bom, misc);
+
+		// unitPriceBinding sums each child's totalPrice, so it needs to be bound to each child's totalPrice
+		// individually (bound/unbound as children are added/removed) - see the comment on RecalculatedDoubleBinding
+		// above for why this isn't done via an extractor on childBuilds instead.
+		for(Build cb : childBuilds) { unitPriceBinding.bindDependencies(cb.getTotalPrice()); }
+		childBuilds.addListener((ListChangeListener.Change<? extends Build> c) ->
+		{
+			while(c.next())
+			{
+				for(Build cb : c.getAddedSubList()) { unitPriceBinding.bindDependencies(cb.getTotalPrice()); }
+				for(Build cb : c.getRemoved()) { unitPriceBinding.unbindDependencies(cb.getTotalPrice()); }
+			}
+		});
+
+
 		unoverridenDescriptionProperty.addListener((obs, oldVal, newVal) ->
 		{
 			if(oldVal != null && newVal != null && overridenDescriptionProperty.isNotNull().get() && overridenDescriptionProperty.getValue().equals(oldVal))

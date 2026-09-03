@@ -79,7 +79,7 @@ java {
 
 archivesBaseName = "ore3dapi"
 group = "design.ore.api.ore3d"
-version = "2.7.0"
+version = "2.7.1"
 
 repositories {
     mavenCentral()

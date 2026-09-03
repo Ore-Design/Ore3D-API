@@ -18,8 +18,14 @@ import java.util.ListIterator;
 @JsonSerialize(using = ObservableListSerialization.BuildList.Serializer.class)
 public class BuildList implements ObservableList<Build>
 {
+	// Deliberately no extractor here: this list's own structural-change listeners (e.g. Build's childBuilds
+	// listener, which runs non-idempotent setup/teardown logic) must only fire on real add/remove. A parent
+	// Build's dependency on each child's totalPrice is wired individually (see Build's constructor), not through
+	// this list's change events - an extractor watching child totalPrice previously turned every child price
+	// recalculation into a structural-change notification here, which re-entered that listener and stack
+	// overflowed.
 	ObservableList<Build> list;
-	
+
 	public BuildList()
 	{
 		list = FXCollections.observableArrayList();
