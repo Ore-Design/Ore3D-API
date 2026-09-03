@@ -104,10 +104,33 @@ public class LargeStringSpecUI extends HBox implements ISpecUI<String>
 		title.getStyleClass().add("small-label");
 		title.setMaxWidth(Double.MAX_VALUE);
 		
-		TextArea editArea = new TextArea();
+		TextArea editArea = new TextArea(parentSpec.getValue() == null ? "" : parentSpec.getValue());
 		editArea.setWrapText(true);
 		editArea.setMaxSize(Control.USE_PREF_SIZE, Control.USE_PREF_SIZE);
-		editArea.textProperty().bindBidirectional(parentSpec);
+
+		// Commit to the spec on focus lost (or when this popout closes) rather than live-binding every keystroke -
+		// a live bidirectional binding here fires a full spec-change -> refresh() cascade (recalculating pricing
+		// and description for the whole build tree) on every character typed.
+		Runnable commitEdit = () -> { if(!editArea.getText().equals(parentSpec.getValue())) parentSpec.setValue(editArea.getText()); };
+
+		editArea.focusedProperty().addListener((obs, wasFocused, isFocused) -> { if(!isFocused) commitEdit.run(); });
+
+		ChangeListener<String> externalChangeListener = (obs, oldVal, newVal) ->
+		{
+			if(!editArea.isFocused() && newVal != null && !newVal.equals(editArea.getText())) editArea.setText(newVal);
+		};
+		parentSpec.addListener(externalChangeListener);
+
+		// The popout's content is removed from the scene graph when its stage closes - use that as the cue to
+		// flush any pending edit and unregister the listener above (otherwise it leaks a new one on every open).
+		editArea.sceneProperty().addListener((obs, oldScene, newScene) ->
+		{
+			if(newScene == null)
+			{
+				commitEdit.run();
+				parentSpec.removeListener(externalChangeListener);
+			}
+		});
 
 		VBox layout = new VBox(title, editArea);
 		layout.setFillWidth(true);

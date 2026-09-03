@@ -73,11 +73,24 @@ public abstract class Build extends ValueStorageRecord
 	// This is used to prevent infinite looping of marking dirty from children
 	@JsonIgnore private boolean dirtyFromChild = false;
 
-	// These are stable, long-lived properties that refresh() updates imperatively via calculateUnitPrice()/recalculateTotalPrice().
-	// They intentionally are NOT reactive JavaFX Bindings rebuilt on every recalculation - that pattern was leaking WeakReference-wrapped
-	// listener registrations onto isCatalog/catalogPrice on every refresh() (see getUnitPrice()/getTotalPrice() below).
-	@JsonIgnore private final ReadOnlyDoubleWrapper unitPriceWrapper = new ReadOnlyDoubleWrapper(0);
-	@JsonIgnore private final ReadOnlyDoubleWrapper totalPriceWrapper = new ReadOnlyDoubleWrapper(0);
+	// These are stable, long-lived DoubleBindings, built exactly once per Build instance and never rebuilt.
+	// refresh() marks them dirty via markDirty() (a manual invalidate() - no dependencies are registered on them,
+	// so they never attach listeners to isCatalog/catalogPrice/entry properties, and they stay lazy/pull-based:
+	// computeValue() only runs when something actually reads the value, same as before the leak fix.
+	// Rebuilding a fresh Binding tree every refresh() was leaking WeakReference-wrapped listener registrations onto
+	// isCatalog/catalogPrice; eagerly computing+setting a plain value on every refresh() (an earlier attempt at this
+	// fix) was leak-free but forced a full eager price recompute of the entire build tree on every spec edit, which
+	// is far more expensive than the old lazy/pull-based evaluation - this DoubleBinding approach avoids both.
+	private class RecalculatedDoubleBinding extends DoubleBinding
+	{
+		private final java.util.function.DoubleSupplier supplier;
+		private RecalculatedDoubleBinding(java.util.function.DoubleSupplier supplier) { this.supplier = supplier; }
+		@Override protected double computeValue() { return supplier.getAsDouble(); }
+		private void markDirty() { invalidate(); }
+	}
+
+	@JsonIgnore private final RecalculatedDoubleBinding unitPriceBinding = new RecalculatedDoubleBinding(this::calculateUnitPrice);
+	@JsonIgnore private final RecalculatedDoubleBinding totalPriceBinding = new RecalculatedDoubleBinding(this::calculateTotalPrice);
 
 	@JsonSerialize(using = BuildDataSerialization.BuildPriceSer.Serializer.class)
 	@JsonDeserialize(using = BuildDataSerialization.BuildPriceSer.Deserializer.class)
@@ -344,7 +357,7 @@ public abstract class Build extends ValueStorageRecord
 
 	public abstract List<BOMEntry> calculateStandardBOMs();
 	public abstract List<RoutingEntry> calculateRoutings();
-	public abstract StringExpression calculateDefaultDescription();
+	public abstract String calculateDefaultDescription();
 	protected abstract double getAdditionalPriceModifiers();
 	protected abstract void detectConflicts();
 	public abstract BooleanBinding allowWorkOrders();
@@ -428,7 +441,7 @@ public abstract class Build extends ValueStorageRecord
 	
 			Map<String, Pair<Double, Integer>> overriddenStandardBOMS = new HashMap<>();
 			
-			unoverridenDescriptionProperty.bind(calculateDefaultDescription());
+			unoverridenDescriptionProperty.set(calculateDefaultDescription());
 			
 			// We only clear non-custom BOMs, hence the usage of bomToRemove
 			List<BOMEntry> bomToRemove = new ArrayList<>();
@@ -519,8 +532,8 @@ public abstract class Build extends ValueStorageRecord
 		}
 
 		price.rebindPricing(this);
-		unitPriceWrapper.set(calculateUnitPrice());
-		recalculateTotalPrice();
+		unitPriceBinding.markDirty();
+		totalPriceBinding.markDirty();
 	}
 
 	// Extension point for subclasses (e.g. OreBuild) to layer additional pricing logic on top of the base
@@ -555,16 +568,17 @@ public abstract class Build extends ValueStorageRecord
 		return isCatalog.get() ? bindingTotal + catalogPrice.get() : bindingTotal + nonCatalogValues;
 	}
 
-	// Stable, long-lived property - safe to bind UI to. Value is refreshed by refresh() via calculateUnitPrice().
-	protected final ReadOnlyDoubleProperty getUnitPrice() { return unitPriceWrapper.getReadOnlyProperty(); }
+	// Stable, long-lived, lazily-evaluated binding - safe to bind UI to. refresh() marks it dirty; the actual sum
+	// in calculateUnitPrice() only runs when something reads the value.
+	protected final DoubleBinding getUnitPrice() { return unitPriceBinding; }
 
 	// This is what the build's ACTUAL total price is, including parent-ignored BOM and Misc entries.
-	// Computed imperatively by refresh() via recalculateTotalPrice() - stable, long-lived property, safe to bind UI to.
-	@JsonIgnore public final ReadOnlyDoubleProperty getTotalPrice() { return totalPriceWrapper.getReadOnlyProperty(); }
+	// Stable, long-lived, lazily-evaluated binding - safe to bind UI to. refresh() marks it dirty via markDirty().
+	@JsonIgnore public final DoubleBinding getTotalPrice() { return totalPriceBinding; }
 
-	private void recalculateTotalPrice()
+	private double calculateTotalPrice()
 	{
-		if(price.totalPriceOverriddenProperty.get()) { totalPriceWrapper.set(price.totalPrice.doubleValue()); return; }
+		if(price.totalPriceOverriddenProperty.get()) return price.totalPrice.doubleValue();
 
 		double total = price.totalPrice.doubleValue();
 
@@ -578,7 +592,7 @@ public abstract class Build extends ValueStorageRecord
 			if(miscEntry.getIgnoreParentQuantityProperty().get()) total += miscEntry.getTotalPriceProperty().get();
 		}
 
-		totalPriceWrapper.set(total);
+		return total;
 	}
 
 	public void addConflict(Conflict conflict)
@@ -620,7 +634,7 @@ public abstract class Build extends ValueStorageRecord
 	{
 		catalogPrice.set(catalogPrice.get() >= 0 ? -1 : 1);
 		runCatalogDetection();
-		unoverridenDescriptionProperty.bind(calculateDefaultDescription());
+		unoverridenDescriptionProperty.set(calculateDefaultDescription());
 	}
 	
 	@Override
