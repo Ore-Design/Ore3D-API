@@ -108,7 +108,7 @@ public abstract class Build extends ValueStorageRecord
 
 	@JsonSerialize(using = PropertySerialization.StringSer.Serializer.class)
 	@JsonDeserialize(using = PropertySerialization.StringSer.Deserializer.class)
-	@Getter protected SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
+	@JsonMerge @Getter protected final SimpleStringProperty titleProperty = new SimpleStringProperty("Build");
 	
 	@JsonIgnore protected final ReadOnlyBooleanWrapper titleEditableProperty = new ReadOnlyBooleanWrapper(true);
 	@JsonIgnore public ReadOnlyBooleanProperty getTitleEditableProperty() { return titleEditableProperty.getReadOnlyProperty(); }
@@ -260,6 +260,9 @@ public abstract class Build extends ValueStorageRecord
 			}
 		});
 
+
+		// The title isn't a spec, so it needs its own listener to trigger a refresh (and description recalculation)
+		titleProperty.addListener(specChangeListener);
 
 		unoverridenDescriptionProperty.addListener((obs, oldVal, newVal) ->
 		{

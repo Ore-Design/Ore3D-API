@@ -47,7 +47,6 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import lombok.Getter;
 import lombok.NonNull;
-import org.apache.http.client.methods.HttpRequestBase;
 import org.controlsfx.control.Notifications;
 import org.slf4j.LoggerFactory;
 
@@ -87,29 +86,6 @@ public class Util
 		@Getter private final static SimpleObjectProperty<Color> accentProperty = new SimpleObjectProperty<>();
 		@Getter private final static SimpleObjectProperty<Color> errorProperty = new SimpleObjectProperty<>();
 		@Getter private final static SimpleObjectProperty<Color> warningProperty = new SimpleObjectProperty<>();
-	}
-	
-	public static class Auth
-	{
-		private static Function<HttpRequestBase, HttpRequestBase> registeredAuthSigner;
-		public static void registerAuthSigner(Function<HttpRequestBase, HttpRequestBase> authSigner)
-		{
-			if(registeredAuthSigner != null)
-			{
-				Log.logger.warn("A second auth signer was attempted to be registered! Ignoring...");
-				return;
-			}
-			registeredAuthSigner = authSigner;
-		}
-		public static HttpRequestBase signWithcORECreds(HttpRequestBase request)
-		{
-			if(registeredAuthSigner == null)
-			{
-				Log.logger.warn("Auth Signer is not yet registered! Cannot sign!");
-				return request;
-			}
-			return registeredAuthSigner.apply(request);
-		}
 	}
 	
 	public static class Mapper
