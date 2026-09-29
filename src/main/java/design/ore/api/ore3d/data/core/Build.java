@@ -132,6 +132,17 @@ public abstract class Build extends ValueStorageRecord
 	{
 		overridenDescriptionProperty.set(unoverridenDescriptionProperty.get());
 	}
+
+	// Recalculates only the description, without a full refresh() (which would regenerate BOMs/routings). Walks up
+	// to the parent too, since parent descriptions include their children's BOM/Misc entries.
+	public void refreshDescription()
+	{
+		Transaction parentTran = parentTransactionProperty.get();
+		if(parentTran == null || parentTran.isExpired()) return;
+
+		unoverridenDescriptionProperty.set(calculateDefaultDescription());
+		if(parentBuildProperty.get() != null) parentBuildProperty.get().refreshDescription();
+	}
 	
 	@JsonIgnore protected final ReadOnlyObjectWrapper<Build> parentBuildProperty = new ReadOnlyObjectWrapper<>();
 	public ReadOnlyObjectProperty<Build> getParentBuildProperty() { return parentBuildProperty.getReadOnlyProperty(); }
